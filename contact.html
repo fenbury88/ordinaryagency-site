@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact — Ordinary Agency</title>
+  <meta name="description" content="Get in touch with Ordinary Agency. Based in Claremont, Western Australia. Email mike@ordinaryagency.com.au or call 0403 566 928." />
+  <meta name="theme-color" content="#F7F4EF" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header" id="header">
+    <div class="container header-inner">
+      <a href="index.html" class="wordmark" aria-label="Ordinary Agency home">
+        <span class="wordmark__name">Ordinary</span><span class="wordmark__mark">.</span>
+        <span class="wordmark__sub">agency</span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="services.html">Services</a>
+        <a href="work.html">Work</a>
+        <a href="about.html">About</a>
+        <a href="contact.html" aria-current="page">Contact</a>
+      </nav>
+      <a href="contact.html" class="btn btn--small nav__cta">Start a project</a>
+      <button class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+        <span></span><span></span>
+      </button>
+    </div>
+    <div class="mobile-menu" id="mobile-menu" hidden>
+      <a href="services.html">Services</a>
+      <a href="work.html">Work</a>
+      <a href="about.html">About</a>
+      <a href="contact.html" aria-current="page">Contact</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="page-head">
+      <div class="container">
+        <p class="eyebrow reveal">Get in touch</p>
+        <h1 class="page-head__title reveal">Let&rsquo;s make something that <em>works</em>.</h1>
+        <p class="page-head__lead reveal">Tell us about your business and what you need. We usually reply within a day.</p>
+      </div>
+    </section>
+
+    <section class="contact section">
+      <div class="container contact__grid">
+        <div class="contact__intro reveal">
+          <ul class="contact__details">
+            <li><span>Email</span><a href="mailto:mike@ordinaryagency.com.au">mike@ordinaryagency.com.au</a></li>
+            <li><span>Phone</span><a href="tel:+61403566928">0403 566 928</a></li>
+            <li><span>Studio</span><address>Claremont,<br />Western Australia</address></li>
+            <li><span>Social</span>
+              <span class="contact__social">
+                <a href="https://www.linkedin.com/company/ordinaryagencyseo/" target="_blank" rel="noopener">LinkedIn</a>
+                &nbsp;·&nbsp;
+                <a href="https://www.instagram.com/ordinaryagency/" target="_blank" rel="noopener">Instagram</a>
+              </span>
+            </li>
+          </ul>
+        </div>
+
+        <form class="contact__form reveal" name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+          <input type="hidden" name="form-name" value="contact" />
+          <p hidden><label>Don&rsquo;t fill this in: <input name="bot-field" /></label></p>
+          <div class="field">
+            <label for="name">Name *</label>
+            <input id="name" name="name" type="text" required />
+          </div>
+          <div class="field">
+            <label for="company">Company</label>
+            <input id="company" name="company" type="text" />
+          </div>
+          <div class="field">
+            <label for="email">Email *</label>
+            <input id="email" name="email" type="email" required />
+          </div>
+          <div class="field">
+            <label for="phone">Phone</label>
+            <input id="phone" name="phone" type="tel" />
+          </div>
+          <div class="field field--full">
+            <label for="message">What can we help with?</label>
+            <textarea id="message" name="message" rows="5"></textarea>
+          </div>
+          <button type="submit" class="btn">Send message</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer__brand">
+        <a href="index.html" class="wordmark wordmark--light">
+          <span class="wordmark__name">Ordinary</span><span class="wordmark__mark">.</span>
+          <span class="wordmark__sub">agency</span>
+        </a>
+        <p>Western Australia based digital agency, specialising in digital marketing in Perth.</p>
+      </div>
+      <nav class="footer__nav" aria-label="Footer">
+        <a href="services.html">Services</a>
+        <a href="work.html">Work</a>
+        <a href="about.html">About</a>
+        <a href="contact.html" aria-current="page">Contact</a>
+      </nav>
+      <div class="footer__social">
+        <a href="https://www.linkedin.com/company/ordinaryagencyseo/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://www.instagram.com/ordinaryagency/" target="_blank" rel="noopener">Instagram</a>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>&copy; <span id="year">2026</span> Ordinary Agency. All rights reserved.</p>
+      <p>Claremont, Western Australia</p>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>

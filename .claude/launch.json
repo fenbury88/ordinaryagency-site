@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ordinaryagency",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "4388", "--directory", "ordinaryagency-site"],
+      "port": 4388
+    }
+  ]
+}
