@@ -6,3 +6,6 @@
 
 # Netlify
 .netlify/
+
+# Local editor / preview config
+.claude/
