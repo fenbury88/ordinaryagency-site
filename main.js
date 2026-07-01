@@ -60,21 +60,6 @@ if (reduce || !('IntersectionObserver' in window)) {
   });
 }
 
-// Wrap the trailing full stop on every H1/H2 so it can colour-cycle like the logo dot.
-document.querySelectorAll('h1, h2').forEach((el) => {
-  if (el.querySelector('.rotator')) return; // skip the rotating-word statement
-  let node = el.lastChild;
-  while (node && node.nodeType === 3 && node.nodeValue.trim() === '') node = node.previousSibling;
-  if (!node || node.nodeType !== 3) return;
-  const val = node.nodeValue.replace(/\s+$/, '');
-  if (val.charAt(val.length - 1) !== '.') return;
-  node.nodeValue = val.slice(0, -1);
-  const dot = document.createElement('span');
-  dot.className = 'dot-cycle';
-  dot.textContent = '.';
-  node.parentNode.insertBefore(dot, node.nextSibling);
-});
-
 // Contact form — AJAX submit to Formspree with inline feedback.
 // Progressive enhancement: without JS the form still POSTs normally.
 document.querySelectorAll('.contact__form').forEach((form) => {
