@@ -287,23 +287,26 @@ a { color: inherit; text-decoration: none; }
 /* ---------- Work ---------- */
 .work { border-top: 1px solid var(--line); }
 .work__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(1.25rem, 3vw, 2rem); }
-.work-card { cursor: default; }
+.work-card { display: block; }
 .work-card__media {
-  aspect-ratio: 4 / 5; background: var(--paper-deep);
-  border: 1px solid var(--line); border-radius: 4px;
+  aspect-ratio: 8 / 5; background: var(--paper-deep);
+  border: 1px solid var(--line); border-radius: 6px;
   position: relative; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
   transition: transform .5s var(--ease), box-shadow .5s var(--ease);
 }
+.work-card__media img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
 .work-card__media::after {
   content: attr(data-placeholder);
   font-family: var(--font-display); font-style: normal; color: var(--muted); font-size: 1.1rem;
 }
 .work-card:hover .work-card__media { transform: translateY(-8px); box-shadow: 0 22px 45px -22px rgba(20, 20, 15, 0.28); }
-.work-card__meta { margin-top: 1rem; }
-.work-card__meta h3 { font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; letter-spacing: -0.01em; }
-.work-card__meta p { color: var(--muted); font-size: 0.9rem; }
+.work-card__meta { margin-top: 1rem; display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.work-card__meta h3 { font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; letter-spacing: -0.01em; transition: color .3s var(--ease); }
+.work-card:hover .work-card__meta h3 { color: var(--accent); }
+.work-card__meta p { color: var(--muted); font-size: 0.9rem; white-space: nowrap; }
 .work__note { margin-top: 2.5rem; color: var(--muted); font-size: 0.9rem; }
+.work__note a { color: var(--accent); border-bottom: 1px solid currentColor; padding-bottom: 1px; }
 
 /* ---------- Quote ---------- */
 .quote { background: var(--paper-deep); border-top: 1px solid var(--line); text-align: center; }
