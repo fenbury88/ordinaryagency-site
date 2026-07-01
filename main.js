@@ -59,3 +59,45 @@ if (reduce || !('IntersectionObserver' in window)) {
     io.observe(el);
   });
 }
+
+// Contact form — AJAX submit to Formspree with inline feedback.
+// Progressive enhancement: without JS the form still POSTs normally.
+document.querySelectorAll('.contact__form').forEach((form) => {
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const status = form.querySelector('.form-status');
+    const btn = form.querySelector('button[type="submit"]');
+    const showStatus = (msg, ok) => {
+      if (!status) return;
+      status.hidden = false;
+      status.textContent = msg;
+      status.classList.toggle('is-success', ok);
+      status.classList.toggle('is-error', !ok);
+    };
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+
+    fetch(form.action, {
+      method: 'POST',
+      body: new FormData(form),
+      headers: { Accept: 'application/json' },
+    })
+      .then((res) => {
+        if (res.ok) {
+          form.reset();
+          if (btn) btn.hidden = true;
+          showStatus('Thanks — your message is on its way. We usually reply within a day.', true);
+        } else {
+          return res.json().then((d) => {
+            const msg = d && d.errors ? d.errors.map((x) => x.message).join(', ')
+              : 'Something went wrong. Please email mike@ordinaryagency.com.au.';
+            showStatus(msg, false);
+            if (btn) { btn.disabled = false; btn.textContent = 'Send message'; }
+          });
+        }
+      })
+      .catch(() => {
+        showStatus('Network error. Please email mike@ordinaryagency.com.au.', false);
+        if (btn) { btn.disabled = false; btn.textContent = 'Send message'; }
+      });
+  });
+});

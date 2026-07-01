@@ -374,6 +374,9 @@ a { color: inherit; text-decoration: none; }
 .field input:focus, .field textarea:focus { outline: none; border-bottom-color: var(--accent); }
 .field textarea { resize: vertical; }
 .contact__form .btn { grid-column: 1 / -1; justify-self: start; margin-top: 0.5rem; }
+.form-status { grid-column: 1 / -1; margin-top: 0.25rem; font-size: 0.98rem; line-height: 1.4; }
+.form-status.is-success { color: var(--accent-deep); font-weight: 500; }
+.form-status.is-error { color: #B4402E; }
 
 /* ---------- Footer ---------- */
 .site-footer { background: var(--ink); color: var(--paper); padding-block: clamp(3rem, 7vw, 5rem) 2rem; }

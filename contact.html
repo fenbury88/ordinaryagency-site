@@ -66,9 +66,9 @@
           </ul>
         </div>
 
-        <form class="contact__form reveal" name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field">
-          <input type="hidden" name="form-name" value="contact" />
-          <p hidden><label>Don&rsquo;t fill this in: <input name="bot-field" /></label></p>
+        <form class="contact__form reveal" action="https://formspree.io/f/meebroln" method="POST">
+          <input type="hidden" name="_subject" value="New enquiry from ordinaryagency.com.au" />
+          <p hidden><label>Don&rsquo;t fill this in: <input name="_gotcha" tabindex="-1" autocomplete="off" /></label></p>
           <div class="field">
             <label for="name">Name *</label>
             <input id="name" name="name" type="text" required />
@@ -90,6 +90,7 @@
             <textarea id="message" name="message" rows="5"></textarea>
           </div>
           <button type="submit" class="btn">Send message</button>
+          <p class="form-status" role="status" aria-live="polite" hidden></p>
         </form>
       </div>
     </section>
