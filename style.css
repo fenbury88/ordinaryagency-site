@@ -153,19 +153,6 @@ a { color: inherit; text-decoration: none; }
   100% { color: #2C7A57; }
 }
 
-/* "Start a project" header CTA cycles through the brand colours too.
-   Colours kept dark enough to keep the white label readable. */
-.nav__cta { animation: btnCycle 14s linear infinite; }
-.nav__cta:hover { animation-play-state: paused; }
-@keyframes btnCycle {
-  0%   { background-color: #2C7A57; border-color: #2C7A57; }  /* green   */
-  20%  { background-color: #2563EB; border-color: #2563EB; }  /* blue    */
-  40%  { background-color: #6D3AC2; border-color: #6D3AC2; }  /* purple  */
-  60%  { background-color: #B5398E; border-color: #B5398E; }  /* magenta */
-  80%  { background-color: #A1431F; border-color: #A1431F; }  /* clay    */
-  100% { background-color: #2C7A57; border-color: #2C7A57; }
-}
-
 .nav { display: flex; gap: 2rem; }
 .nav a {
   font-size: 0.95rem; font-weight: 500; color: var(--ink-soft);
