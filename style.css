@@ -11,7 +11,7 @@
   --paper-deep:   #EFEFEA;
   --ink:          #15150F;   /* 30% secondary */
   --ink-soft:     #45443D;
-  --muted:        #75736A;
+  --muted:        #66645B;
   --line:         rgba(21, 21, 15, 0.12);
   --line-strong:  rgba(21, 21, 15, 0.22);
   --accent:       #2C7A57;   /* 10% accent */
@@ -317,6 +317,10 @@ a { color: inherit; text-decoration: none; }
 }
 .quote footer { margin-top: 1.75rem; font-size: 0.9rem; color: var(--muted); letter-spacing: 0.04em; }
 .quote cite { font-style: normal; font-weight: 600; color: var(--ink); }
+.quote .quote__badge { display: inline-flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.6rem; font-size: 0.95rem; font-weight: 600; color: var(--ink); }
+.quote .quote__badge .g-logo { width: 20px; height: 20px; }
+.quote .quote__badge .stars { color: #F5A623; letter-spacing: 1px; font-size: 0.95rem; }
+.quote .quote__more { margin-top: 1.75rem; font-size: 1rem; }
 
 /* ---------- Google reviews ---------- */
 .reviews { border-top: 1px solid var(--line); padding-block: clamp(4.5rem, 11vw, 9rem); }
@@ -389,6 +393,10 @@ a { color: inherit; text-decoration: none; }
 /* ---------- Reveal animation ---------- */
 .reveal { opacity: 0; transform: translateY(26px); filter: blur(6px); transition: opacity 1s var(--ease), transform 1s var(--ease), filter 1s var(--ease); }
 .reveal.is-visible { opacity: 1; transform: none; filter: none; }
+/* Fallback: if JavaScript is disabled, never hide reveal content */
+@media (scripting: none) {
+  .reveal { opacity: 1 !important; transform: none !important; filter: none !important; }
+}
 
 /* ---------- Active nav state ---------- */
 .nav a[aria-current="page"] { color: var(--ink); }

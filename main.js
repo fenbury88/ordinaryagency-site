@@ -1,13 +1,16 @@
 // Ordinary Agency — interactions
 
 // Current year in footer
-document.getElementById('year').textContent = new Date().getFullYear();
+const yearEl = document.getElementById('year');
+if (yearEl) yearEl.textContent = new Date().getFullYear();
 
 // Sticky-header border on scroll
 const header = document.getElementById('header');
-const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 8);
-onScroll();
-window.addEventListener('scroll', onScroll, { passive: true });
+if (header) {
+  const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 8);
+  onScroll();
+  window.addEventListener('scroll', onScroll, { passive: true });
+}
 
 // Mobile menu toggle
 const toggle = document.querySelector('.nav-toggle');
