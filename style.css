@@ -28,6 +28,13 @@
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Per-service accent themes — override one variable and every accent follows:
+   dot-labels, the emphasised headline word, bullet dots, the hero glow,
+   and link/button hovers. Everything else stays off-white and ink. */
+.theme-web   { --accent: #2C7A57; --accent-deep: #20603F; }  /* forest green */
+.theme-leads { --accent: #B4502E; --accent-deep: #8F3E22; }  /* terracotta  */
+.theme-ai    { --accent: #3E5C8A; --accent-deep: #2E466B; }  /* slate blue  */
+
 /* ---------- Reset ---------- */
 *, *::before, *::after { box-sizing: border-box; }
 * { margin: 0; }
@@ -418,7 +425,7 @@ a { color: inherit; text-decoration: none; }
   content: ""; position: absolute; z-index: 0; pointer-events: none;
   top: -30%; right: -6%; width: 46vw; height: 46vw; max-width: 560px; max-height: 560px;
   border-radius: 50%; filter: blur(36px);
-  background: radial-gradient(circle at center, rgba(44,122,87,0.24), rgba(44,122,87,0) 66%);
+  background: radial-gradient(circle at center, color-mix(in srgb, var(--accent) 22%, transparent), transparent 66%);
 }
 .page-head .container { position: relative; z-index: 1; }
 .page-head__title {
