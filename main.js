@@ -61,20 +61,36 @@ if (reduce || !('IntersectionObserver' in window)) {
 }
 
 // Contact form — AJAX submit to Formspree with inline feedback.
-// Progressive enhancement: without JS the form still POSTs normally.
+// Formspree refuses AJAX posts while reCAPTCHA is enabled on the form, so any
+// failure falls back to a native POST: Formspree handles the challenge and its
+// _next value returns the visitor here with ?sent=1. Without JS at all, the
+// form POSTs natively from the start. Either way the enquiry gets through.
+const SENT_MSG = 'Thanks — your message is on its way. We usually reply within a day.';
+
+const showStatus = (form, msg, ok) => {
+  const status = form.querySelector('.form-status');
+  if (!status) return;
+  status.hidden = false;
+  status.textContent = msg;
+  status.classList.toggle('is-success', ok);
+  status.classList.toggle('is-error', !ok);
+};
+
 document.querySelectorAll('.contact__form').forEach((form) => {
+  // Returned from Formspree's own page after a native fallback submit.
+  if (new URLSearchParams(location.search).get('sent') === '1') {
+    const btn = form.querySelector('button[type="submit"]');
+    if (btn) btn.hidden = true;
+    showStatus(form, SENT_MSG, true);
+  }
+
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const status = form.querySelector('.form-status');
     const btn = form.querySelector('button[type="submit"]');
-    const showStatus = (msg, ok) => {
-      if (!status) return;
-      status.hidden = false;
-      status.textContent = msg;
-      status.classList.toggle('is-success', ok);
-      status.classList.toggle('is-error', !ok);
-    };
     if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+
+    // form.submit() bypasses this handler, so there's no submit loop.
+    const fallback = () => form.submit();
 
     fetch(form.action, {
       method: 'POST',
@@ -82,22 +98,11 @@ document.querySelectorAll('.contact__form').forEach((form) => {
       headers: { Accept: 'application/json' },
     })
       .then((res) => {
-        if (res.ok) {
-          form.reset();
-          if (btn) btn.hidden = true;
-          showStatus('Thanks — your message is on its way. We usually reply within a day.', true);
-        } else {
-          return res.json().then((d) => {
-            const msg = d && d.errors ? d.errors.map((x) => x.message).join(', ')
-              : 'Something went wrong. Please email mike@ordinaryagency.com.au.';
-            showStatus(msg, false);
-            if (btn) { btn.disabled = false; btn.textContent = 'Send message'; }
-          });
-        }
+        if (!res.ok) return fallback();
+        form.reset();
+        if (btn) btn.hidden = true;
+        showStatus(form, SENT_MSG, true);
       })
-      .catch(() => {
-        showStatus('Network error. Please email mike@ordinaryagency.com.au.', false);
-        if (btn) { btn.disabled = false; btn.textContent = 'Send message'; }
-      });
+      .catch(fallback);
   });
 });

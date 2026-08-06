@@ -112,6 +112,10 @@ body::after {
 .section-head { max-width: 40ch; margin-bottom: clamp(2.5rem, 6vw, 4.5rem); }
 
 /* ---------- Buttons & links ---------- */
+/* The `hidden` attribute only sets display:none at user-agent priority, so any
+   element with an explicit display (.btn, .form-status) ignores it. Enforce it. */
+[hidden] { display: none !important; }
+
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
   background: var(--ink); color: var(--paper);
