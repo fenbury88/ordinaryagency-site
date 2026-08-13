@@ -670,137 +670,18 @@ body::after {
   .footer-inner { grid-template-columns: 1fr; }
 }
 
-/* =========================================================
-   HARING LAYER
-   Flat primaries, heavy keylines and hard offset shadows,
-   sitting on top of the existing editorial layout and type.
-   Self-contained and appended last so it can be lifted out
-   in one piece if the direction changes.
-
-   Two tokens per colour, deliberately:
-     --accent        text-safe, passes AA on paper
-     --accent-block  the full-strength primary, fills only
-   Yellow is 1.49:1 on paper — it can never carry text.
-   ========================================================= */
-
-:root {
-  --pop-red:    #E8342A;
-  --pop-yellow: #FFC800;
-  --pop-blue:   #1B4DE4;
-  --pop-green:  #00A45E;
-
-  --accent-block: var(--pop-green);
-  --keyline: 3px;
-  --pop-offset: 7px;
-}
-
-/* Service themes remapped to the primaries. Text tone first, block second. */
-.theme-web   { --accent: #1B4DE4; --accent-deep: #143BAF; --accent-block: var(--pop-blue);   --on-block: var(--paper); }
-.theme-leads { --accent: #C92A20; --accent-deep: #9E211A; --accent-block: var(--pop-red);    --on-block: var(--paper); }
-.theme-ai    { --accent: #8A6A00; --accent-deep: #6B5200; --accent-block: var(--pop-yellow); --on-block: var(--ink); }
-:root        { --on-block: var(--paper); }
-
-/* ---------- Figures ---------- */
-.figure { display: block; width: 100%; height: auto; overflow: visible; }
-.figure [data-body] {
-  fill: none;
-  stroke: var(--ink);
-  stroke-width: 13;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.figure [data-fill]  { fill: var(--accent-block); stroke: none; }
-.figure [data-rays]  {
-  stroke: var(--accent-block); stroke-width: 9; stroke-linecap: round; fill: none;
-}
-.figure [data-head]  { fill: var(--accent-block); stroke: var(--ink); stroke-width: 13; }
-
-/* Draw the hero figure in on load, then leave it alone. */
-@media (prefers-reduced-motion: no-preference) {
-  .figure--hero [data-body], .figure--hero [data-head] {
-    stroke-dasharray: 900; stroke-dashoffset: 900;
-    animation: popDraw 1.5s var(--ease) forwards;
-  }
-  .figure--hero [data-rays] { opacity: 0; animation: popIn .5s var(--ease) 1.15s forwards; }
-}
-@keyframes popDraw { to { stroke-dashoffset: 0; } }
-@keyframes popIn   { to { opacity: 1; } }
-
-/* ---------- Keylines + hard shadows ---------- */
-.btn {
-  border: var(--keyline) solid var(--ink);
-  transition: background-color .3s var(--ease), color .3s var(--ease),
-              transform .18s var(--ease), box-shadow .18s var(--ease);
-}
-.btn:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: var(--pop-offset) var(--pop-offset) 0 var(--accent-block);
-}
-.btn:active { transform: translate(1px, 1px); box-shadow: 2px 2px 0 var(--accent-block); }
-
-.work-card__media {
-  border: var(--keyline) solid var(--ink);
-  border-radius: 14px;
-}
-.work-card:hover .work-card__media {
-  transform: translate(-3px, -3px);
-  box-shadow: var(--pop-offset) var(--pop-offset) 0 var(--accent-block);
-}
-
-/* Service numbers become flat colour chips. */
-.service__num {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 2.5rem; padding: 0.35rem 0.6rem;
-  background: var(--accent-block); color: var(--on-block);
-  border: var(--keyline) solid var(--ink); border-radius: 9px;
-  font-weight: 600;
-}
-.service__row:hover .service__num { transform: rotate(-4deg); }
-.service__num { transition: transform .25s var(--ease); }
-
-/* The label dot picks up the block colour and gains an outline. */
-.eyebrow::before,
-.section-label::before {
-  background: var(--accent-block);
-  box-shadow: 0 0 0 2px var(--ink);
-}
-
-/* Form fields get a real edge rather than a hairline. */
-.field input, .field textarea { border-bottom-width: 2px; }
-.field input:focus, .field textarea:focus {
-  border-bottom-color: var(--ink);
-  box-shadow: 0 2px 0 0 var(--accent-block);
-}
-
-/* ---------- Figure placement ---------- */
-.hero__figure, .page-head__figure {
-  position: absolute; z-index: 1; pointer-events: none;
-}
-.hero__figure { right: 4%; top: 50%; transform: translateY(-50%); width: clamp(180px, 21vw, 300px); }
-.page-head__figure { right: 5%; top: 50%; transform: translateY(-50%); width: clamp(150px, 15vw, 220px); }
-.page-head { position: relative; overflow: hidden; }
-@media (max-width: 900px) {
-  .hero__figure, .page-head__figure { display: none; }
-}
-
-.notfound__figure { width: clamp(180px, 30vw, 260px); margin: 2.5rem 0 0; }
-
 /* ---------- Send It Bro ---------- */
 /* Deliberately off-palette: this section carries Send It Bro's own lime so it
    reads as a separate product, not another Ordinary Agency service. */
 .sib {
   --sib-lime: #BDFF30;
-  --accent-block: var(--sib-lime);
   background: var(--ink); color: var(--paper);
   padding: clamp(4rem, 9vw, 7rem) 0;
   position: relative; overflow: hidden;
 }
-.sib__grid {
-  display: grid; grid-template-columns: 1.15fr 0.85fr;
-  gap: clamp(2rem, 6vw, 5rem); align-items: center;
-}
+.sib__body { max-width: 62ch; }
 .sib .eyebrow { color: var(--sib-lime); }
-.sib .eyebrow::before { background: var(--sib-lime); box-shadow: 0 0 0 2px rgba(255,255,255,0.25); }
+.sib .eyebrow::before { background: var(--sib-lime); }
 .sib__title {
   font-family: var(--font-display); font-weight: 600;
   font-size: clamp(2.1rem, 4.8vw, 3.6rem); line-height: 1.03;
@@ -814,7 +695,7 @@ body::after {
   color: rgba(250,250,247,0.9);
 }
 .sib__points li::before {
-  content: ""; width: 9px; height: 9px; border-radius: 50%;
+  content: ""; width: 7px; height: 7px; border-radius: 50%;
   background: var(--sib-lime); flex-shrink: 0; transform: translateY(-1px);
 }
 .sib__actions { margin-top: 2.2rem; display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
@@ -822,18 +703,6 @@ body::after {
   background: var(--sib-lime); color: var(--ink); border-color: var(--sib-lime);
 }
 .sib .btn:hover {
-  background: var(--sib-lime); color: var(--ink);
-  box-shadow: var(--pop-offset) var(--pop-offset) 0 rgba(250,250,247,0.28);
+  background: #CDFF5E; border-color: #CDFF5E; color: var(--ink);
 }
 .sib__note { font-size: 0.92rem; color: rgba(250,250,247,0.55); }
-.sib__art { display: flex; justify-content: center; }
-.sib__art .figure { width: min(100%, 340px); }
-.sib__art .figure [data-body] { stroke: var(--paper); }
-.sib__art .figure [data-head] { fill: var(--sib-lime); stroke: var(--paper); }
-.sib__art .figure [data-rays] { stroke: var(--sib-lime); }
-
-@media (max-width: 860px) {
-  .sib__grid { grid-template-columns: 1fr; }
-  .sib__art { order: -1; }
-  .sib__art .figure { width: min(70%, 240px); }
-}

@@ -41,17 +41,6 @@ Switching reCAPTCHA off in the Formspree dashboard keeps everything on the fast 
 - **Type:** Fraunces (wordmark) + Space Grotesk (display) + Inter (body)
 - **Palette:** paper `#FAFAF7`, ink `#15150F`, green accent `#2C7A57` — all in `:root` in `style.css`
 
-### The Haring layer
-The bottom section of `style.css` is a self-contained design layer: flat primaries, 3px ink keylines, hard offset shadows, and original figure illustrations drawn in Keith Haring's visual language. (Drawn for this site — Haring's actual works are owned by the Keith Haring Foundation and aren't reproduced here.) It's appended last so it can be lifted out in one piece.
-
-Every hue has **two tokens**, and this matters:
-- `--accent` — text-safe, passes WCAG AA on paper
-- `--accent-block` — the full-strength primary, for fills only
-
-They are not interchangeable. Yellow `#FFC800` is 1.49:1 against paper — it can never carry text. The three service themes (`.theme-web` blue, `.theme-leads` red, `.theme-ai` yellow) each set both, so changing one variable re-themes a whole service page.
-
-Figures are inline SVG using `data-body` / `data-head` / `data-rays` / `data-fill` attributes, styled entirely from `style.css`. They pick up whatever theme colour is in scope.
-
 ## Cache busting
 `style.css` and `main.js` are linked with a `?v=YYYYMMDD` stamp in all nine pages. **Bump it whenever either file changes** — they're served with a 4-hour cache, so without a bump returning visitors keep the old copy:
 ```
