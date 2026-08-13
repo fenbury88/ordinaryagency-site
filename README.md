@@ -38,8 +38,37 @@ Both forms (home page and `contact.html`) POST to **Formspree** (`https://formsp
 Switching reCAPTCHA off in the Formspree dashboard keeps everything on the fast inline path.
 
 ## Brand
-- **Type:** Fraunces (display serif) + Inter (sans)
-- **Palette:** warm paper `#F7F4EF`, ink `#1B1A17`, clay accent `#C2552F` — all editable in `:root` in `style.css`
+- **Type:** Fraunces (wordmark) + Space Grotesk (display) + Inter (body)
+- **Palette:** paper `#FAFAF7`, ink `#15150F`, green accent `#2C7A57` — all in `:root` in `style.css`
+
+### The Haring layer
+The bottom section of `style.css` is a self-contained design layer: flat primaries, 3px ink keylines, hard offset shadows, and original figure illustrations drawn in Keith Haring's visual language. (Drawn for this site — Haring's actual works are owned by the Keith Haring Foundation and aren't reproduced here.) It's appended last so it can be lifted out in one piece.
+
+Every hue has **two tokens**, and this matters:
+- `--accent` — text-safe, passes WCAG AA on paper
+- `--accent-block` — the full-strength primary, for fills only
+
+They are not interchangeable. Yellow `#FFC800` is 1.49:1 against paper — it can never carry text. The three service themes (`.theme-web` blue, `.theme-leads` red, `.theme-ai` yellow) each set both, so changing one variable re-themes a whole service page.
+
+Figures are inline SVG using `data-body` / `data-head` / `data-rays` / `data-fill` attributes, styled entirely from `style.css`. They pick up whatever theme colour is in scope.
+
+## Cache busting
+`style.css` and `main.js` are linked with a `?v=YYYYMMDD` stamp in all nine pages. **Bump it whenever either file changes** — they're served with a 4-hour cache, so without a bump returning visitors keep the old copy:
+```
+perl -pi -e 's/\?v=[0-9a-z]+/?v=20260807/g' *.html
+```
+
+## Social share card
+`og-image.png` (1200×630) is generated from `og-image-source.html`, which mirrors the hero. Regenerate after a brand change:
+```
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --headless --disable-gpu --hide-scrollbars --force-device-scale-factor=1 \
+  --virtual-time-budget=6000 --screenshot=og-image.png \
+  --window-size=1200,630 og-image-source.html
+```
+
+## Send It Bro
+`index.html` carries a dedicated Send It Bro section (`#send-it-bro`) that pitches the product and links to senditbro.com.au. It is **not** a portfolio piece — deliberately kept out of both work grids, and it uses Send It Bro's own lime `#BDFF30` on ink so it reads as a separate brand.
 
 ## To do
 - Add the exact **Claremont street address + postcode** — currently set to "Claremont, Western Australia" in the contact section/page and all footers.
