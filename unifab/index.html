@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="description" content="Homepage design concept for Unifab Welding Pty Ltd.">
+<link rel="icon" href="data:,">
+<title>Unifab Welding</title>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  /* Ripped from unifabwelding.com.au &mdash; brand cyan, deep cyan, navy */
+  --cyan:#0CBFF2;
+  --cyan-deep:#098CB1;
+  --cyan-pale:#A0DEF6;
+  --navy:#023675;
+
+  /* Blue-biased steel neutrals */
+  --steel-950:#0A1015;
+  --steel-900:#0F1821;
+  --steel-850:#132029;
+  --steel-800:#1A2A36;
+  --on-dark:#DCE7ED;
+  --on-dark-soft:#93A8B6;
+  --line-dark:rgba(150,190,212,.16);
+
+  --paper:#EEF3F6;
+  --paper-2:#E1EAEF;
+  --ink:#16212A;
+  --ink-soft:#4C5D6A;
+  --line:#CEDCE4;
+
+  --maxw:1240px;
+  --r:2px;
+  --seam:linear-gradient(90deg,transparent,var(--cyan-deep) 18%,var(--cyan) 50%,var(--cyan-deep) 82%,transparent);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  background:var(--steel-950);
+  color:var(--on-dark);
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+h1,h2,h3,h4{font-family:'Titillium Web','Titillium',system-ui,sans-serif;line-height:1.06;letter-spacing:-.015em;text-wrap:balance}
+img{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 40px}
+
+/* mono spec label */
+.tag{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;
+  font-size:11.5px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:10px;
+}
+.tag::before{content:"";width:20px;height:1px;background:var(--cyan);flex-shrink:0}
+.tag.on-dark{color:var(--cyan)}
+.tag.on-light{color:var(--cyan-deep)}
+
+/* weld-seam rule */
+.seam{height:2px;background:var(--seam);position:relative}
+.seam::after{content:"";position:absolute;inset:-7px 0;background:var(--seam);filter:blur(7px);opacity:.55}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  padding:15px 28px;border-radius:var(--r);border:1px solid transparent;
+  font-family:'Titillium Web',sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;
+  cursor:pointer;white-space:nowrap;
+  transition:background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease;
+}
+.btn svg{width:16px;height:16px;flex-shrink:0}
+.btn-cyan{background:var(--cyan);color:#04222C}
+.btn-cyan:hover{background:#3ED0FA;transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--on-dark);border-color:rgba(160,222,246,.34)}
+.btn-ghost:hover{border-color:var(--cyan);color:#fff}
+.btn-ink{background:var(--ink);color:#fff}
+.btn-ink:hover{background:#0B141B;transform:translateY(-1px)}
+.btn-sm{padding:10px 18px;font-size:13.5px}
+
+.band-dark{background:var(--steel-900)}
+.band-darker{background:var(--steel-950)}
+.band-light{background:var(--paper);color:var(--ink)}
+.band-light h2,.band-light h3,.band-light h4{color:var(--ink)}
+.section{padding:104px 0}
+
+.head{max-width:720px;margin-bottom:52px}
+.head h2{font-size:clamp(30px,3.6vw,44px);font-weight:700;margin-top:16px}
+.head p{margin-top:18px;font-size:17px;max-width:62ch}
+.band-dark .head p,.band-darker .head p{color:var(--on-dark-soft)}
+.band-light .head p{color:var(--ink-soft)}
+
+/* ============ HEADER ============ */
+header{
+  position:fixed;top:0;left:0;right:0;z-index:900;
+  padding:16px 0;
+  background:rgba(10,16,21,.55);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid transparent;
+  transition:background .25s ease,border-color .25s ease,padding .25s ease;
+}
+header.stuck{background:rgba(10,16,21,.94);border-bottom-color:var(--line-dark);padding:10px 0}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:26px}
+.hlogo img{height:44px;width:auto;transition:height .25s ease}
+header.stuck .hlogo img{height:38px}
+.mainnav{display:flex;gap:30px}
+.mainnav a{
+  font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--on-dark);opacity:.82;
+  padding:6px 0;border-bottom:1px solid transparent;transition:opacity .15s,border-color .15s;
+}
+.mainnav a:hover{opacity:1;border-bottom-color:var(--cyan)}
+.hcta{display:flex;align-items:center;gap:16px;flex-shrink:0}
+.hphone{
+  display:flex;align-items:center;gap:8px;color:#fff;white-space:nowrap;
+  font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;letter-spacing:.01em;
+}
+.hphone svg{width:16px;height:16px;color:var(--cyan);flex-shrink:0}
+.burger{display:none;width:40px;height:40px;border:1px solid var(--line-dark);border-radius:var(--r);background:rgba(255,255,255,.05);align-items:center;justify-content:center;cursor:pointer}
+.burger svg{width:19px;height:19px;color:#fff}
+
+/* ============ HERO ============ */
+.hero{
+  position:relative;padding:168px 0 104px;overflow:hidden;
+  background:
+    radial-gradient(1000px 520px at 88% -12%, rgba(12,191,242,.16), transparent 62%),
+    radial-gradient(760px 480px at 4% 108%, rgba(2,54,117,.55), transparent 66%),
+    linear-gradient(168deg,#08111A 0%,#0F1D2A 52%,#122B3C 100%);
+}
+.hero::before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:repeating-linear-gradient(104deg,rgba(160,222,246,.045) 0 1px,transparent 1px 92px);
+}
+.hero-grid{position:relative;z-index:2;display:grid;grid-template-columns:1.08fr .92fr;gap:64px;align-items:center}
+.hero h1{font-size:clamp(36px,4.8vw,60px);font-weight:700;color:#fff;margin-top:18px}
+.hero h1 em{font-style:normal;color:var(--cyan);font-weight:900}
+.hero .lede{margin-top:22px;font-size:18px;color:#B7C8D4;max-width:54ch}
+.hero-btns{display:flex;gap:14px;margin-top:34px;flex-wrap:wrap}
+.hero-specs{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 30px;
+  margin-top:42px;padding-top:26px;border-top:1px solid var(--line-dark);
+}
+.hero-specs div{
+  display:flex;align-items:center;gap:10px;
+  font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:.03em;color:#C3D3DE;
+}
+.hero-specs svg{width:15px;height:15px;color:var(--cyan);flex-shrink:0}
+
+.hero-art{position:relative}
+.hero-frame{position:relative;border-radius:var(--r);overflow:hidden;border:1px solid var(--line-dark)}
+.hero-frame img{width:100%;aspect-ratio:82/70;object-fit:cover}
+.hero-frame::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:var(--seam);z-index:2}
+.hero-frame::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,17,26,.78) 0%,rgba(8,17,26,.06) 34%,rgba(8,17,26,.34) 100%)}
+.hero-cap{
+  position:absolute;left:0;right:0;top:2px;z-index:2;padding:18px 22px;
+  font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:#D7E7F0;
+}
+.stat{
+  position:absolute;left:-30px;bottom:-28px;background:var(--steel-800);
+  border:1px solid var(--line-dark);border-left:3px solid var(--cyan);
+  border-radius:var(--r);padding:18px 24px;min-width:200px;
+  box-shadow:0 26px 60px -24px rgba(0,0,0,.85);
+}
+.stat b{display:block;font-family:'Titillium Web',sans-serif;font-weight:900;font-size:30px;color:#fff;line-height:1}
+.stat span{display:block;margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-dark-soft)}
+
+/* ============ SPEC BAR ============ */
+.specbar{background:var(--steel-850);border-top:1px solid var(--line-dark);border-bottom:1px solid var(--line-dark)}
+.specbar .wrap{display:flex;flex-wrap:wrap;gap:20px 44px;padding-top:24px;padding-bottom:24px;justify-content:space-between}
+.specbar .it{display:flex;align-items:center;gap:12px}
+.specbar .it svg{width:24px;height:24px;color:var(--cyan);flex-shrink:0}
+.specbar .k{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:#fff;letter-spacing:.02em}
+.specbar .v{font-size:11.5px;color:var(--on-dark-soft);letter-spacing:.02em}
+
+/* ============ SERVICES ============ */
+.svc{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.svc-card{background:var(--paper);padding:34px 30px 30px;display:flex;flex-direction:column;transition:background .2s ease}
+.svc-card:hover{background:#fff}
+.svc-card .ic{width:38px;height:38px;color:var(--cyan-deep);margin-bottom:22px}
+.svc-card .ic svg{width:100%;height:100%}
+.svc-card .cat{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan-deep);margin-bottom:10px}
+.svc-card h3{font-size:20px;font-weight:700;margin-bottom:12px}
+.svc-card p{font-size:14.5px;color:var(--ink-soft);flex:1}
+.svc-card .go{margin-top:20px;display:inline-flex;align-items:center;gap:8px;font-family:'Titillium Web',sans-serif;font-weight:700;font-size:13.5px;color:var(--ink)}
+.svc-card .go svg{width:14px;height:14px;color:var(--cyan-deep);transition:transform .2s}
+.svc-card:hover .go svg{transform:translateX(4px)}
+.svc-card.wide{grid-column:span 1}
+
+/* ============ INDUSTRIES ============ */
+.ind{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.ind-card{
+  background:var(--steel-850);border:1px solid var(--line-dark);border-radius:var(--r);
+  padding:28px 24px;transition:background .2s ease,border-color .2s ease;position:relative;
+}
+.ind-card:hover{background:var(--steel-800);border-color:rgba(12,191,242,.4)}
+.ind-card.core{
+  grid-column:span 1;
+  background:linear-gradient(135deg,rgba(12,191,242,.13),rgba(2,54,117,.24));
+  border-color:rgba(12,191,242,.4);
+}
+.ind-card svg{width:28px;height:28px;color:var(--cyan);margin-bottom:18px}
+.ind-card h4{font-size:18px;font-weight:700;color:#fff;margin-bottom:8px}
+.ind-card p{font-size:13.5px;color:var(--on-dark-soft)}
+.ind-card .flag{
+  position:absolute;top:18px;right:18px;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;background:var(--cyan);color:#04222C;padding:4px 9px;border-radius:var(--r);
+}
+
+/* ============ WHY ============ */
+.why{display:grid;grid-template-columns:repeat(2,1fr);gap:0;border-top:1px solid var(--line)}
+.why-item{display:flex;gap:20px;padding:32px 34px 32px 0;border-bottom:1px solid var(--line)}
+.why-item:nth-child(odd){padding-right:44px;border-right:1px solid var(--line)}
+.why-item:nth-child(even){padding-left:34px}
+.why-item .ic{width:26px;height:26px;color:var(--cyan-deep);flex-shrink:0;margin-top:3px}
+.why-item .ic svg{width:100%;height:100%}
+.why-item h4{font-size:18px;font-weight:700;margin-bottom:8px}
+.why-item p{font-size:14.5px;color:var(--ink-soft)}
+
+/* ============ WORKSHOP GRID ============ */
+.shop{display:grid;grid-template-columns:1.5fr 1fr 1fr;grid-auto-rows:236px;gap:14px}
+.shot{position:relative;overflow:hidden;border-radius:var(--r);border:1px solid var(--line-dark);background:var(--steel-850)}
+.shot img{width:100%;height:100%;object-fit:cover;transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+.shot:hover img{transform:scale(1.05)}
+.shot::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,17,26,0) 42%,rgba(8,17,26,.85) 100%)}
+.shot figcaption{
+  position:absolute;left:0;right:0;bottom:0;z-index:2;padding:16px 18px;
+  font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#D3E4EE;
+}
+.shot.tall{grid-row:span 2}
+
+/* ============ WORK ============ */
+.work{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.work-card{background:var(--steel-850);border:1px solid var(--line-dark);border-radius:var(--r);overflow:hidden}
+.work-card .pic{position:relative;height:214px;overflow:hidden}
+.work-card .pic img{width:100%;height:100%;object-fit:cover;transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+.work-card:hover .pic img{transform:scale(1.04)}
+.work-card .pic::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--seam)}
+.work-card .body{padding:22px 24px 26px}
+.work-card .cat{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);margin-bottom:9px}
+.work-card h4{font-size:17px;font-weight:700;color:#fff;margin-bottom:8px}
+.work-card p{font-size:13.5px;color:var(--on-dark-soft)}
+
+/* ============ CERTS ============ */
+.certs{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.cert{background:#fff;border:1px solid var(--line);border-top:3px solid var(--cyan);border-radius:var(--r);padding:32px 28px}
+.cert .ic{width:44px;height:44px;color:var(--cyan-deep);margin-bottom:20px}
+.cert .ic svg{width:100%;height:100%}
+.cert h4{font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;letter-spacing:.01em;margin-bottom:9px}
+.cert p{font-size:13.5px;color:var(--ink-soft)}
+
+/* ============ CTA ============ */
+.cta{position:relative;overflow:hidden;padding:112px 0}
+.cta .bg{position:absolute;inset:0;z-index:0}
+.cta .bg img{width:100%;height:100%;object-fit:cover;opacity:.28}
+.cta .bg::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(160deg,rgba(8,17,26,.93),rgba(2,54,117,.82));
+}
+.cta .in{position:relative;z-index:2;display:grid;grid-template-columns:1.1fr .9fr;gap:60px;align-items:center}
+.cta h2{font-size:clamp(30px,3.9vw,46px);font-weight:700;color:#fff;margin-top:16px}
+.cta p{margin-top:16px;font-size:17px;color:#B7C8D4;max-width:50ch}
+.cta-btns{display:flex;gap:14px;margin-top:32px;flex-wrap:wrap}
+.contact-card{background:rgba(10,17,23,.72);border:1px solid var(--line-dark);border-left:3px solid var(--cyan);border-radius:var(--r);padding:30px 32px;backdrop-filter:blur(6px)}
+.contact-card ul{list-style:none;display:flex;flex-direction:column;gap:20px}
+.contact-card li{display:flex;gap:14px;align-items:flex-start}
+.contact-card svg{width:17px;height:17px;color:var(--cyan);flex-shrink:0;margin-top:4px}
+.contact-card .k{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--on-dark-soft);display:block;margin-bottom:3px}
+.contact-card .v{font-size:15.5px;color:#fff;font-weight:500}
+
+/* ============ FOOTER ============ */
+footer{background:var(--steel-950);border-top:1px solid var(--line-dark);padding:70px 0 28px;color:var(--on-dark-soft)}
+.fgrid{display:grid;grid-template-columns:1.7fr 1fr 1fr 1.2fr;gap:44px;padding-bottom:44px;border-bottom:1px solid var(--line-dark)}
+.fgrid img.flogo{height:52px;width:auto;margin-bottom:18px}
+.fgrid p{font-size:13.5px;line-height:1.7;max-width:38ch}
+.fcol h5{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#fff;margin-bottom:18px}
+.fcol ul{list-style:none;display:flex;flex-direction:column;gap:11px}
+.fcol a{font-size:13.5px;color:var(--on-dark-soft);transition:color .15s}
+.fcol a:hover{color:var(--cyan)}
+.fcontact li{display:flex;gap:11px;font-size:13.5px;margin-bottom:14px;align-items:flex-start;line-height:1.55}
+.fcontact svg{width:15px;height:15px;color:var(--cyan);flex-shrink:0;margin-top:4px}
+.fbot{display:flex;justify-content:space-between;align-items:center;gap:14px;padding-top:24px;flex-wrap:wrap;font-size:12.5px;color:#6E8492}
+.social{display:flex;gap:10px;margin-top:20px}
+.social a{width:36px;height:36px;border:1px solid var(--line-dark);border-radius:var(--r);display:flex;align-items:center;justify-content:center;transition:border-color .18s,background .18s}
+.social a:hover{border-color:var(--cyan);background:rgba(12,191,242,.1)}
+.social svg{width:15px;height:15px;color:var(--on-dark)}
+
+/* ============ REVEAL ============ */
+.rv{opacity:0;transform:translateY(22px);transition:opacity .75s cubic-bezier(.2,.7,.2,1),transform .75s cubic-bezier(.2,.7,.2,1)}
+.rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  .rv{opacity:1;transform:none;transition:none}
+  html{scroll-behavior:auto}
+  .shot img,.work-card .pic img{transition:none}
+}
+
+/* ============ STICKY MOBILE ============ */
+.mobar{display:none}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width:1060px){
+  .mainnav{display:none}
+  .mainnav.open{
+    display:flex;position:fixed;top:64px;left:0;right:0;flex-direction:column;gap:0;
+    background:rgba(10,16,21,.98);border-top:1px solid var(--line-dark);padding:8px 20px 18px;z-index:899;
+  }
+  .mainnav.open a{padding:14px 0;border-bottom:1px solid var(--line-dark)}
+  .burger{display:flex}
+  .mainnav.open{top:60px}
+  .hero-grid{grid-template-columns:1fr;gap:48px}
+  .hero-art{max-width:440px;margin:0 auto}
+  .svc{grid-template-columns:repeat(2,1fr)}
+  .ind{grid-template-columns:repeat(2,1fr)}
+  .ind-card.core{grid-column:span 1}
+  .why{grid-template-columns:1fr}
+  .why-item:nth-child(odd){border-right:none;padding-right:0}
+  .why-item:nth-child(even){padding-left:0}
+  .shop{grid-template-columns:1fr 1fr;grid-auto-rows:200px}
+  .shot.tall{grid-row:span 1;grid-column:span 2}
+  .work{grid-template-columns:repeat(2,1fr)}
+  .cta .in{grid-template-columns:1fr;gap:40px}
+  .fgrid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:760px){
+  .wrap{padding:0 20px}
+  .section{padding:68px 0}
+  .hphone{display:none}
+  .hlogo img{height:36px}
+  header.stuck .hlogo img{height:32px}
+  .hero{padding:118px 0 64px}
+  .hero-btns .btn{width:100%}
+  .hero-specs{grid-template-columns:1fr}
+  .stat{left:12px;bottom:-22px;padding:14px 18px;min-width:0}
+  .specbar .wrap{flex-direction:column;gap:18px}
+  .svc{grid-template-columns:1fr}
+  .ind{grid-template-columns:1fr}
+  .ind-card.core{grid-column:span 1}
+  .shop{grid-template-columns:1fr;grid-auto-rows:210px}
+  .shot.tall{grid-column:span 1}
+  .work{grid-template-columns:1fr}
+  .certs{grid-template-columns:1fr}
+  .cta{padding:70px 0}
+  .cta-btns .btn{width:100%}
+  .fgrid{grid-template-columns:1fr;gap:34px}
+  .fbot{flex-direction:column;align-items:flex-start}
+  .mobar{
+    display:flex;position:fixed;left:0;right:0;bottom:0;z-index:950;gap:10px;
+    padding:11px 14px;background:rgba(10,16,21,.97);border-top:1px solid var(--line-dark);
+    backdrop-filter:blur(8px);
+  }
+  .mobar .btn{flex:1;padding:13px 8px;font-size:13.5px}
+  body{padding-bottom:70px}
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M4 5c0 8.5 6.5 15 15 15l3-4-6-3-2 2c-2.5-1.2-4.8-3.5-6-6l2-2-3-6-4 0Z"/></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="m4 7 8 6 8-6"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 22s7-7.5 7-12.5A7 7 0 0 0 5 9.5C5 14.5 12 22 12 22Z"/><circle cx="12" cy="9.5" r="2.4"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h13M13 6l6 6-6 6"/></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+<symbol id="i-cert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-3 5 3-1.5-8"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2l8 3.5v6C20 17 16.5 20.5 12 22 7.5 20.5 4 17 4 11.5v-6L12 2Z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+<symbol id="i-badge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.3 2.4 2.4 4.6-5.4"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+<symbol id="i-tank" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="6" y="4" width="12" height="16" rx="3"/><path d="M6 9h12M9 20v2M15 20v2M9 2v2M15 2v2"/></symbol>
+<symbol id="i-spanner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6Z"/></symbol>
+<symbol id="i-weld" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20 20 4M9 4h5v5M4 15v5h5"/><circle cx="11.5" cy="11.5" r="1.5" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-cube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5Z"/><path d="M3 7l9 5 9-5M12 12v10"/></symbol>
+<symbol id="i-factory" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 21V11l5 3v-3l5 3V8l5 3v10H3Z"/><path d="M7 21v-4M12 21v-4M17 21v-4"/></symbol>
+<symbol id="i-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20C4 10 12 4 20 4c0 8-6 16-16 16Z"/><path d="M4 20c3-3 6-7 9-11"/></symbol>
+<symbol id="i-drop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3s7 8 7 12.5A7 7 0 1 1 5 15.5C5 11 12 3 12 3Z"/></symbol>
+<symbol id="i-mug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 8h12v7a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8Z"/><path d="M16 10h2a2.5 2.5 0 0 1 0 5h-2M8 5v1M11 5v1M14 5v1"/></symbol>
+<symbol id="i-crew" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.5 2.9-6 6.5-6s6.5 2.5 6.5 6"/><circle cx="17" cy="8.5" r="2.6"/><path d="M15.5 14.3c2.9.5 5 2.6 5 5.7"/></symbol>
+<symbol id="i-lk" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9h4v12H3V9Zm6.5 0h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05C21.6 8.65 22 11 22 14.1V21h-4v-6.15c0-1.47-.03-3.35-2.04-3.35-2.05 0-2.36 1.6-2.36 3.25V21h-4V9Z"/></symbol>
+</defs></svg>
+
+<!-- ============ HEADER ============ -->
+<header id="hdr">
+  <div class="wrap hrow">
+    <a href="#top" class="hlogo" aria-label="Unifab Welding &mdash; home">
+      <img src="img/logo-white.png" alt="Unifab Welding" width="281" height="118">
+    </a>
+    <nav class="mainnav" id="nav">
+      <a href="#services">Services</a>
+      <a href="#industries">Industries</a>
+      <a href="#workshop">Workshop</a>
+      <a href="#work">Our Work</a>
+      <a href="#accreditation">Accreditation</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="hcta">
+      <a class="hphone" href="tel:+61865551811"><svg><use href="#i-phone"/></svg>(08) 6555 1811</a>
+      <a class="btn btn-cyan btn-sm" href="#contact">Request a Quote</a>
+      <button class="burger" id="burger" aria-label="Menu" aria-expanded="false"><svg><use href="#i-menu"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="tag on-dark">Forrestdale WA &middot; Servicing Greater Perth</span>
+      <h1>Welding, fabrication &amp; maintenance for Perth's <em>food &amp; beverage</em> industry.</h1>
+      <p class="lede">Tank fabrication, process pipework and structural platforms &mdash; plus the breakdown repairs and shutdown work that get your line running again. Same crew from commencement to completion.</p>
+      <div class="hero-btns">
+        <a href="#contact" class="btn btn-cyan">Request a Quote <svg><use href="#i-arrow"/></svg></a>
+        <a href="tel:+61865551811" class="btn btn-ghost"><svg><use href="#i-phone"/></svg> (08) 6555 1811</a>
+      </div>
+      <div class="hero-specs">
+        <div><svg><use href="#i-cert"/></svg> ISO 9001:2015 certified</div>
+        <div><svg><use href="#i-shield"/></svg> AS/NZS 4801:2001 compliant</div>
+        <div><svg><use href="#i-badge"/></svg> ASSDA member</div>
+        <div><svg><use href="#i-clock"/></svg> Perth-owned since 2010</div>
+      </div>
+    </div>
+    <div class="hero-art">
+      <figure class="hero-frame">
+        <img src="img/hero.jpg" alt="Stainless steel process tanks fabricated and installed by Unifab Welding" width="820" height="700">
+        <figcaption class="hero-cap">Stainless process tanks &middot; Perth food &amp; beverage facility</figcaption>
+      </figure>
+      <div class="stat">
+        <b>Since 2010</b>
+        <span>Perth owned &amp; operated</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="seam"></div>
+
+<!-- ============ SPEC BAR ============ -->
+<div class="specbar">
+  <div class="wrap">
+    <div class="it"><svg><use href="#i-cert"/></svg><div><div class="k">ISO 9001:2015</div><div class="v">Quality management system</div></div></div>
+    <div class="it"><svg><use href="#i-shield"/></svg><div><div class="k">AS/NZS 4801:2001</div><div class="v">OH&amp;S management system</div></div></div>
+    <div class="it"><svg><use href="#i-badge"/></svg><div><div class="k">ASSDA MEMBER</div><div class="v">Aust. Stainless Steel Dev. Assoc.</div></div></div>
+    <div class="it"><svg><use href="#i-pin"/></svg><div><div class="k">FORRESTDALE WA</div><div class="v">Fully equipped workshop</div></div></div>
+    <div class="it"><svg><use href="#i-leaf"/></svg><div><div class="k">FOOD &amp; BEVERAGE</div><div class="v">Specialised sector skills</div></div></div>
+  </div>
+</div>
+
+<!-- ============ SERVICES ============ -->
+<section class="section band-light" id="services">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="tag on-light">What we do</span>
+      <h2>Five services, one crew, one point of contact.</h2>
+      <p>Work performed on site, at your premises, or in our fully equipped Forrestdale workshop &mdash; whichever gets your plant back into production fastest.</p>
+    </div>
+    <div class="svc rv">
+      <article class="svc-card">
+        <div class="ic"><svg><use href="#i-spanner"/></svg></div>
+        <div class="cat">Maintenance</div>
+        <h3>Break-Down Repairs, Plant Shut-Down Works &amp; Factory Maintenance</h3>
+        <p>When a line goes down, production stops. We handle emergency repairs, planned shutdown works and ongoing factory maintenance.</p>
+        <a class="go" href="#contact">Request support <svg><use href="#i-arrow"/></svg></a>
+      </article>
+      <article class="svc-card">
+        <div class="ic"><svg><use href="#i-tank"/></svg></div>
+        <div class="cat">Fabrication</div>
+        <h3>Tank Fabrication, Process Pipework &amp; Structural Platforms</h3>
+        <p>Stainless and mild steel tanks, process piping, access platforms and walkways &mdash; fabricated to your specification.</p>
+        <a class="go" href="#contact">Get a quote <svg><use href="#i-arrow"/></svg></a>
+      </article>
+      <article class="svc-card">
+        <div class="ic"><svg><use href="#i-weld"/></svg></div>
+        <div class="cat">Welding</div>
+        <h3>Weld Procedures, Coded Pipe &amp; Structural Welding</h3>
+        <p>Documented weld procedures, coded pipe welding and structural welding, carried out under our certified quality system.</p>
+        <a class="go" href="#contact">Talk to us <svg><use href="#i-arrow"/></svg></a>
+      </article>
+      <article class="svc-card">
+        <div class="ic"><svg><use href="#i-cube"/></svg></div>
+        <div class="cat">Specialist</div>
+        <h3>Specialist Solutions &amp; Customised Installations</h3>
+        <p>The jobs that don't fit a catalogue. We're a solutions-oriented company that sees obstacles as challenges &mdash; usually the out-of-the-box kind.</p>
+        <a class="go" href="#contact">Discuss a challenge <svg><use href="#i-arrow"/></svg></a>
+      </article>
+      <article class="svc-card">
+        <div class="ic"><svg><use href="#i-factory"/></svg></div>
+        <div class="cat">Projects</div>
+        <h3>Project Works</h3>
+        <p>Full project delivery with the same personnel on the job from commencement to completion. Delivered safely, on time and within budget.</p>
+        <a class="go" href="#contact">Discuss a project <svg><use href="#i-arrow"/></svg></a>
+      </article>
+      <article class="svc-card" style="background:var(--paper-2)">
+        <div class="ic"><svg><use href="#i-badge"/></svg></div>
+        <div class="cat">Assurance</div>
+        <h3>Accreditation &amp; Industry Affiliations</h3>
+        <p>ISO 9001:2015 certified, AS/NZS 4801:2001 compliant and an ASSDA member &mdash; verifiable credentials, not claims.</p>
+        <a class="go" href="#accreditation">View accreditation <svg><use href="#i-arrow"/></svg></a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ INDUSTRIES ============ -->
+<section class="section band-dark" id="industries">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="tag on-dark">Who we work with</span>
+      <h2>Built for plants that can't afford downtime.</h2>
+      <p>The majority of our clients are in food and beverage, and we have specialised skills in assisting those sectors. We also work closely with engineers, architects and builders across a range of other industries.</p>
+    </div>
+    <div class="ind rv">
+      <div class="ind-card core">
+        <span class="flag">Core sector</span>
+        <svg><use href="#i-leaf"/></svg>
+        <h4>Food &amp; Beverage Production</h4>
+        <p>Hygienic stainless fabrication for processing lines, tanks and pipework &mdash; the sector we've specialised in since 2010.</p>
+      </div>
+      <div class="ind-card">
+        <svg><use href="#i-drop"/></svg>
+        <h4>Dairy</h4>
+        <p>Stainless process equipment and pipework for dairy production environments.</p>
+      </div>
+      <div class="ind-card">
+        <svg><use href="#i-mug"/></svg>
+        <h4>Brewery &amp; Beverage</h4>
+        <p>Tanks, process pipework and fabrication for beverage production sites.</p>
+      </div>
+      <div class="ind-card">
+        <svg><use href="#i-cube"/></svg>
+        <h4>Engineers, Architects &amp; Builders</h4>
+        <p>Architectural stainless, balustrade and structural steelwork delivered to drawing.</p>
+      </div>
+      <div class="ind-card">
+        <svg><use href="#i-factory"/></svg>
+        <h4>Commercial &amp; Industrial</h4>
+        <p>Structural fabrication, plant maintenance and custom installations across WA industry.</p>
+      </div>
+      <div class="ind-card">
+        <svg><use href="#i-spanner"/></svg>
+        <h4>Whatever the job</h4>
+        <p>Big or small, complex or simple &mdash; we have a practical solution for you.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHY ============ -->
+<section class="section band-light" id="why">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="tag on-light">Why Unifab</span>
+      <h2>What the certificates and the crew policy actually buy you.</h2>
+    </div>
+    <div class="why rv">
+      <div class="why-item">
+        <div class="ic"><svg><use href="#i-crew"/></svg></div>
+        <div>
+          <h4>The same personnel, commencement to completion</h4>
+          <p>No handovers between tradesmen halfway through your job. Fewer errors, clearer accountability, and one team who already knows your plant.</p>
+        </div>
+      </div>
+      <div class="why-item">
+        <div class="ic"><svg><use href="#i-cert"/></svg></div>
+        <div>
+          <h4>Certified, not self-declared</h4>
+          <p>ISO 9001:2015 quality certification and AS/NZS 4801:2001 OH&amp;S compliance &mdash; an audited system behind every weld, not a line on a website.</p>
+        </div>
+      </div>
+      <div class="why-item">
+        <div class="ic"><svg><use href="#i-badge"/></svg></div>
+        <div>
+          <h4>ASSDA-member stainless expertise</h4>
+          <p>Membership of the Australian Stainless Steel Development Association &mdash; material knowledge that matters when the equipment handles food.</p>
+        </div>
+      </div>
+      <div class="why-item">
+        <div class="ic"><svg><use href="#i-spanner"/></svg></div>
+        <div>
+          <h4>New builds and breakdowns from one contractor</h4>
+          <p>Fabricate the tank, then keep it running. One relationship across the whole life of your equipment, on site or in our workshop.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WORKSHOP ============ -->
+<section class="section band-darker" id="workshop">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="tag on-dark">Inside the workshop</span>
+      <h2>Fully equipped in Forrestdale. On site anywhere in Perth.</h2>
+      <p>Fabrication runs out of our own workshop, then installs on your floor &mdash; tanks, process lines, platforms and the pipework tying it all together.</p>
+    </div>
+    <div class="shop rv">
+      <figure class="shot tall"><img src="img/cap1.jpg" alt="Two large stainless steel tanks under fabrication in the Unifab workshop" loading="lazy"><figcaption>Stainless tanks under fabrication</figcaption></figure>
+      <figure class="shot"><img src="img/cap2.jpg" alt="Stainless steel process pipework installed through a production plant" loading="lazy"><figcaption>Process pipework installation</figcaption></figure>
+      <figure class="shot"><img src="img/cap4.jpg" alt="A fabricated stainless steel vessel loaded for delivery outside the Unifab workshop" loading="lazy"><figcaption>Vessel out for delivery</figcaption></figure>
+      <figure class="shot"><img src="img/cap3.jpg" alt="Structural steel access platform and stair installed inside a processing plant" loading="lazy"><figcaption>Access platforms &amp; walkways</figcaption></figure>
+      <figure class="shot"><img src="img/cap5.jpg" alt="Process pipework and valve manifold in a food production facility" loading="lazy"><figcaption>Valve manifolds &amp; process lines</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WORK ============ -->
+<section class="section band-dark" id="work">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="tag on-dark">Our work</span>
+      <h2>Every job is a reference and a stepping stone to the next.</h2>
+      <p>A sample of completed fabrication and installation work across food and beverage production, industrial plant and architectural stainless.</p>
+    </div>
+    <div class="work rv">
+      <article class="work-card">
+        <div class="pic"><img src="img/proj1.jpg" alt="Industrial storage silos and connecting pipework at a production plant" loading="lazy"></div>
+        <div class="body">
+          <div class="cat">Industrial plant</div>
+          <h4>Silo &amp; transfer pipework installation</h4>
+          <p>Storage silos with connecting transfer lines and support steelwork, installed on a live production site.</p>
+        </div>
+      </article>
+      <article class="work-card">
+        <div class="pic"><img src="img/proj2.jpg" alt="Stainless steel balustrade with tensioned wire infill on a waterfront walkway" loading="lazy"></div>
+        <div class="body">
+          <div class="cat">Architectural stainless</div>
+          <h4>Waterfront balustrade &amp; handrail</h4>
+          <p>Stainless handrail with tensioned wire infill, fabricated to drawing and installed on a public waterfront walkway.</p>
+        </div>
+      </article>
+      <article class="work-card">
+        <div class="pic"><img src="img/proj3.jpg" alt="Stainless steel processing equipment and platform installed inside a plant room" loading="lazy"></div>
+        <div class="body">
+          <div class="cat">Food &amp; beverage</div>
+          <h4>Process plant &amp; access structure</h4>
+          <p>Processing equipment, support structure and access stair fabricated and installed inside an operating facility.</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ACCREDITATION ============ -->
+<section class="section band-light" id="accreditation">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="tag on-light">Accreditation &amp; affiliations</span>
+      <h2>Credentials your auditor can check.</h2>
+      <p>Unifab Welding is a member of the Australian Stainless Steel Development Association, holds certification under the ISO 9001:2015 Quality Management System, and complies with the AS/NZS 4801:2001 Occupational Health and Safety Management System.</p>
+    </div>
+    <div class="certs rv">
+      <div class="cert">
+        <div class="ic"><svg><use href="#i-cert"/></svg></div>
+        <h4>ISO 9001:2015</h4>
+        <p>Certified Quality Management System covering fabrication, welding and maintenance work.</p>
+      </div>
+      <div class="cert">
+        <div class="ic"><svg><use href="#i-shield"/></svg></div>
+        <h4>AS/NZS 4801:2001</h4>
+        <p>Compliance with the Occupational Health and Safety Management System standard.</p>
+      </div>
+      <div class="cert">
+        <div class="ic"><svg><use href="#i-badge"/></svg></div>
+        <h4>ASSDA Member</h4>
+        <p>Member of the Australian Stainless Steel Development Association.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA / CONTACT ============ -->
+<section class="cta" id="contact">
+  <div class="bg"><img src="img/band.jpg" alt="" aria-hidden="true" loading="lazy"></div>
+  <div class="wrap in">
+    <div>
+      <span class="tag on-dark">Talk to us</span>
+      <h2>Got a project &mdash; or a plant that's stopped?</h2>
+      <p>Tell us what you need and we'll come back with a clear scope and a price. Whatever the job, big or small, complex or simple, we'll have a practical solution for you.</p>
+      <div class="cta-btns">
+        <a href="mailto:admin@unifabwelding.com" class="btn btn-cyan">Email the team <svg><use href="#i-arrow"/></svg></a>
+        <a href="tel:+61865551811" class="btn btn-ghost"><svg><use href="#i-phone"/></svg> Call (08) 6555 1811</a>
+      </div>
+    </div>
+    <div class="contact-card">
+      <ul>
+        <li><svg><use href="#i-phone"/></svg><div><span class="k">Office</span><a class="v" href="tel:+61865551811">(08) 6555 1811</a></div></li>
+        <li><svg><use href="#i-phone"/></svg><div><span class="k">Ian &mdash; Director</span><a class="v" href="tel:+61400118683">0400 118 683</a></div></li>
+        <li><svg><use href="#i-mail"/></svg><div><span class="k">Email</span><a class="v" href="mailto:admin@unifabwelding.com">admin@unifabwelding.com</a></div></li>
+        <li><svg><use href="#i-pin"/></svg><div><span class="k">Workshop</span><span class="v">Unit 4, 4 Weedon Road<br>Forrestdale WA 6112</span></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="wrap">
+    <div class="fgrid">
+      <div class="fcol">
+        <img class="flogo" src="img/logo-white.png" alt="Unifab Welding" width="281" height="118">
+        <p>Unifab Welding Pty Ltd supplies a range of welding, fabrication, maintenance and project work services to Perth industry, with specialised skills in the food and beverage sector.</p>
+        <div class="social">
+          <a href="https://www.linkedin.com/" aria-label="Unifab Welding on LinkedIn"><svg><use href="#i-lk"/></svg></a>
+        </div>
+      </div>
+      <div class="fcol">
+        <h5>Services</h5>
+        <ul>
+          <li><a href="#services">Break-Down &amp; Shut-Down Works</a></li>
+          <li><a href="#services">Tank Fabrication &amp; Pipework</a></li>
+          <li><a href="#services">Structural Platforms</a></li>
+          <li><a href="#services">Coded Pipe &amp; Structural Welding</a></li>
+          <li><a href="#services">Specialist Installations</a></li>
+          <li><a href="#services">Project Works</a></li>
+        </ul>
+      </div>
+      <div class="fcol">
+        <h5>Company</h5>
+        <ul>
+          <li><a href="#why">Who We Are</a></li>
+          <li><a href="#industries">Industries</a></li>
+          <li><a href="#workshop">Workshop</a></li>
+          <li><a href="#work">Our Work</a></li>
+          <li><a href="#accreditation">Accreditation</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </div>
+      <div class="fcol">
+        <h5>Contact</h5>
+        <ul class="fcontact">
+          <li><svg><use href="#i-pin"/></svg><span>Unit 4, 4 Weedon Road,<br>Forrestdale WA 6112</span></li>
+          <li><svg><use href="#i-phone"/></svg><a href="tel:+61865551811">(08) 6555 1811</a></li>
+          <li><svg><use href="#i-phone"/></svg><a href="tel:+61400118683">Ian &mdash; 0400 118 683</a></li>
+          <li><svg><use href="#i-mail"/></svg><a href="mailto:admin@unifabwelding.com">admin@unifabwelding.com</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="fbot">
+      <span>&copy; 2026 Unifab Welding Pty Ltd. All rights reserved.</span>
+      <span>ISO 9001:2015 &middot; AS/NZS 4801:2001 &middot; ASSDA Member</span>
+    </div>
+  </div>
+</footer>
+
+<div class="mobar">
+  <a href="tel:+61865551811" class="btn btn-ghost"><svg><use href="#i-phone"/></svg> Call</a>
+  <a href="#contact" class="btn btn-cyan">Request a Quote</a>
+</div>
+
+<script>
+(function(){
+  var hdr = document.getElementById('hdr');
+  var onScroll = function(){ hdr.classList.toggle('stuck', window.scrollY > 40); };
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+  var burger = document.getElementById('burger');
+  var nav = document.getElementById('nav');
+  burger.addEventListener('click', function(){
+    var open = nav.classList.toggle('open');
+    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  nav.addEventListener('click', function(e){
+    if(e.target.tagName === 'A'){
+      nav.classList.remove('open');
+      burger.setAttribute('aria-expanded','false');
+    }
+  });
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var items = document.querySelectorAll('.rv');
+  if(reduce || !('IntersectionObserver' in window)){
+    items.forEach(function(el){ el.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, {threshold:.12, rootMargin:'0px 0px -40px 0px'});
+    items.forEach(function(el){ io.observe(el); });
+  }
+})();
+</script>
+
+</body>
+</html>
