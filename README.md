@@ -72,6 +72,21 @@ perl -pi -e 's/\?v=[0-9a-z]+/?v=20260807/g' *.html
 `index.html` carries a dedicated Send It Bro section (`#send-it-bro`) that pitches the product and links to senditbro.com.au. It is **not** a portfolio piece — deliberately kept out of both work grids, and it uses Send It Bro's own lime `#BDFF30` on ink so it reads as a separate brand.
 
 ## To do
-- Add the exact **Claremont street address + postcode** — currently set to "Claremont, Western Australia" in the contact section/page and all footers.
+
+### Blog + automated post routines — the big one
+**Why:** the site currently reads as a shell. Nothing on it is dated, nothing changes between visits, and a prospect comparing agencies can't tell whether anyone is home. Fixing that is the point; a blog is the vehicle.
+
+Not started. Three parts, roughly in order:
+
+1. **A blog section that exists** — `blog/index.html` listing posts, plus a post template. Needs a visible date on every post and a "latest from the blog" block on the home page, since the point is proving recency. Also `Article` schema, and posts in `sitemap.xml`.
+2. **A routine that writes them** — a scheduled Claude Code agent: draft a post on a chosen topic, render it into the post template, commit and push. GitHub Pages deploys on push, so no build step is needed and nothing else has to change. Model it on the Send It Bro agents already running on the Mac mini.
+3. **A topic backlog** — the routine needs a queue to draw from, not a blank prompt each run. Sensible seed: the questions Mike actually gets asked, and the trades already represented in `work.html`.
+
+Decisions still open: how often posts go out, whether Mike reviews before publish or the routine pushes unattended (Send It Bro settled on review-first for proposals — same call to make here), and whether posts are per-file HTML or need a generator once there are enough of them.
+
+Other ways to make the site feel alive, if the blog alone isn't enough: dates on the work items, a "recently shipped" strip, or client logos with the month each went live.
+
+### Smaller
+- Add the exact **Claremont street address + postcode** — currently set to "Claremont, Western Australia" in the contact section/page and all footers. Also unblocks a full `PostalAddress` in the home page schema, which currently stops at suburb level.
 - Confirm the social proof / testimonial is current.
 - **Security headers** (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`) aren't being served. GitHub Pages can't set custom headers, so add them as a Cloudflare Transform Rule if wanted. They were previously declared in a `netlify.toml` left over from an earlier host, which never applied on Pages.
