@@ -186,6 +186,8 @@ body::after {
 .nav a:hover { color: var(--ink); }
 .nav a:hover::after { width: 100%; }
 
+.nav__ctas { display: flex; align-items: center; gap: 0.55rem; }
+
 .nav-toggle { display: none; }
 
 /* ---------- Hero ---------- */
@@ -636,7 +638,7 @@ body::after {
 }
 
 @media (max-width: 860px) {
-  .nav, .nav__cta { display: none; }
+  .nav, .nav__ctas { display: none; }
   .nav-toggle {
     display: inline-flex; flex-direction: column; gap: 5px; justify-content: center;
     width: 44px; height: 44px; background: none; border: none; cursor: pointer; padding: 0;
