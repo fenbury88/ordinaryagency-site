@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Website Discovery — Ordinary Agency</title>
+  <meta name="description" content="Tell us about your website project. A short discovery questionnaire covering your goals, audience, content, design direction and technical requirements." />
+  <meta name="theme-color" content="#F7F4EF" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=20260806d" />
+
+  <link rel="canonical" href="https://ordinaryagency.com.au/discovery.html" />
+
+  <!-- Open Graph -->
+  <meta property="og:site_name" content="Ordinary Agency" />
+  <meta property="og:title" content="Website Discovery — Ordinary Agency" />
+  <meta property="og:description" content="Tell us about your website project. A short discovery questionnaire covering your goals, audience, content, design direction and technical requirements." />
+  <meta property="og:url" content="https://ordinaryagency.com.au/discovery.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="en_AU" />
+  <meta property="og:image" content="https://ordinaryagency.com.au/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Ordinary Agency — elevating the ordinary. Digital marketing, Perth." />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Website Discovery — Ordinary Agency" />
+  <meta name="twitter:description" content="Tell us about your website project. A short discovery questionnaire covering your goals, audience, content, design direction and technical requirements." />
+  <meta name="twitter:image" content="https://ordinaryagency.com.au/og-image.png" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header" id="header">
+    <div class="container header-inner">
+      <a href="index.html" class="wordmark" aria-label="Ordinary Agency home">
+        <span class="wordmark__name">Ordinary</span><span class="wordmark__mark">.</span>
+        <span class="wordmark__sub">agency</span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="services.html">Services</a>
+        <a href="work.html">Work</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+      <a href="contact.html" class="btn btn--small nav__cta">Start a project</a>
+      <button class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+        <span></span><span></span>
+      </button>
+    </div>
+    <div class="mobile-menu" id="mobile-menu" hidden>
+      <a href="services.html">Services</a>
+      <a href="work.html">Work</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="page-head">
+      <div class="container">
+        <p class="eyebrow reveal">Website discovery</p>
+        <h1 class="page-head__title reveal">Tell us about the <em>project</em>.</h1>
+        <p class="page-head__lead reveal">
+          The better we understand your business up front, the sharper the proposal and the
+          fewer surprises later. Six short sections — about ten minutes. Only your name,
+          email and audience are required; skip anything you&rsquo;re unsure about.
+        </p>
+      </div>
+    </section>
+
+    <section class="section dsc">
+      <div class="container">
+
+        <!-- Shown when Formspree bounces back after a no-JS / fallback submit -->
+        <div class="dsc__done" id="dsc-done" hidden>
+          <p class="eyebrow">All done</p>
+          <h2 class="section-title">Thanks — we&rsquo;ve got it.</h2>
+          <p class="dsc__done-lead">
+            Your brief has landed with us. We&rsquo;ll read it properly and come back to you
+            within a business day, usually with a couple of follow-up questions before we
+            put numbers to anything.
+          </p>
+          <div class="dsc__done-actions">
+            <a href="index.html" class="btn">Back to home</a>
+            <a href="work.html" class="link-arrow">See the work <span aria-hidden="true">&rarr;</span></a>
+          </div>
+        </div>
+
+        <form class="dsc__form" id="dsc-form" data-success-panel="dsc-done" action="https://formspree.io/f/meebroln" method="POST">
+          <input type="hidden" name="_subject" value="Website discovery brief from ordinaryagency.com.au" />
+          <input type="hidden" name="_next" value="https://ordinaryagency.com.au/discovery.html?sent=1" />
+          <p hidden><label>Don&rsquo;t fill this in: <input name="_gotcha" tabindex="-1" autocomplete="off" /></label></p>
+
+          <!-- Progress. Hidden until JS turns the form into steps. -->
+          <div class="dsc__progress" id="dsc-progress" hidden>
+            <div class="dsc__progress-bar"><span id="dsc-progress-fill"></span></div>
+            <p class="dsc__progress-text" id="dsc-progress-text" role="status" aria-live="polite"></p>
+          </div>
+
+          <!-- ================= 1 · About you ================= -->
+          <fieldset class="dsc__step" data-step="1">
+            <legend class="dsc__legend"><span class="dsc__num">01</span> About you</legend>
+
+            <div class="dsc__grid">
+              <div class="field">
+                <label for="d-name">Your name *</label>
+                <input id="d-name" name="Your name" type="text" required autocomplete="name" />
+              </div>
+              <div class="field">
+                <label for="d-business">Business name</label>
+                <input id="d-business" name="Business name" type="text" autocomplete="organization" />
+              </div>
+              <div class="field">
+                <label for="d-email">Email address *</label>
+                <input id="d-email" name="Email address" type="email" required autocomplete="email" />
+              </div>
+              <div class="field">
+                <label for="d-phone">Phone</label>
+                <input id="d-phone" name="Phone" type="tel" autocomplete="tel" />
+              </div>
+              <div class="field">
+                <label for="d-trade">Trade / industry</label>
+                <input id="d-trade" name="Trade or industry" type="text" />
+              </div>
+              <div class="field">
+                <label for="d-current">Current website (if you have one)</label>
+                <input id="d-current" name="Current website" type="text" inputmode="url" placeholder="yourbusiness.com.au" />
+              </div>
+              <div class="field field--full">
+                <label for="d-social">Social media — paste any links you have</label>
+                <input id="d-social" name="Social media" type="text" />
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- ================= 2 · Project goals ================= -->
+          <fieldset class="dsc__step" data-step="2">
+            <legend class="dsc__legend"><span class="dsc__num">02</span> Project goals</legend>
+
+            <fieldset class="dsc__group">
+              <legend class="dsc__q">What is the primary goal of this new website?</legend>
+              <p class="dsc__hint">Tick as many as apply.</p>
+              <ul class="dsc__opts">
+                <li><label><input type="checkbox" name="Primary goal" value="Establish online presence / brand awareness" /><span>Establish online presence / brand awareness</span></label></li>
+                <li><label><input type="checkbox" name="Primary goal" value="Generate leads / increase quote requests" /><span>Generate leads / increase quote requests</span></label></li>
+                <li><label><input type="checkbox" name="Primary goal" value="Direct e-commerce sales / online transactions" /><span>Direct e-commerce sales / online transactions</span></label></li>
+                <li><label><input type="checkbox" name="Primary goal" value="Share company news, reports and insights" /><span>Share company news, reports and insights</span></label></li>
+              </ul>
+              <div class="field field--other">
+                <label for="d-goal-other">Something else?</label>
+                <input id="d-goal-other" name="Primary goal — other" type="text" />
+              </div>
+            </fieldset>
+
+            <fieldset class="dsc__group">
+              <legend class="dsc__q">What does success look like for this project?</legend>
+              <ul class="dsc__opts">
+                <li><label><input type="checkbox" name="Success looks like" value="Customers find products/services and convert within 3 clicks" /><span>Customers find what they need and convert within about three clicks</span></label></li>
+                <li><label><input type="checkbox" name="Success looks like" value="A 30-50% increase in online enquiries" /><span>A 30&ndash;50% increase in online enquiries compared to now</span></label></li>
+                <li><label><input type="checkbox" name="Success looks like" value="Seamless mobile browsing and checkout" /><span>A genuinely good experience on a phone</span></label></li>
+                <li><label><input type="checkbox" name="Success looks like" value="Building brand trust through case studies and transparent information" /><span>Building trust through case studies and transparent information</span></label></li>
+              </ul>
+              <div class="field field--other">
+                <label for="d-success-other">Something else?</label>
+                <input id="d-success-other" name="Success looks like — other" type="text" />
+              </div>
+            </fieldset>
+
+            <div class="dsc__grid">
+              <div class="field field--full">
+                <label for="d-future">Thinking three to five years out, what will the website need to do for the business?</label>
+                <textarea id="d-future" name="Three to five year view" rows="3"></textarea>
+              </div>
+              <div class="field field--full">
+                <label for="d-hidden">What should visitors know about you that they&rsquo;d never guess from your current site?</label>
+                <textarea id="d-hidden" name="What visitors would never guess" rows="3"></textarea>
+              </div>
+              <div class="field">
+                <label for="d-budget">Budget range for the project</label>
+                <input id="d-budget" name="Budget range" type="text" placeholder="A ballpark is fine" />
+              </div>
+              <div class="field">
+                <label for="d-launch">Ideal launch date or deadline</label>
+                <input id="d-launch" name="Ideal launch date" type="date" />
+              </div>
+              <div class="field field--full">
+                <label for="d-event">Is that deadline tied to something specific? (a launch, a campaign, an expo)</label>
+                <input id="d-event" name="Deadline tied to" type="text" />
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- ================= 3 · Target audience ================= -->
+          <fieldset class="dsc__step" data-step="3">
+            <legend class="dsc__legend"><span class="dsc__num">03</span> Target audience</legend>
+
+            <fieldset class="dsc__group" data-require-one="Primary audience">
+              <legend class="dsc__q">Who is your primary audience? *</legend>
+              <ul class="dsc__opts">
+                <li><label><input type="checkbox" name="Primary audience" value="B2C — direct consumers" /><span>B2C &mdash; direct consumers looking for products or services</span></label></li>
+                <li><label><input type="checkbox" name="Primary audience" value="B2B — wholesalers, distributors, other businesses" /><span>B2B &mdash; wholesalers, distributors or other businesses</span></label></li>
+                <li><label><input type="checkbox" name="Primary audience" value="Industry professionals / contractors / agencies" /><span>Industry professionals, contractors or agencies</span></label></li>
+              </ul>
+              <div class="field field--other">
+                <label for="d-aud-other">Someone else?</label>
+                <input id="d-aud-other" name="Primary audience — other" type="text" />
+              </div>
+              <p class="dsc__error" data-error-for="Primary audience" hidden>Pick at least one, or describe your audience in the box.</p>
+            </fieldset>
+
+            <fieldset class="dsc__group">
+              <legend class="dsc__q">What do they most need when they land on your site?</legend>
+              <ul class="dsc__opts">
+                <li><label><input type="checkbox" name="Audience needs" value="Transparent pricing and specifications, quickly" /><span>Transparent pricing and specifications, quickly</span></label></li>
+                <li><label><input type="checkbox" name="Audience needs" value="A smooth, secure checkout" /><span>A smooth, secure checkout</span></label></li>
+                <li><label><input type="checkbox" name="Audience needs" value="Store locations or contact details" /><span>Your location or contact details</span></label></li>
+                <li><label><input type="checkbox" name="Audience needs" value="Portfolio images / past projects to judge quality" /><span>Photos of past work, to judge whether you&rsquo;re any good</span></label></li>
+              </ul>
+              <div class="field field--other">
+                <label for="d-needs-other">Something else?</label>
+                <input id="d-needs-other" name="Audience needs — other" type="text" />
+              </div>
+            </fieldset>
+          </fieldset>
+
+          <!-- ================= 4 · Content & structure ================= -->
+          <fieldset class="dsc__step" data-step="4">
+            <legend class="dsc__legend"><span class="dsc__num">04</span> Content &amp; structure</legend>
+
+            <fieldset class="dsc__group">
+              <legend class="dsc__q">Which pages do you want?</legend>
+              <ul class="dsc__opts dsc__opts--cols">
+                <li><label><input type="checkbox" name="Pages wanted" value="Home" /><span>Home</span></label></li>
+                <li><label><input type="checkbox" name="Pages wanted" value="About us / our team" /><span>About us / our team</span></label></li>
+                <li><label><input type="checkbox" name="Pages wanted" value="Services / solutions" /><span>Services / solutions</span></label></li>
+                <li><label><input type="checkbox" name="Pages wanted" value="Shop / products" /><span>Shop / products</span></label></li>
+                <li><label><input type="checkbox" name="Pages wanted" value="Portfolio / case studies" /><span>Portfolio / case studies</span></label></li>
+                <li><label><input type="checkbox" name="Pages wanted" value="Blog / news" /><span>Blog / news</span></label></li>
+                <li><label><input type="checkbox" name="Pages wanted" value="Contact us" /><span>Contact us</span></label></li>
+                <li><label><input type="checkbox" name="Pages wanted" value="Careers" /><span>Careers</span></label></li>
+              </ul>
+              <div class="field field--other">
+                <label for="d-pages-other">Any others?</label>
+                <input id="d-pages-other" name="Pages wanted — other" type="text" />
+              </div>
+            </fieldset>
+
+            <fieldset class="dsc__group">
+              <legend class="dsc__q">What should appear on every single page?</legend>
+              <ul class="dsc__opts dsc__opts--cols">
+                <li><label><input type="checkbox" name="On every page" value="Contact number / hotline" /><span>Contact number</span></label></li>
+                <li><label><input type="checkbox" name="On every page" value="Call-to-action button" /><span>Call-to-action button</span></label></li>
+                <li><label><input type="checkbox" name="On every page" value="Newsletter signup form" /><span>Newsletter signup</span></label></li>
+                <li><label><input type="checkbox" name="On every page" value="Social media links" /><span>Social media links</span></label></li>
+                <li><label><input type="checkbox" name="On every page" value="Physical address" /><span>Physical address</span></label></li>
+              </ul>
+              <div class="field field--other">
+                <label for="d-every-other">Anything else?</label>
+                <input id="d-every-other" name="On every page — other" type="text" />
+              </div>
+            </fieldset>
+
+            <fieldset class="dsc__group">
+              <legend class="dsc__q">Do you have the content — words and images — ready?</legend>
+              <ul class="dsc__opts">
+                <li><label><input type="radio" name="Content readiness" value="Yes, everything is ready" /><span>Yes, everything is ready</span></label></li>
+                <li><label><input type="radio" name="Content readiness" value="Partially — still working on it" /><span>Partially &mdash; still working on it</span></label></li>
+                <li><label><input type="radio" name="Content readiness" value="No — will need copywriting and asset creation" /><span>No &mdash; we&rsquo;ll need help with copywriting and assets</span></label></li>
+              </ul>
+            </fieldset>
+          </fieldset>
+
+          <!-- ================= 5 · Design & branding ================= -->
+          <fieldset class="dsc__step" data-step="5">
+            <legend class="dsc__legend"><span class="dsc__num">05</span> Design &amp; branding</legend>
+
+            <fieldset class="dsc__group">
+              <legend class="dsc__q">Which design direction feels like you?</legend>
+              <ul class="dsc__opts dsc__opts--cols">
+                <li><label><input type="checkbox" name="Design direction" value="Minimalist, clean, premium" /><span>Minimalist, clean, premium</span></label></li>
+                <li><label><input type="checkbox" name="Design direction" value="Corporate, professional, trustworthy" /><span>Corporate, professional, trustworthy</span></label></li>
+                <li><label><input type="checkbox" name="Design direction" value="Bold, modern, dynamic" /><span>Bold, modern, dynamic</span></label></li>
+                <li><label><input type="checkbox" name="Design direction" value="Warm, friendly, approachable" /><span>Warm, friendly, approachable</span></label></li>
+                <li><label><input type="checkbox" name="Design direction" value="Dark theme / high contrast" /><span>Dark theme / high contrast</span></label></li>
+                <li><label><input type="checkbox" name="Design direction" value="Light theme / airy" /><span>Light theme / airy</span></label></li>
+                <li><label><input type="checkbox" name="Design direction" value="Not sure yet — need recommendations" /><span>Not sure yet &mdash; tell us what you&rsquo;d do</span></label></li>
+              </ul>
+            </fieldset>
+
+            <fieldset class="dsc__group">
+              <legend class="dsc__q">Which assets can you provide?</legend>
+              <ul class="dsc__opts">
+                <li><label><input type="checkbox" name="Assets available" value="High-resolution logo (AI / EPS / SVG)" /><span>High-resolution logo &mdash; vector formats (AI / EPS / SVG)</span></label></li>
+                <li><label><input type="checkbox" name="Assets available" value="Brand guidelines (fonts, hex codes)" /><span>Brand guidelines &mdash; fonts, colour hex codes</span></label></li>
+                <li><label><input type="checkbox" name="Assets available" value="High-quality product or team photography" /><span>High-quality product or team photography</span></label></li>
+                <li><label><input type="checkbox" name="Assets available" value="Product database / pricing lists (Excel / CSV)" /><span>Product database or pricing lists (Excel / CSV)</span></label></li>
+                <li><label><input type="checkbox" name="Assets available" value="Complete contact details (address, phone, email, hours)" /><span>Complete contact details &mdash; address, phone, email, hours</span></label></li>
+              </ul>
+              <div class="field field--other">
+                <label for="d-assets-other">Anything else you can hand over?</label>
+                <input id="d-assets-other" name="Assets available — other" type="text" />
+              </div>
+            </fieldset>
+
+            <div class="dsc__grid">
+              <div class="field field--full">
+                <label for="d-colours">Any colour palette or brand colours in mind?</label>
+                <input id="d-colours" name="Colour palette" type="text" />
+              </div>
+              <div class="field field--full">
+                <label for="d-refs">Two to five websites you like &mdash; and what you like about each</label>
+                <textarea id="d-refs" name="Reference websites" rows="4" placeholder="Paste links, and a few words on what appeals about each one."></textarea>
+              </div>
+              <div class="field field--full">
+                <label for="d-competitors">Two or three of your main competitors&rsquo; websites</label>
+                <textarea id="d-competitors" name="Competitor websites" rows="3"></textarea>
+              </div>
+              <div class="field field--full">
+                <label for="d-sensitivities">Anything we should steer clear of? (imagery, overused colours, phrases you avoid)</label>
+                <textarea id="d-sensitivities" name="Sensitivities to avoid" rows="3"></textarea>
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- ================= 6 · Technical ================= -->
+          <fieldset class="dsc__step" data-step="6">
+            <legend class="dsc__legend"><span class="dsc__num">06</span> Technical &amp; ongoing</legend>
+
+            <fieldset class="dsc__group">
+              <legend class="dsc__q">Which features are must-haves?</legend>
+              <ul class="dsc__opts dsc__opts--cols">
+                <li><label><input type="checkbox" name="Required features" value="E-commerce (cart, checkout)" /><span>E-commerce &mdash; cart and checkout</span></label></li>
+                <li><label><input type="checkbox" name="Required features" value="Lead capture / contact forms" /><span>Lead capture / contact forms</span></label></li>
+                <li><label><input type="checkbox" name="Required features" value="Newsletter signup integration" /><span>Newsletter signup</span></label></li>
+                <li><label><input type="checkbox" name="Required features" value="Booking / appointment scheduling" /><span>Booking or appointment scheduling</span></label></li>
+                <li><label><input type="checkbox" name="Required features" value="Multi-language support" /><span>Multi-language support</span></label></li>
+                <li><label><input type="checkbox" name="Required features" value="Advanced product filtering / search" /><span>Advanced filtering or search</span></label></li>
+              </ul>
+              <div class="field field--other">
+                <label for="d-feat-other">Anything else you need it to do?</label>
+                <input id="d-feat-other" name="Required features — other" type="text" />
+              </div>
+            </fieldset>
+
+            <fieldset class="dsc__group">
+              <legend class="dsc__q">Any third-party platforms to integrate?</legend>
+              <ul class="dsc__opts">
+                <li><label><input type="checkbox" name="Integrations" value="Payment gateways (Stripe, PayPal, etc.)" /><span>Payment gateways &mdash; Stripe, PayPal and the like</span></label></li>
+                <li><label><input type="checkbox" name="Integrations" value="Live chat / messenger" /><span>Live chat or messenger</span></label></li>
+                <li><label><input type="checkbox" name="Integrations" value="CRM / email marketing (HubSpot, Mailchimp, ActiveCampaign)" /><span>CRM or email marketing &mdash; HubSpot, Mailchimp, ActiveCampaign</span></label></li>
+                <li><label><input type="checkbox" name="Integrations" value="Shipping / logistics APIs" /><span>Shipping or logistics APIs</span></label></li>
+              </ul>
+              <div class="field field--other">
+                <label for="d-int-other">Anything else to plug in?</label>
+                <input id="d-int-other" name="Integrations — other" type="text" />
+              </div>
+            </fieldset>
+
+            <fieldset class="dsc__group">
+              <legend class="dsc__q">Do you have a domain and hosting sorted?</legend>
+              <ul class="dsc__opts">
+                <li><label><input type="radio" name="Domain and hosting" value="Yes, both ready" /><span>Yes, we have both ready</span></label></li>
+                <li><label><input type="radio" name="Domain and hosting" value="Domain only" /><span>We only have a domain name</span></label></li>
+                <li><label><input type="radio" name="Domain and hosting" value="Neither — need recommendations and setup" /><span>Neither &mdash; we&rsquo;ll need recommendations and setup</span></label></li>
+              </ul>
+            </fieldset>
+
+            <fieldset class="dsc__group">
+              <legend class="dsc__q">Who&rsquo;ll update the site once it&rsquo;s live?</legend>
+              <ul class="dsc__opts">
+                <li><label><input type="radio" name="Who manages the site" value="Internal team — needs a user-friendly backend" /><span>Our own team &mdash; so it needs to be genuinely easy to use</span></label></li>
+                <li><label><input type="radio" name="Who manages the site" value="Dedicated IT / web person" /><span>We have a dedicated IT or web person</span></label></li>
+                <li><label><input type="radio" name="Who manages the site" value="Would like Ordinary Agency to manage it" /><span>We&rsquo;d like you to look after it</span></label></li>
+              </ul>
+            </fieldset>
+
+            <fieldset class="dsc__group">
+              <legend class="dsc__q">Do you want ongoing maintenance and support?</legend>
+              <ul class="dsc__opts">
+                <li><label><input type="radio" name="Ongoing support" value="Yes — technical maintenance (security, updates, backups)" /><span>Yes &mdash; technical maintenance: security, updates, backups</span></label></li>
+                <li><label><input type="radio" name="Ongoing support" value="Yes — ongoing content updates and additions" /><span>Yes &mdash; ongoing content updates and additions</span></label></li>
+                <li><label><input type="radio" name="Ongoing support" value="No — handling everything internally" /><span>No &mdash; we&rsquo;ll handle it internally</span></label></li>
+              </ul>
+            </fieldset>
+
+            <div class="dsc__grid">
+              <div class="field field--full">
+                <label for="d-anything">Anything else we should know?</label>
+                <textarea id="d-anything" name="Anything else" rows="3"></textarea>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="dsc__actions">
+            <button type="button" class="btn btn--ghost" id="dsc-back" hidden>Back</button>
+            <button type="button" class="btn" id="dsc-next" hidden>Next</button>
+            <button type="submit" class="btn btn--large" id="dsc-submit">Send the brief</button>
+            <p class="dsc__save-note" id="dsc-save-note" hidden>Your answers are kept in this browser as you go.</p>
+          </div>
+
+          <p class="form-status" role="status" aria-live="polite" hidden></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-cta">
+      <p class="footer-cta__kicker">Rather just talk it through?</p>
+      <a class="footer-cta__link" href="contact.html">Let&rsquo;s talk<span aria-hidden="true">&rarr;</span></a>
+    </div>
+    <div class="container footer-inner">
+      <div class="footer__brand">
+        <a href="index.html" class="wordmark wordmark--light">
+          <span class="wordmark__name">Ordinary</span><span class="wordmark__mark">.</span>
+          <span class="wordmark__sub">agency</span>
+        </a>
+        <p>Western Australia based digital agency, specialising in digital marketing in Perth.</p>
+      </div>
+      <nav class="footer__nav" aria-label="Footer">
+        <a href="services.html">Services</a>
+        <a href="website-development.html">Website Development</a>
+        <a href="lead-generation.html">Lead Generation</a>
+        <a href="automation-ai.html">Automation &amp; AI</a>
+        <a href="work.html">Work</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+      <div class="footer__social">
+        <a href="https://www.linkedin.com/company/ordinaryagencyseo/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://www.instagram.com/ordinaryagency/" target="_blank" rel="noopener">Instagram</a>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>&copy; <span id="year">2026</span> Ordinary Agency. All rights reserved.</p>
+      <p>Claremont, Perth</p>
+    </div>
+    <div class="footer-mark" aria-hidden="true">Ordinary<span class="footer-mark__dot">.</span></div>
+  </footer>
+
+  <script src="main.js?v=20260806d"></script>
+</body>
+</html>

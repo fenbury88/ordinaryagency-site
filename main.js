@@ -76,17 +76,35 @@ const showStatus = (form, msg, ok) => {
   status.classList.toggle('is-error', !ok);
 };
 
-document.querySelectorAll('.contact__form').forEach((form) => {
+// A form may name a panel to reveal instead of an inline message — the long
+// discovery form swaps itself out for a thank-you rather than tacking a line
+// under a submit button that's scrolled far off screen.
+const succeed = (form, msg) => {
+  const panelId = form.dataset.successPanel;
+  const panel = panelId && document.getElementById(panelId);
+  if (panel) {
+    form.hidden = true;
+    panel.hidden = false;
+    panel.setAttribute('tabindex', '-1');
+    panel.focus({ preventScroll: true });
+    panel.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    return;
+  }
+  const btn = form.querySelector('button[type="submit"]');
+  if (btn) btn.hidden = true;
+  showStatus(form, msg, true);
+};
+
+document.querySelectorAll('.contact__form, .dsc__form').forEach((form) => {
   // Returned from Formspree's own page after a native fallback submit.
   if (new URLSearchParams(location.search).get('sent') === '1') {
-    const btn = form.querySelector('button[type="submit"]');
-    if (btn) btn.hidden = true;
-    showStatus(form, SENT_MSG, true);
+    succeed(form, SENT_MSG);
   }
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const btn = form.querySelector('button[type="submit"]');
+    const label = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
 
     // form.submit() bypasses this handler, so there's no submit loop.
@@ -100,9 +118,187 @@ document.querySelectorAll('.contact__form').forEach((form) => {
       .then((res) => {
         if (!res.ok) return fallback();
         form.reset();
-        if (btn) btn.hidden = true;
-        showStatus(form, SENT_MSG, true);
+        if (btn) btn.textContent = label;
+        succeed(form, SENT_MSG);
       })
       .catch(fallback);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Discovery form — turn the long questionnaire into a stepper.
+// Every step ships visible, so with no JS this is one honest scrolling form
+// that still submits. Everything below is enhancement.
+// ---------------------------------------------------------------------------
+(() => {
+  const form = document.getElementById('dsc-form');
+  if (!form) return;
+
+  const steps = [...form.querySelectorAll('.dsc__step')];
+  if (steps.length < 2) return;
+
+  // Once steps are hidden, the browser's own validation would block submission
+  // on a required field it cannot scroll to or focus, and the submit event
+  // would never fire. Validation moves to validateStep() below. Without JS the
+  // attribute is never set, so native validation still applies.
+  form.noValidate = true;
+
+  const progress   = document.getElementById('dsc-progress');
+  const fill       = document.getElementById('dsc-progress-fill');
+  const text       = document.getElementById('dsc-progress-text');
+  const backBtn    = document.getElementById('dsc-back');
+  const nextBtn    = document.getElementById('dsc-next');
+  const submitBtn  = document.getElementById('dsc-submit');
+  const saveNote   = document.getElementById('dsc-save-note');
+  const STORE_KEY  = 'oa_discovery_v1';
+
+  let current = 0;
+
+  // Came back from Formspree's own page: the brief is in, so the draft is spent.
+  const justSent = new URLSearchParams(location.search).get('sent') === '1';
+
+  // --- draft persistence -----------------------------------------------------
+  // Losing thirty answers to a stray refresh would be miserable. Kept in this
+  // browser only; never sent anywhere until the form is submitted.
+  const saveDraft = () => {
+    try {
+      const data = {};
+      new FormData(form).forEach((v, k) => {
+        if (k.startsWith('_')) return;
+        if (data[k] === undefined) data[k] = v;
+        else if (Array.isArray(data[k])) data[k].push(v);
+        else data[k] = [data[k], v];
+      });
+      localStorage.setItem(STORE_KEY, JSON.stringify(data));
+    } catch (_) { /* private window, blocked storage — carry on */ }
+  };
+
+  const loadDraft = () => {
+    let data;
+    try {
+      data = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+    } catch (_) { return false; }
+    if (!data) return false;
+
+    Object.entries(data).forEach(([name, value]) => {
+      const values = Array.isArray(value) ? value : [value];
+      form.querySelectorAll(`[name="${CSS.escape(name)}"]`).forEach((el) => {
+        if (el.type === 'checkbox' || el.type === 'radio') {
+          if (values.includes(el.value)) el.checked = true;
+        } else if (values[0] !== undefined) {
+          el.value = values[0];
+        }
+      });
+    });
+    return true;
+  };
+
+  const clearDraft = () => {
+    try { localStorage.removeItem(STORE_KEY); } catch (_) {}
+  };
+
+  // --- validation ------------------------------------------------------------
+  // Native validity covers required inputs. Checkbox groups can't express
+  // "at least one of these", so data-require-one carries that, and an adjacent
+  // "other" text field counts as an answer.
+  const validateStep = (i) => {
+    const step = steps[i];
+    let firstBad = null;
+
+    step.querySelectorAll('input, textarea, select').forEach((el) => {
+      if (!el.checkValidity() && !firstBad) firstBad = el;
+    });
+
+    step.querySelectorAll('[data-require-one]').forEach((group) => {
+      const name = group.dataset.requireOne;
+      const checked = group.querySelector(`[name="${CSS.escape(name)}"]:checked`);
+      const other = group.querySelector(`[name="${CSS.escape(name)} — other"]`);
+      const ok = !!checked || (other && other.value.trim() !== '');
+      const err = group.querySelector(`[data-error-for="${CSS.escape(name)}"]`);
+      if (err) err.hidden = ok;
+      if (!ok && !firstBad) firstBad = group.querySelector('input');
+    });
+
+    if (firstBad) {
+      if (typeof firstBad.reportValidity === 'function' && !firstBad.checkValidity()) {
+        firstBad.reportValidity();
+      } else {
+        firstBad.focus();
+      }
+      return false;
+    }
+    return true;
+  };
+
+  // --- rendering -------------------------------------------------------------
+  const render = (i, { focus = true } = {}) => {
+    current = i;
+    steps.forEach((s, n) => { s.hidden = n !== i; });
+
+    const pct = Math.round(((i + 1) / steps.length) * 100);
+    if (fill) fill.style.width = pct + '%';
+    if (text) text.textContent = `Step ${i + 1} of ${steps.length}`;
+
+    backBtn.hidden   = i === 0;
+    nextBtn.hidden   = i === steps.length - 1;
+    submitBtn.hidden = i !== steps.length - 1;
+
+    if (focus) {
+      const legend = steps[i].querySelector('.dsc__legend');
+      if (legend) {
+        legend.setAttribute('tabindex', '-1');
+        legend.focus({ preventScroll: true });
+      }
+      const top = form.getBoundingClientRect().top + window.scrollY - 90;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  };
+
+  // --- wire up ---------------------------------------------------------------
+  progress.hidden = false;
+  nextBtn.hidden = false;
+
+  if (justSent) { clearDraft(); return; }
+
+  const restored = loadDraft();
+  if (saveNote) {
+    saveNote.hidden = false;
+    if (restored) saveNote.textContent = 'We restored your answers from last time.';
+  }
+
+  form.addEventListener('input', saveDraft);
+  form.addEventListener('change', saveDraft);
+
+  nextBtn.addEventListener('click', () => {
+    if (!validateStep(current)) return;
+    render(Math.min(current + 1, steps.length - 1));
+  });
+
+  backBtn.addEventListener('click', () => render(Math.max(current - 1, 0)));
+
+  // Guard the final submit too — someone can reach it without passing through
+  // every step if they restore a draft.
+  form.addEventListener('submit', (e) => {
+    for (let i = 0; i < steps.length; i++) {
+      if (!validateStep(i)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        render(i);
+        return;
+      }
+    }
+    clearDraft();
+  }, true);
+
+  // Enter in a single-line field should advance, not submit from step 2.
+  form.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    if (e.target.tagName === 'TEXTAREA') return;
+    if (current < steps.length - 1) {
+      e.preventDefault();
+      nextBtn.click();
+    }
+  });
+
+  render(0, { focus: false });
+})();

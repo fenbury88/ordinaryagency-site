@@ -11,6 +11,7 @@ A minimal, editorial static site for ordinaryagency.com.au. No build step, no fr
 - `work.html` — portfolio grid
 - `about.html` — story, values, process
 - `contact.html` — contact details + form
+- `discovery.html` — long website-discovery questionnaire (six steps)
 - `404.html` — custom not-found page (GitHub Pages serves it automatically)
 - `style.css` — all styles (palette + type tokens are CSS variables at the top)
 - `main.js` — scroll reveals, sticky-header state, mobile menu, contact form
@@ -18,7 +19,7 @@ A minimal, editorial static site for ordinaryagency.com.au. No build step, no fr
 - `robots.txt` / `sitemap.xml` — SEO
 - `CNAME` — custom domain for GitHub Pages. Don't delete it; the domain breaks.
 
-Header/footer markup is duplicated across pages (kept as static HTML for SEO — no JS-injected partials). If you change a nav link, update it in **all nine pages**.
+Header/footer markup is duplicated across pages (kept as static HTML for SEO — no JS-injected partials). If you change a nav link, update it in **all ten pages**.
 
 ## Run locally
 ```
@@ -37,12 +38,23 @@ Both forms (home page and `contact.html`) POST to **Formspree** (`https://formsp
 
 Switching reCAPTCHA off in the Formspree dashboard keeps everything on the fast inline path.
 
+## Discovery form
+`/discovery.html` is the website-project questionnaire — six sections, about thirty questions. It posts to the **same Formspree form** as the contact page, told apart by its `_subject` ("Website discovery brief…"). Give it its own Formspree form when volume justifies it: change `action` on `#dsc-form` and the matching `_next`.
+
+How it behaves:
+- **No JS**: one long scrolling form with native validation. It submits and works.
+- **With JS** (`main.js`, bottom): steps, a progress bar, per-step validation, and a thank-you panel swapped in on success. The stepper sets `form.noValidate` because native validation cannot focus a required field inside a hidden step, which would block submission silently.
+- **Draft saving**: answers go to `localStorage` under `oa_discovery_v1` as you type, and are restored on return. Cleared on successful submit. Never leaves the browser until submission.
+- **"At least one" rule**: checkbox groups can't express this natively, so `data-require-one="<field name>"` on a group handles it; a filled `"<field name> — other"` text box counts as an answer.
+
+Field `name` attributes are human-readable ("Primary goal", "Budget range") because Formspree uses them as labels in the notification email.
+
 ## Brand
 - **Type:** Fraunces (wordmark) + Space Grotesk (display) + Inter (body)
 - **Palette:** paper `#FAFAF7`, ink `#15150F`, green accent `#2C7A57` — all in `:root` in `style.css`
 
 ## Cache busting
-`style.css` and `main.js` are linked with a `?v=YYYYMMDD` stamp in all nine pages. **Bump it whenever either file changes** — they're served with a 4-hour cache, so without a bump returning visitors keep the old copy:
+`style.css` and `main.js` are linked with a `?v=YYYYMMDD` stamp in all ten pages. **Bump it whenever either file changes** — they're served with a 4-hour cache, so without a bump returning visitors keep the old copy:
 ```
 perl -pi -e 's/\?v=[0-9a-z]+/?v=20260807/g' *.html
 ```
