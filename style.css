@@ -805,3 +805,17 @@ body::after {
   border-bottom: 1px solid var(--line);
   color: var(--ink-soft); max-width: 40ch;
 }
+/* Second row under the featured trio on the home page. */
+.work__grid--more { margin-top: clamp(1.25rem, 3vw, 2rem); }
+
+/* Header phone — a contactable business is a trust signal, but it's the
+   first thing to go when the header runs out of room. */
+.nav__phone {
+  font-size: 0.9rem; font-weight: 500; color: var(--ink-soft);
+  margin-right: 0.5rem; white-space: nowrap;
+  transition: color .3s var(--ease);
+}
+.nav__phone:hover { color: var(--accent); }
+@media (max-width: 1080px) { .nav__phone { display: none; } }
+
+.mobile-menu__phone { color: var(--accent) !important; }
