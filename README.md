@@ -83,6 +83,9 @@ Body in Markdown: paragraphs, ## and ### headings, - and 1. lists, > quotes, **b
 - none of a list of AI-sounding stock phrases ("delve", "seamless", "game-changer"…)
 - internal links must point at pages that exist, and external links must be https
 
+## Homepage blueprint
+`website-development.html#homepage-blueprint` is a wireframe of a trade homepage, block by block, with a leader line from each block to the job it does. It's adapted from the Send It Bro homepage but recoloured into Ordinary's ink and green, since lime is reserved for Send It Bro. Each callout is a `<details>` that's open in the markup, so it reads fine without JS. On phones `main.js` closes all but the first, because nine open rows in a narrow column get long.
+
 ## Brand
 - **Type:** Fraunces (wordmark) + Space Grotesk (display) + Inter (body)
 - **Palette:** paper `#FAFAF7`, ink `#15150F`, green accent `#2C7A57` — all in `:root` in `style.css`

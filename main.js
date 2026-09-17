@@ -327,3 +327,10 @@ document.querySelectorAll('.contact__form, .dsc__form').forEach((form) => {
 
   render(0, { focus: false });
 })();
+
+// Homepage blueprint (website-development.html) — every callout is open in the
+// markup so it reads without JS. On a phone the text column is narrow and nine
+// open rows get very long, so start with just the first open; tap to expand.
+if (window.matchMedia('(max-width: 680px)').matches) {
+  document.querySelectorAll('.bp-callout').forEach((d, i) => { if (i > 0) d.open = false; });
+}
