@@ -60,12 +60,12 @@ if (reduce || !('IntersectionObserver' in window)) {
   });
 }
 
-// Contact form — AJAX submit to Formspree with inline feedback.
-// Formspree refuses AJAX posts while reCAPTCHA is enabled on the form, so any
-// failure falls back to a native POST: Formspree handles the challenge and its
-// _next value returns the visitor here with ?sent=1. Without JS at all, the
-// form POSTs natively from the start. Either way the enquiry gets through.
+// Contact + discovery forms — AJAX submit to the worker's /oa-form route
+// (Resend emails Mike) with inline feedback. If the fetch itself dies, a native
+// POST still works: the worker 303s back here with ?sent=1. Without JS at all,
+// the form POSTs natively from the start.
 const SENT_MSG = 'Thanks — your message is on its way. We usually reply within a day.';
+const FAIL_MSG = 'That didn\u2019t send. Please try again, or email mike@ordinaryagency.com.au.';
 
 const showStatus = (form, msg, ok) => {
   const status = form.querySelector('.form-status');
@@ -80,6 +80,9 @@ const showStatus = (form, msg, ok) => {
 // discovery form swaps itself out for a thank-you rather than tacking a line
 // under a submit button that's scrolled far off screen.
 const succeed = (form, msg) => {
+  // Only ever fired once the send is confirmed — the discovery form listens for
+  // this to bin its draft, and a draft must outlive an abandoned submit.
+  form.dispatchEvent(new CustomEvent('oa:sent'));
   const panelId = form.dataset.successPanel;
   const panel = panelId && document.getElementById(panelId);
   if (panel) {
@@ -96,27 +99,46 @@ const succeed = (form, msg) => {
 };
 
 document.querySelectorAll('.contact__form, .dsc__form').forEach((form) => {
-  // Returned from Formspree's own page after a native fallback submit.
+  // Returned from the worker after a native (no-JS or fallback) submit.
   if (new URLSearchParams(location.search).get('sent') === '1') {
     succeed(form, SENT_MSG);
   }
+
+  // Coming back via the back button restores a disabled
+  // "Sending…" button from the bfcache, with no way to try again.
+  window.addEventListener('pageshow', () => {
+    const btn = form.querySelector('button[type="submit"]');
+    if (btn && btn.disabled && btn.dataset.label) {
+      btn.disabled = false;
+      btn.textContent = btn.dataset.label;
+    }
+  });
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const btn = form.querySelector('button[type="submit"]');
     const label = btn ? btn.textContent : '';
-    if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+    if (btn) { btn.dataset.label = label; btn.disabled = true; btn.textContent = 'Sending…'; }
 
-    // form.submit() bypasses this handler, so there's no submit loop.
+    // Network failure only: form.submit() bypasses this handler, so no loop.
     const fallback = () => form.submit();
+    // The worker answered and said no — a native retry would fail the same
+    // way, so say so and give the button back rather than failing silently.
+    const refuse = (msg) => {
+      if (btn) { btn.disabled = false; btn.textContent = label; }
+      showStatus(form, msg || FAIL_MSG, false);
+    };
 
     fetch(form.action, {
       method: 'POST',
       body: new FormData(form),
       headers: { Accept: 'application/json' },
     })
-      .then((res) => {
-        if (!res.ok) return fallback();
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          return refuse(body.error);
+        }
         form.reset();
         if (btn) btn.textContent = label;
         succeed(form, SENT_MSG);
@@ -154,7 +176,7 @@ document.querySelectorAll('.contact__form, .dsc__form').forEach((form) => {
 
   let current = 0;
 
-  // Came back from Formspree's own page: the brief is in, so the draft is spent.
+  // Came back from a native submit: the brief is in, so the draft is spent.
   const justSent = new URLSearchParams(location.search).get('sent') === '1';
 
   // --- draft persistence -----------------------------------------------------
@@ -287,8 +309,11 @@ document.querySelectorAll('.contact__form, .dsc__form').forEach((form) => {
         return;
       }
     }
-    clearDraft();
   }, true);
+
+  // Not on submit — a send can still fail, and binning thirty answers at that
+  // point is the worst moment to do it.
+  form.addEventListener('oa:sent', clearDraft);
 
   // Enter in a single-line field should advance, not submit from step 2.
   form.addEventListener('keydown', (e) => {
