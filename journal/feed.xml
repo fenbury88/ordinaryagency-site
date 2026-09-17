@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Ordinary Agency Journal</title>
+    <link>https://ordinaryagency.com.au/journal/</link>
+    <atom:link href="https://ordinaryagency.com.au/journal/feed.xml" rel="self" type="application/rss+xml" />
+    <description>Short, practical posts from a Perth digital agency.</description>
+    <language>en-au</language>
+    <lastBuildDate>Thu, 17 Sep 2026 09:00:00 +0800</lastBuildDate>
+    <item>
+      <title>What a tradie&#x27;s website needs to do on a phone</title>
+      <link>https://ordinaryagency.com.au/journal/what-a-tradie-website-needs-to-do-on-a-phone.html</link>
+      <guid isPermaLink="true">https://ordinaryagency.com.au/journal/what-a-tradie-website-needs-to-do-on-a-phone.html</guid>
+      <pubDate>Thu, 17 Sep 2026 09:00:00 +0800</pubDate>
+      <category>Websites</category>
+      <description>Most people find a tradie on their phone, often standing next to the problem. Here&#x27;s what your site has to get right on a small screen.</description>
+    </item>
+    <item>
+      <title>Fix your website before you pay for ads</title>
+      <link>https://ordinaryagency.com.au/journal/fix-your-website-before-you-pay-for-ads.html</link>
+      <guid isPermaLink="true">https://ordinaryagency.com.au/journal/fix-your-website-before-you-pay-for-ads.html</guid>
+      <pubDate>Thu, 17 Sep 2026 09:00:00 +0800</pubDate>
+      <category>Lead gen</category>
+      <description>Ads send people to your website. If the site can&#x27;t turn a visit into a phone call, you&#x27;re paying to show strangers a closed door.</description>
+    </item>
+    <item>
+      <title>The admin jobs worth automating first</title>
+      <link>https://ordinaryagency.com.au/journal/admin-jobs-worth-automating-first.html</link>
+      <guid isPermaLink="true">https://ordinaryagency.com.au/journal/admin-jobs-worth-automating-first.html</guid>
+      <pubDate>Thu, 17 Sep 2026 09:00:00 +0800</pubDate>
+      <category>Automation</category>
+      <description>You don&#x27;t need an AI strategy. You need to stop typing the same details into three places. Start with the boring, repetitive jobs.</description>
+    </item>
+  </channel>
+</rss>
