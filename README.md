@@ -11,7 +11,7 @@ A minimal, editorial static site for ordinaryagency.com.au. No build step, no fr
 - `work.html` — portfolio grid
 - `about.html` — story, values, process
 - `contact.html` — contact details + form
-- `discovery.html` — the **Website brief**: long website-project questionnaire (six steps). Labelled "Website brief" everywhere; the filename stays so links already sent out keep working
+- `discovery.html` — the **Website Discovery**: long website-project questionnaire (six steps). Labelled "Website Discovery" everywhere, and it is the one call-to-action button in the header; the filename stays so links already sent out keep working
 - `404.html` — custom not-found page (GitHub Pages serves it automatically)
 - `style.css` — all styles (palette + type tokens are CSS variables at the top)
 - `main.js` — scroll reveals, sticky-header state, mobile menu, contact form
@@ -34,12 +34,12 @@ python3 -m http.server 4388
 Hosted on **GitHub Pages** from the `main` branch of `fenbury88/ordinaryagency-site`, with Cloudflare in front for DNS. Push to `main` and it's live in roughly a minute — there's no build step and nothing to run.
 
 ## Contact form
-All forms (home page, `contact.html`, the Website brief) POST to the Send It Bro Cloudflare Worker's `/oa-form` route (`https://senditbro-proxy.mike-e40.workers.dev/oa-form`; code in `~/senditbro/worker.js`). It emails the submission to mike@ordinaryagency.com.au via Resend, with reply-to set to the enquirer. They used to go to Formspree, whose reCAPTCHA silently lost submissions.
+All forms (home page, `contact.html`, the Website Discovery) POST to the Send It Bro Cloudflare Worker's `/oa-form` route (`https://senditbro-proxy.mike-e40.workers.dev/oa-form`; code in `~/senditbro/worker.js`). It emails the submission to mike@ordinaryagency.com.au via Resend, with reply-to set to the enquirer. They used to go to Formspree, whose reCAPTCHA silently lost submissions.
 
 `main.js` submits in the background so the visitor never leaves the page. If the fetch itself fails, it falls back to a normal browser POST; the worker 303s back to the form's `_next` URL with `?sent=1`, which shows the thank-you note. Without JS the form posts natively from the start.
 
-## Website brief form
-`/discovery.html` is the website-project questionnaire — six sections, about thirty questions. It posts to the same worker route as the contact form, told apart by its `_subject` ("Website brief from ordinaryagency.com.au").
+## Website Discovery form
+`/discovery.html` is the website-project questionnaire — six sections, about thirty questions. It posts to the same worker route as the contact form, told apart by its `_subject` ("Website Discovery from ordinaryagency.com.au").
 
 How it behaves:
 - **No JS**: one long scrolling form with native validation. It submits and works.
@@ -94,7 +94,7 @@ Body in Markdown: paragraphs, ## and ### headings, - and 1. lists, > quotes, **b
 | `call_click` | any `tel:` link; `where` = header / floating / page / footer |
 | `email_click` | any `mailto:` link |
 | `form_sent` | contact form (home or contact page) confirmed sent |
-| `brief_sent` | Website brief confirmed sent |
+| `brief_sent` | Website Discovery confirmed sent |
 | `outbound_senditbro` | a click through to senditbro.com.au |
 
 Cloudflare's **Email Address Obfuscation** rewrites `mailto:` links on the live site to `/cdn-cgi/l/email-protection…` and adds a script. With it on, `email_click` won't fire and the address is broken without JS. Turn it off in Cloudflare (Scrape Shield) if that matters.

@@ -39,7 +39,7 @@ GENERATOR = "_journal/build.py"
 PERTH = ZoneInfo("Australia/Perth")
 
 TAGS = {  # tag -> (theme class, call to action)
-    "Websites":   ("theme-web",   ("Planning a new website?", "Fill in the website brief and we'll come back with a proper proposal.", "/discovery.html", "Start the website brief")),
+    "Websites":   ("theme-web",   ("Planning a new website?", "Fill in the Website Discovery and we'll come back with a proper proposal.", "/discovery.html", "Start Website Discovery")),
     "Lead gen":   ("theme-leads", ("Want more enquiries?", "Tell us where the leads are drying up and we'll tell you honestly what we'd do.", "/contact.html", "Talk to us")),
     "Automation": ("theme-ai",    ("Drowning in admin?", "Tell us the job that eats your week and we'll tell you if it can be automated.", "/contact.html", "Talk to us")),
 }

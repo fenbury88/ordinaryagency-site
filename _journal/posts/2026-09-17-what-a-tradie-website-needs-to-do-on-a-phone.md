@@ -32,4 +32,4 @@ People on mobile data in a carport won't wait for a heavy page to load. Oversize
 
 Pull out your phone, open your own website and pretend your hot water system just died. Can you ring yourself inside ten seconds? If not, that's the first thing to fix.
 
-If you'd like a site built around that moment, start with our [website brief](/discovery.html). It takes about ten minutes and covers everything we need to quote properly.
+If you'd like a site built around that moment, start with our [Website Discovery](/discovery.html). It takes about ten minutes and covers everything we need to quote properly.
