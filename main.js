@@ -334,3 +334,49 @@ document.querySelectorAll('.contact__form, .dsc__form').forEach((form) => {
 if (window.matchMedia('(max-width: 680px)').matches) {
   document.querySelectorAll('.bp-callout').forEach((d, i) => { if (i > 0) d.open = false; });
 }
+
+// Floating call button on phones — appears once the header's call button has
+// scrolled out of view, so the number is always one tap away.
+(() => {
+  if (!window.matchMedia('(max-width: 860px)').matches) return;
+  const fab = document.createElement('a');
+  fab.href = 'tel:+61403566928';
+  fab.className = 'call-fab';
+  fab.setAttribute('aria-label', 'Call Ordinary Agency on 0403 566 928');
+  fab.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>Call Mike';
+  fab.tabIndex = -1;
+  document.body.appendChild(fab);
+  const footer = document.querySelector('.site-footer');
+  const update = () => {
+    const pastHeader = window.scrollY > 480;
+    // Step aside over the footer, which has its own contact links.
+    const atFooter = footer && footer.getBoundingClientRect().top < window.innerHeight - 40;
+    const show = pastHeader && !atFooter;
+    fab.classList.toggle('is-shown', show);
+    fab.tabIndex = show ? 0 : -1;
+  };
+  update();
+  window.addEventListener('scroll', update, { passive: true });
+})();
+
+// Conversion events. Sends to whichever analytics is on the page (GA4's gtag or
+// Plausible) and does nothing when neither is, so it's safe to ship before one
+// is chosen. Events: call_click, email_click, form_sent, brief_sent,
+// outbound_senditbro.
+const track = (name, props = {}) => {
+  const data = { page: location.pathname, ...props };
+  if (typeof window.gtag === 'function') window.gtag('event', name, data);
+  if (typeof window.plausible === 'function') window.plausible(name, { props: data });
+};
+document.addEventListener('click', (e) => {
+  const a = e.target.closest && e.target.closest('a[href]');
+  if (!a) return;
+  const href = a.getAttribute('href');
+  const where = a.closest('header') ? 'header' : a.classList.contains('call-fab') ? 'floating' : a.closest('footer') ? 'footer' : 'page';
+  if (href.startsWith('tel:')) track('call_click', { where });
+  else if (href.startsWith('mailto:')) track('email_click', { where });
+  else if (href.includes('senditbro.com.au')) track('outbound_senditbro', { where });
+});
+document.querySelectorAll('.contact__form, .dsc__form').forEach((form) => {
+  form.addEventListener('oa:sent', () => track(form.classList.contains('dsc__form') ? 'brief_sent' : 'form_sent'));
+});

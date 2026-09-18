@@ -3,20 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Contact — Ordinary Agency</title>
+  <title>Contact Ordinary Agency — Perth Web Design &amp; SEO</title>
   <meta name="description" content="Get in touch with Ordinary Agency. Based in Claremont, Perth. Email mike@ordinaryagency.com.au or call 0403 566 928." />
   <meta name="theme-color" content="#F7F4EF" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=20260917c" />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300..700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300..700&display=swap" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300..700&display=swap" /></noscript>
+  <link rel="stylesheet" href="style.css?v=20260918a" />
 
   <link rel="canonical" href="https://ordinaryagency.com.au/contact.html" />
 
   <!-- Open Graph -->
   <meta property="og:site_name" content="Ordinary Agency" />
-  <meta property="og:title" content="Contact — Ordinary Agency" />
+  <meta property="og:title" content="Contact Ordinary Agency — Perth Web Design &amp; SEO" />
   <meta property="og:description" content="Get in touch with Ordinary Agency. Based in Claremont, Perth. Email mike@ordinaryagency.com.au or call 0403 566 928." />
   <meta property="og:url" content="https://ordinaryagency.com.au/contact.html" />
   <meta property="og:type" content="website" />
@@ -28,7 +30,7 @@
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Contact — Ordinary Agency" />
+  <meta name="twitter:title" content="Contact Ordinary Agency — Perth Web Design &amp; SEO" />
   <meta name="twitter:description" content="Get in touch with Ordinary Agency. Based in Claremont, Perth. Email mike@ordinaryagency.com.au or call 0403 566 928." />
   <meta name="twitter:image" content="https://ordinaryagency.com.au/og-image.png" />
 </head>
@@ -53,6 +55,7 @@
         <a href="discovery.html" class="btn btn--small btn--ghost">Website brief</a>
         <a href="contact.html" class="btn btn--small nav__cta">Start a project</a>
       </div>
+      <a href="tel:+61403566928" class="nav-call" aria-label="Call Ordinary Agency on 0403 566 928"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>Call</a>
       <button class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
         <span></span><span></span>
       </button>
@@ -105,19 +108,19 @@
           <p hidden><label>Don&rsquo;t fill this in: <input name="_gotcha" tabindex="-1" autocomplete="off" /></label></p>
           <div class="field">
             <label for="name">Name *</label>
-            <input id="name" name="name" type="text" required />
+            <input id="name" name="name" type="text" autocomplete="name" required />
           </div>
           <div class="field">
             <label for="company">Company</label>
-            <input id="company" name="company" type="text" />
+            <input id="company" name="company" type="text" autocomplete="organization" />
           </div>
           <div class="field">
             <label for="email">Email *</label>
-            <input id="email" name="email" type="email" required />
+            <input id="email" name="email" type="email" autocomplete="email" required />
           </div>
           <div class="field">
-            <label for="phone">Phone</label>
-            <input id="phone" name="phone" type="tel" />
+            <label for="phone">Phone <span class="field__hint">(quickest way to reach you)</span></label>
+            <input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" />
           </div>
           <div class="field field--full">
             <label for="message">What can we help with?</label>
@@ -126,6 +129,20 @@
           <button type="submit" class="btn">Send message</button>
           <p class="form-status" role="status" aria-live="polite" hidden></p>
         </form>
+      </div>
+    </section>
+
+    <section class="section section--tint">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="section-label">What happens next</p>
+          <h2 class="section-title">No pitch deck. Just a conversation.</h2>
+        </div>
+        <div class="steps">
+          <div class="step reveal"><span class="step__num">01</span><div><h3>Mike reads it himself</h3><p>Your message comes straight to Mike, not a sales inbox. You&rsquo;ll hear back within a business day, usually sooner.</p></div></div>
+          <div class="step reveal"><span class="step__num">02</span><div><h3>A quick call</h3><p>A short chat to understand your business, what&rsquo;s working and what isn&rsquo;t. No obligation, and no jargon.</p></div></div>
+          <div class="step reveal"><span class="step__num">03</span><div><h3>A clear proposal</h3><p>What we&rsquo;d do, what it costs and how long it takes, in writing. If we&rsquo;re not the right fit, we&rsquo;ll tell you who is.</p></div></div>
+        </div>
       </div>
     </section>
   </main>
@@ -165,6 +182,6 @@
     <div class="footer-mark" aria-hidden="true">Ordinary<span class="footer-mark__dot">.</span></div>
   </footer>
 
-  <script src="main.js?v=20260917a"></script>
+  <script src="main.js?v=20260918a" defer></script>
 </body>
 </html>

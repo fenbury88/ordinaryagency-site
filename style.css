@@ -1042,3 +1042,43 @@ body::after {
   .bp-label { font-size: 1.02rem; }
   .bp-callout p { padding-left: 0; font-size: 0.92rem; line-height: 1.5; }
 }
+
+/* ---------- Tap-to-call on phones ---------- */
+/* Below 860px the header collapses to logo + menu, which hid the phone number
+   inside the menu. A call button stays in the header, and main.js adds a
+   floating one once the header has scrolled away. */
+.nav-call { display: none; }
+.nav-call svg { width: 15px; height: 15px; fill: currentColor; flex-shrink: 0; }
+@media (max-width: 860px) {
+  .nav-call {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    margin-left: auto; margin-right: 0.35rem;
+    padding: 0.55rem 1rem; border-radius: 100px;
+    background: var(--ink); color: var(--paper); font-size: 0.9rem; font-weight: 500;
+  }
+  .nav-call:active { background: var(--accent); }
+}
+.call-fab {
+  position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 90;
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.85rem 1.25rem; border-radius: 100px;
+  background: var(--accent); color: #fff; font-weight: 600; font-size: 0.95rem;
+  box-shadow: 0 12px 30px -10px rgba(21, 21, 15, 0.45);
+  opacity: 0; transform: translateY(12px); pointer-events: none;
+  transition: opacity .35s var(--ease), transform .35s var(--ease);
+}
+.call-fab svg { width: 17px; height: 17px; fill: currentColor; }
+.call-fab.is-shown { opacity: 1; transform: none; pointer-events: auto; }
+@media (min-width: 861px) { .call-fab { display: none; } }
+
+/* ---------- First screen paints immediately ---------- */
+/* The hero and page heads used the scroll reveal, which starts at opacity 0 and
+   waits for fonts, CSS and main.js before a 0.9s fade — the headline was the
+   last thing on screen (LCP ~4s on mobile). Above the fold they now render at
+   once with a small CSS-only lift. */
+.hero .reveal, .page-head .reveal {
+  opacity: 1; filter: none; transform: none; transition: none;
+  animation: liftIn .7s var(--ease) both;
+}
+@keyframes liftIn { from { transform: translateY(14px); } to { transform: none; } }
+.field__hint { font-weight: 400; color: var(--muted); }

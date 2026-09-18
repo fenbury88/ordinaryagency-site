@@ -262,7 +262,9 @@ def page(*, title, description, canonical, og_type, head_extra, body, chrome_par
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300..700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300..700&display=swap" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300..700&display=swap" /></noscript>
   <link rel="stylesheet" href="/style.css?v={css_v}" />
   <link rel="alternate" type="application/rss+xml" title="Ordinary Agency Journal" href="{SITE}/journal/feed.xml" />
 
@@ -295,7 +297,7 @@ def page(*, title, description, canonical, og_type, head_extra, body, chrome_par
 
 {footer}
 
-  <script src="/main.js?v={js_v}"></script>
+  <script src="/main.js?v={js_v}" defer></script>
 </body>
 </html>
 """
