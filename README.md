@@ -86,6 +86,22 @@ Body in Markdown: paragraphs, ## and ### headings, - and 1. lists, > quotes, **b
 ## Homepage blueprint
 `website-development.html#homepage-blueprint` is a wireframe of a trade homepage, block by block, with a leader line from each block to the job it does. It's adapted from the Send It Bro homepage but recoloured into Ordinary's ink and green, since lime is reserved for Send It Bro. Each callout is a `<details>` that's open in the markup, so it reads fine without JS. On phones `main.js` closes all but the first, because nine open rows in a narrow column get long.
 
+## Tracking
+`main.js` fires conversion events to GA4 (`gtag`) or Plausible, whichever is on the page, and does nothing if neither is. That means adding an analytics snippet to the `<head>` of every page (and the template in `_journal/build.py`) is all it takes to switch them on.
+
+| Event | When |
+|---|---|
+| `call_click` | any `tel:` link; `where` = header / floating / page / footer |
+| `email_click` | any `mailto:` link |
+| `form_sent` | contact form (home or contact page) confirmed sent |
+| `brief_sent` | Website brief confirmed sent |
+| `outbound_senditbro` | a click through to senditbro.com.au |
+
+Cloudflare's **Email Address Obfuscation** rewrites `mailto:` links on the live site to `/cdn-cgi/l/email-protection…` and adds a script. With it on, `email_click` won't fire and the address is broken without JS. Turn it off in Cloudflare (Scrape Shield) if that matters.
+
+## Phones
+Below 860px the header shows a **Call** button beside the menu, and `main.js` adds a floating **Call Mike** button once the page has scrolled 480px, hiding it again over the footer.
+
 ## Brand
 - **Type:** Fraunces (wordmark) + Space Grotesk (display) + Inter (body)
 - **Palette:** paper `#FAFAF7`, ink `#15150F`, green accent `#2C7A57` — all in `:root` in `style.css`
