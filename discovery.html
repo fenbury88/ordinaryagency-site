@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Website Discovery — Plan Your New Website | Ordinary Agency</title>
-  <meta name="description" content="Tell us about your website project. A short website discovery questionnaire covering your goals, audience, content, design direction and technical requirements." />
+  <meta name="description" content="Plan your new website in about five minutes: chat with our AI assistant and get a website brief, or fill in the written questionnaire." />
   <meta name="theme-color" content="#F7F4EF" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -12,7 +12,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300..700&display=swap" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300..700&display=swap" media="print" onload="this.media='all'" />
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300..700&display=swap" /></noscript>
-  <link rel="stylesheet" href="style.css?v=20260918a" />
+  <link rel="stylesheet" href="style.css?v=20261007a" />
 
   <link rel="canonical" href="https://ordinaryagency.com.au/discovery.html" />
 
@@ -77,14 +77,37 @@
         <h1 class="page-head__title reveal">Tell us about the <em>project</em>.</h1>
         <p class="page-head__lead reveal">
           The better we understand your business up front, the sharper the proposal and the
-          fewer surprises later. Six short sections — about ten minutes. Only your name,
-          email and audience are required; skip anything you&rsquo;re unsure about.
+          fewer surprises later. Talk it through with Jess, our AI assistant, in about five
+          minutes. Your brief goes straight to Mike, and a copy comes to you.
         </p>
       </div>
     </section>
 
     <section class="section dsc">
       <div class="container">
+
+        <!-- Discovery chat. Hidden until discovery-chat.js runs; without JS the
+             written questionnaire below is the whole page. -->
+        <div class="dchat" id="dchat" hidden>
+          <div class="dchat__head">
+            <span class="dchat__avatar" aria-hidden="true">J</span>
+            <div class="dchat__who">
+              <strong>Jess</strong>
+              <span>Ordinary Agency&rsquo;s AI assistant</span>
+            </div>
+            <button type="button" class="dchat__reset" id="dchat-reset">Start over</button>
+          </div>
+          <div class="dchat__msgs" id="dchat-msgs" role="log" aria-live="polite" aria-label="Conversation with Jess"></div>
+          <form class="dchat__form" id="dchat-form">
+            <label class="sr-only" for="dchat-input">Your answer</label>
+            <textarea id="dchat-input" rows="1" placeholder="Type your answer…" autocomplete="off" maxlength="2000"></textarea>
+            <button type="submit" class="btn" id="dchat-send">Send</button>
+          </form>
+          <p class="dchat__fine">Jess is an AI and can get things wrong &mdash; Mike reads every brief himself. Rather talk to a person? Call <a href="tel:+61403566928">0403&nbsp;566&nbsp;928</a>.</p>
+        </div>
+        <button type="button" class="link-arrow dsc__toggle" id="dsc-written-toggle" aria-expanded="false" aria-controls="dsc-written" hidden>Prefer a written form? Use the questionnaire instead</button>
+
+        <div id="dsc-written">
 
         <!-- Shown after a send, and when a no-JS submit returns with ?sent=1 -->
         <div class="dsc__done" id="dsc-done" hidden>
@@ -415,6 +438,7 @@
 
           <p class="form-status" role="status" aria-live="polite" hidden></p>
         </form>
+        </div>
       </div>
     </section>
   </main>
@@ -454,6 +478,7 @@
     <div class="footer-mark" aria-hidden="true">Ordinary<span class="footer-mark__dot">.</span></div>
   </footer>
 
-  <script src="main.js?v=20260918a" defer></script>
+  <script src="main.js?v=20261007a" defer></script>
+  <script src="discovery-chat.js?v=20261007a" defer></script>
 </body>
 </html>

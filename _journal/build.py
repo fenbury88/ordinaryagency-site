@@ -44,7 +44,7 @@ TAGS = {  # tag -> (theme class, call to action)
     "Automation": ("theme-ai",    ("Drowning in admin?", "Tell us the job that eats your week and we'll tell you if it can be automated.", "/contact.html", "Talk to us")),
 }
 MIN_WORDS, MAX_WORDS = 200, 500
-ALLOWED_DOLLARS = {"$797", "$250"}  # Send It Bro's published prices
+ALLOWED_DOLLARS = set()  # no prices in posts: every project is quoted individually
 BANNED_PHRASES = [
     "in today's fast-paced", "in today’s fast-paced", "delve", "game-changer", "game changer",
     "unlock the power", "unleash", "supercharge", "in the digital age", "look no further",
@@ -134,7 +134,7 @@ def check_post(post, clients):
         problems.append("contains a percentage; no statistics (they can't be verified)")
     for amount in re.findall(r"\$\s?\d[\d,]*(?:\.\d+)?k?", everything):
         if amount.replace(" ", "") not in ALLOWED_DOLLARS:
-            problems.append(f"price {amount!r}; only Send It Bro's published $797 / $250 may appear")
+            problems.append(f"price {amount!r}; no dollar amounts in posts")
     for phrase in BANNED_PHRASES:
         if phrase in lower:
             problems.append(f"banned phrase {phrase!r}")

@@ -11,10 +11,11 @@ A minimal, editorial static site for ordinaryagency.com.au. No build step, no fr
 - `work.html` — portfolio grid
 - `about.html` — story, values, process
 - `contact.html` — contact details + form
-- `discovery.html` — the **Website Discovery**: long website-project questionnaire (six steps). Labelled "Website Discovery" everywhere, and it is the one call-to-action button in the header; the filename stays so links already sent out keep working
+- `discovery.html` — the **Website Discovery**: an AI discovery chat (Jess) up top, with the long website-project questionnaire (six steps) behind a "Prefer a written form?" link. Labelled "Website Discovery" everywhere, and it is the one call-to-action button in the header; the filename stays so links already sent out keep working
 - `404.html` — custom not-found page (GitHub Pages serves it automatically)
 - `style.css` — all styles (palette + type tokens are CSS variables at the top)
 - `main.js` — scroll reveals, sticky-header state, mobile menu, contact form
+- `discovery-chat.js` — the Website Discovery chat (see [Discovery chat](#discovery-chat))
 - `favicon.svg` — brand mark
 - `robots.txt` / `sitemap.xml` — SEO
 - `journal/` — the Journal. **Generated, don't hand-edit**; see [Journal](#journal)
@@ -34,9 +35,20 @@ python3 -m http.server 4388
 Hosted on **GitHub Pages** from the `main` branch of `fenbury88/ordinaryagency-site`, with Cloudflare in front for DNS. Push to `main` and it's live in roughly a minute — there's no build step and nothing to run.
 
 ## Contact form
-All forms (home page, `contact.html`, the Website Discovery) POST to the Send It Bro Cloudflare Worker's `/oa-form` route (`https://senditbro-proxy.mike-e40.workers.dev/oa-form`; code in `~/senditbro/worker.js`). It emails the submission to mike@ordinaryagency.com.au via Resend, with reply-to set to the enquirer. They used to go to Formspree, whose reCAPTCHA silently lost submissions.
+All forms (home page, `contact.html`, the Website Discovery) POST to the Cloudflare Worker's `/oa-form` route (`https://senditbro-proxy.mike-e40.workers.dev/oa-form`; code in `~/senditbro/worker.js`). It emails the submission to mike@ordinaryagency.com.au via Resend, with reply-to set to the enquirer. They used to go to Formspree, whose reCAPTCHA silently lost submissions.
 
 `main.js` submits in the background so the visitor never leaves the page. If the fetch itself fails, it falls back to a normal browser POST; the worker 303s back to the form's `_next` URL with `?sent=1`, which shows the thank-you note. Without JS the form posts natively from the start.
+
+## Discovery chat
+The top of `/discovery.html` is a chat with **Jess**, an AI assistant (Claude Haiku). It was ported from Send It Bro's `/ai` page when SIB was wound up on 2026-10-07. Code is all in `discovery-chat.js`; the system prompt is `systemPrompt()` at the bottom.
+
+- **Calls** `POST /` on the senditbro-proxy worker, which only serves Ordinary Agency origins (plus localhost), one model, capped tokens, and `web_search` as the only tool. Jess searches "[industry] [location]" once to name two real local competitors.
+- **Never quotes prices or timeframes.** Mike sends a proposal after reading the brief.
+- **Finishes** with a `BRIEF_SUMMARY:` JSON block. The page renders it as a card and posts it to `/oa-form` (subject "Website Discovery (chat) from ordinaryagency.com.au") with the full transcript. `_copy_to_client=1` makes the worker email the client a copy as well, sent from `brief@senditbro.com.au` until ordinaryagency.com.au is verified in Resend.
+- **Unfinished chats:** if someone leaves after giving an email but before the brief, a `sendBeacon` on `pagehide` sends Mike the transcript once ("Unfinished Website Discovery chat").
+- **Saved** in `localStorage` (`oa_discovery_chat_v1`, 7 days) so a refresh resumes; "Start over" clears it.
+- **No JS:** the chat stays hidden and the written questionnaire is the page, exactly as before.
+- **Events:** `discovery_chat_started`, and `brief_sent` with `source: 'chat'`.
 
 ## Website Discovery form
 `/discovery.html` is the website-project questionnaire — six sections, about thirty questions. It posts to the same worker route as the contact form, told apart by its `_subject` ("Website Discovery from ordinaryagency.com.au").
@@ -78,13 +90,13 @@ Body in Markdown: paragraphs, ## and ### headings, - and 1. lists, > quotes, **b
 **The checks** are the only gate between the unattended agent and the live site, so any failure stops the build before it writes anything:
 - the tag is valid, the slug is lowercase-with-hyphens and unique, the title is 70 characters or fewer, the description is 50–160 characters, and the body is 200–500 words
 - only the Markdown listed above: no single-# headings, raw HTML, images, tables or code blocks
-- no percentages (statistics can't be verified), and no dollar amounts except Send It Bro's published $797 / $250
+- no percentages (statistics can't be verified), and no dollar amounts at all
 - no client from `work.html` named without Mike's okay
 - none of a list of AI-sounding stock phrases ("delve", "seamless", "game-changer"…)
 - internal links must point at pages that exist, and external links must be https
 
 ## Homepage blueprint
-`website-development.html#homepage-blueprint` is a wireframe of a trade homepage, block by block, with a leader line from each block to the job it does. It's adapted from the Send It Bro homepage but recoloured into Ordinary's ink and green, since lime is reserved for Send It Bro. Each callout is a `<details>` that's open in the markup, so it reads fine without JS. On phones `main.js` closes all but the first, because nine open rows in a narrow column get long.
+`website-development.html#homepage-blueprint` is a wireframe of a trade homepage, block by block, with a leader line from each block to the job it does. It was adapted from the (now closed) Send It Bro homepage and recoloured into Ordinary's ink and green. Each callout is a `<details>` that's open in the markup, so it reads fine without JS. On phones `main.js` closes all but the first, because nine open rows in a narrow column get long.
 
 ## Tracking
 `main.js` fires conversion events to GA4 (`gtag`) or Plausible, whichever is on the page, and does nothing if neither is. That means adding an analytics snippet to the `<head>` of every page (and the template in `_journal/build.py`) is all it takes to switch them on.
@@ -94,8 +106,8 @@ Body in Markdown: paragraphs, ## and ### headings, - and 1. lists, > quotes, **b
 | `call_click` | any `tel:` link; `where` = header / floating / page / footer |
 | `email_click` | any `mailto:` link |
 | `form_sent` | contact form (home or contact page) confirmed sent |
-| `brief_sent` | Website Discovery confirmed sent |
-| `outbound_senditbro` | a click through to senditbro.com.au |
+| `brief_sent` | Website Discovery confirmed sent (`source: 'chat'` from the chat) |
+| `discovery_chat_started` | first message sent in the discovery chat |
 
 Cloudflare's **Email Address Obfuscation** rewrites `mailto:` links on the live site to `/cdn-cgi/l/email-protection…` and adds a script. With it on, `email_click` won't fire and the address is broken without JS. Turn it off in Cloudflare (Scrape Shield) if that matters.
 
@@ -122,8 +134,8 @@ python3 _journal/build.py
   --window-size=1200,630 og-image-source.html
 ```
 
-## Send It Bro
-`index.html` carries a dedicated Send It Bro section (`#send-it-bro`) that pitches the product and links to senditbro.com.au. It is **not** a portfolio piece — deliberately kept out of both work grids, and it uses Send It Bro's own lime `#BDFF30` on ink so it reads as a separate brand.
+## Plan-your-site band
+`index.html` has a dark band (`#plan-your-site`, `.plan` styles) pointing at the Website Discovery chat. It replaced the Send It Bro section when SIB closed on 2026-10-07; senditbro.com.au now 301s to this site.
 
 ## To do
 
@@ -141,7 +153,7 @@ python3 _journal/build.py
 3. **The Journal agent.** *(next)* Weekly scheduled Claude Code routine with repo access (cloud, so it doesn't depend on the Mac mini being awake).
    - Pulls the next topic from `journal/topics.md` (seed: questions Mike gets asked, trades in `work.html`, Perth local search, AI/automation for small business).
    - Drafts in Mike's voice, Australian English, humanizer pass; runs the generator; commits and pushes; notifies Mike with the live link.
-   - Because nothing is reviewed before publish, the guardrails are hard rules, and a failed check stops the push: no invented client results or statistics, no naming clients, no pricing claims beyond Send It Bro's published prices, word limit, no repeated topic, links and schema validate. Unpublishing = delete the entry from `posts.json`, rerun the generator, push.
+   - Because nothing is reviewed before publish, the guardrails are hard rules, and a failed check stops the push: no invented client results or statistics, no naming clients, no pricing claims, word limit, no repeated topic, links and schema validate. Unpublishing = delete the entry from `posts.json`, rerun the generator, push.
 4. **Other activity signals.** Month-went-live on work tiles (dates from Mike); an availability line ("Taking on 2 new projects for October") the agent refreshes monthly; newer Google reviews (featured ones are 2023); optionally a LinkedIn draft per post.
 
 ### Smaller

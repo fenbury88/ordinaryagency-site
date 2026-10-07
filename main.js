@@ -361,8 +361,8 @@ if (window.matchMedia('(max-width: 680px)').matches) {
 
 // Conversion events. Sends to whichever analytics is on the page (GA4's gtag or
 // Plausible) and does nothing when neither is, so it's safe to ship before one
-// is chosen. Events: call_click, email_click, form_sent, brief_sent,
-// outbound_senditbro.
+// is chosen. Events: call_click, email_click, form_sent, brief_sent.
+// discovery-chat.js adds discovery_chat_started and brief_sent {source: 'chat'}.
 const track = (name, props = {}) => {
   const data = { page: location.pathname, ...props };
   if (typeof window.gtag === 'function') window.gtag('event', name, data);
@@ -375,7 +375,6 @@ document.addEventListener('click', (e) => {
   const where = a.closest('header') ? 'header' : a.classList.contains('call-fab') ? 'floating' : a.closest('footer') ? 'footer' : 'page';
   if (href.startsWith('tel:')) track('call_click', { where });
   else if (href.startsWith('mailto:')) track('email_click', { where });
-  else if (href.includes('senditbro.com.au')) track('outbound_senditbro', { where });
 });
 document.querySelectorAll('.contact__form, .dsc__form').forEach((form) => {
   form.addEventListener('oa:sent', () => track(form.classList.contains('dsc__form') ? 'brief_sent' : 'form_sent'));
