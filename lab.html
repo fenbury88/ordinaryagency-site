@@ -234,6 +234,48 @@
     }
     .btn:hover { transform: translateY(-2px); background: #76d6a6; }
 
+    /* ---------- Who you'd be working with ---------- */
+    .me { border-top: 1px solid rgba(250, 250, 247, 0.12); }
+    .me__grid {
+      display: grid; grid-template-columns: 0.85fr 1.15fr;
+      gap: clamp(2rem, 6vw, 5.5rem); align-items: start;
+    }
+    .portrait {
+      aspect-ratio: 4 / 5; border-radius: 10px;
+      border: 1px solid rgba(250, 250, 247, 0.16);
+      background:
+        repeating-linear-gradient(135deg, rgba(250,250,247,.035) 0 10px, transparent 10px 20px),
+        #16160F;
+      display: grid; place-items: center; text-align: center;
+      color: var(--muted); font-size: 0.8rem; letter-spacing: 0.14em; text-transform: uppercase;
+      padding: 1rem;
+    }
+    .portrait__cap { margin-top: 0.9rem; color: var(--muted); font-size: 0.85rem; }
+    .me__body p { color: rgba(250, 250, 247, 0.66); font-size: clamp(1rem, 1.35vw, 1.12rem); }
+    .me__body p + p { margin-top: 1.2rem; }
+    .me__body .lead {
+      font-family: var(--font-display); font-weight: 500; color: var(--paper);
+      font-size: clamp(1.25rem, 2.3vw, 1.75rem); line-height: 1.3; letter-spacing: -0.02em;
+      margin-bottom: 1.6rem;
+    }
+    .me__body strong { color: var(--paper); font-weight: 500; }
+    .sig {
+      margin-top: 2.4rem; padding-top: 1.6rem;
+      border-top: 1px solid rgba(250, 250, 247, 0.12);
+      display: flex; align-items: baseline; gap: 0.9rem; flex-wrap: wrap;
+    }
+    .sig__name { font-family: var(--font-logo); font-size: 1.4rem; font-weight: 600; letter-spacing: -0.02em; }
+    .sig__role { color: var(--muted); font-size: 0.9rem; }
+
+    /* The pointer trail. Drawn on a canvas by the script below; it only wakes
+       up for a real mouse, and only after the page has elevated. */
+    .trail {
+      position: fixed; inset: 0; z-index: 60; pointer-events: none;
+      opacity: 1;
+    }
+    @media (pointer: coarse) { .trail { display: none; } }
+    @media (prefers-reduced-motion: reduce) { .trail { display: none; } }
+
     .foot {
       border-top: 1px solid rgba(250, 250, 247, 0.12);
       padding-block: 2.5rem; color: var(--muted); font-size: 0.85rem;
@@ -241,7 +283,8 @@
     }
 
     @media (max-width: 820px) {
-      .vault__head, .gate__grid { grid-template-columns: 1fr; }
+      .vault__head, .gate__grid, .me__grid { grid-template-columns: 1fr; }
+      .portrait { aspect-ratio: 3 / 2; }
       .row__btn { grid-template-columns: 2.2rem 1fr 1.6rem; }
       .row__meta { display: none; }
       .row__frame { flex-direction: column; align-items: flex-start; gap: 1rem; }
@@ -412,6 +455,43 @@
     </div>
   </section>
 
+  <!-- ── Who you'd be working with ──────────────────────── -->
+  <section class="section me" id="mike">
+    <div class="container">
+      <p class="label">Who you&rsquo;d be working with</p>
+      <div class="me__grid">
+        <figure>
+          <div class="portrait">Portrait goes here</div>
+          <figcaption class="portrait__cap">Mike. Claremont, Perth.</figcaption>
+        </figure>
+        <div class="me__body">
+          <p class="lead">There isn&rsquo;t a &ldquo;we&rdquo;. There&rsquo;s me, and a build team I&rsquo;ve worked with for years.</p>
+          <p>
+            I&rsquo;m Mike. Over a decade of this now, most of it for the businesses nobody writes
+            case studies about. Air conditioning. Pest control. Glazing. Cranes. The ordinary ones,
+            run by people who are very good at the thing they do and have no interest in
+            becoming marketers on the side.
+          </p>
+          <p>
+            <strong>You deal with me.</strong> Not a salesperson who vanishes once the deposit clears,
+            and not an account manager relaying your message to someone you&rsquo;ll never meet.
+            The design and development team sits in Vietnam, they&rsquo;ve been with me for years,
+            and they&rsquo;re the reason the work costs what it costs.
+          </p>
+          <p>
+            I&rsquo;ll also tell you when something isn&rsquo;t worth doing. Half the jobs that come
+            through here don&rsquo;t need what the last agency sold them. That conversation is free,
+            and it&rsquo;s usually the most useful one we have.
+          </p>
+          <div class="sig">
+            <span class="sig__name">Mike Fenbury</span>
+            <span class="sig__role">Founder · answers his own phone · 0403 566 928</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ── Selectivity ────────────────────────────────────── -->
   <section class="section gate">
     <div class="container gate__grid">
@@ -441,7 +521,96 @@
     <span><a href="tel:+61403566928">0403 566 928</a></span>
   </footer>
 
+  <canvas class="trail" id="trail" aria-hidden="true"></canvas>
+
   <script>
+    // Pointer trail — a tapered smear that follows the mouse and flicks off
+    // droplets when you move fast. Mouse only, and it fades in as the page
+    // elevates, so even the cursor starts ordinary.
+    (() => {
+      const cv = document.getElementById('trail');
+      const fine = matchMedia('(pointer: fine)').matches;
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!cv || !fine || reduce) { cv && cv.remove(); return; }
+
+      const ctx = cv.getContext('2d');
+      const LIFE = 480;      // ms a point stays on screen
+      const MAXW = 26;       // px at the head of the smear
+      let dpr = 1, pts = [], drops = [], last = null, raf = null;
+
+      const size = () => {
+        dpr = Math.min(devicePixelRatio || 1, 2);
+        cv.width = innerWidth * dpr;
+        cv.height = innerHeight * dpr;
+        cv.style.width = innerWidth + 'px';
+        cv.style.height = innerHeight + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      };
+      size();
+      addEventListener('resize', size);
+
+      // Dark smear over the plain hero, green once we're on ink.
+      const colour = () => {
+        const p = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--p')) || 0;
+        return p < 0.5 ? [14, 14, 10] : [87, 190, 137];
+      };
+
+      addEventListener('pointermove', (e) => {
+        if (e.pointerType !== 'mouse') return;
+        const now = performance.now();
+        const sp = last ? Math.hypot(e.clientX - last.x, e.clientY - last.y) : 0;
+        pts.push({ x: e.clientX, y: e.clientY, t: now });
+        if (pts.length > 70) pts.shift();
+        // Fling a droplet off the end of a fast stroke.
+        if (sp > 26 && Math.random() < 0.3 && last) {
+          const a = Math.atan2(e.clientY - last.y, e.clientX - last.x) + (Math.random() - 0.5);
+          const v = Math.min(sp, 60) * 0.055;
+          drops.push({ x: e.clientX, y: e.clientY, vx: Math.cos(a) * v, vy: Math.sin(a) * v,
+                       r: 1.4 + Math.random() * 2.6, t: now });
+        }
+        last = { x: e.clientX, y: e.clientY };
+        if (!raf) raf = requestAnimationFrame(draw);
+      }, { passive: true });
+
+      function draw() {
+        const now = performance.now();
+        ctx.clearRect(0, 0, innerWidth, innerHeight);
+        pts = pts.filter((p) => now - p.t < LIFE);
+        drops = drops.filter((d) => now - d.t < 700);
+
+        const [r, g, b] = colour();
+        // The smear: newest segment is fattest, the tail thins to nothing.
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        // Curve through the midpoints so the stroke reads as one smear rather
+        // than a string of dashes.
+        for (let i = 1; i < pts.length; i++) {
+          const a = pts[i - 1], c = pts[i];
+          const k = 1 - (now - c.t) / LIFE;        // 1 = fresh
+          const mid = { x: (a.x + c.x) / 2, y: (a.y + c.y) / 2 };
+          const prev = pts[i - 2] || a;
+          ctx.strokeStyle = `rgba(${r},${g},${b},${(Math.pow(k, 1.3) * 0.92).toFixed(3)})`;
+          ctx.lineWidth = Math.max(0.4, MAXW * Math.pow(k, 1.45));
+          ctx.beginPath();
+          ctx.moveTo((prev.x + a.x) / 2, (prev.y + a.y) / 2);
+          ctx.quadraticCurveTo(a.x, a.y, mid.x, mid.y);
+          ctx.stroke();
+        }
+        // Droplets: thrown out, slowed down, pulled down a little.
+        drops.forEach((d) => {
+          const k = 1 - (now - d.t) / 700;
+          d.x += d.vx; d.y += d.vy;
+          d.vx *= 0.94; d.vy = d.vy * 0.94 + 0.12;
+          ctx.fillStyle = `rgba(${r},${g},${b},${(k * 0.85).toFixed(3)})`;
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, d.r * k, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        raf = pts.length || drops.length ? requestAnimationFrame(draw) : null;
+      }
+    })();
+
     // Scroll drives one number: 0 = the ordinary version, 1 = ours.
     (() => {
       const track = document.getElementById('track');
