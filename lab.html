@@ -583,7 +583,12 @@
       const FADE = 0.021;       // alpha taken off the buffer each frame
 
       let w = 0, h = 0, dpr = 1, size = 0;
-      let at = null, prev = null, raf = null, idle = 0, ripples = [];
+      // `wetness` tracks the strongest ink left on the canvas. The fade is
+      // multiplicative so it approaches zero without ever reaching it — left
+      // alone, the loop would stop and freeze the remainder on screen for
+      // good. This is what tells us when to wipe it properly.
+      let wetness = 0;
+      let at = null, prev = null, raf = null, ripples = [];
 
       const resize = () => {
         w = innerWidth; h = innerHeight;
@@ -622,12 +627,14 @@
         wake();
       }, { passive: true });
 
-      addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-          ctx.clearRect(0, 0, w, h);
-          size = 0; prev = null; at = null;
-        }
-      });
+      const dry = () => {
+        ctx.clearRect(0, 0, w, h);
+        size = 0; wetness = 0; prev = null; at = null;
+      };
+      addEventListener('visibilitychange', () => { if (document.hidden) dry(); });
+      addEventListener('blur', dry);
+      // Mouse left the window entirely: stop drawing from a stale position.
+      document.addEventListener('mouseleave', () => { at = null; prev = null; });
 
       window.__ripple = (x, y) => {
         const t = performance.now();
@@ -651,7 +658,9 @@
         ctx.fillRect(0, 0, w, h);
         ctx.globalCompositeOperation = 'source-over';
 
+        wetness *= (1 - FADE);
         if (at && size > 0.015) {
+          wetness = 1;
           const r = size * MAXR;
           if (prev) {
             // Walk from the last position to this one, so a fast flick is one
@@ -689,9 +698,14 @@
           rctx.beginPath(); rctx.arc(r.x, r.y, Math.pow(a, 0.52) * REACH, 0, 6.283); rctx.stroke();
         });
 
-        // Keep going while there is still ink left to fade out.
-        idle = (size < 0.015 && target < 0.015) ? idle + 1 : 0;
-        raf = (idle < 80 || ripples.length) ? requestAnimationFrame(draw) : null;
+        // Once the ink is spent, wipe the canvas for real and stop. Without
+        // this the last few percent sits there until the page reloads.
+        if (wetness < 0.02 && size < 0.015) {
+          ctx.clearRect(0, 0, w, h);
+          wetness = 0;
+          if (!ripples.length) { raf = null; return; }
+        }
+        raf = requestAnimationFrame(draw);
       }
     })();
 
