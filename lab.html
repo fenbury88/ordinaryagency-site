@@ -593,8 +593,10 @@
       <!-- Just enough displacement to stop the edge reading as a machine-made
            curve. Theirs is a smooth, fat, calligraphic ribbon, not a torn one,
            so this stays gentle. -->
-      <feTurbulence type="fractalNoise" baseFrequency="0.008 0.011" numOctaves="3" seed="11" result="noise" />
-      <feDisplacementMap in="goo" in2="noise" scale="26" xChannelSelector="R" yChannelSelector="G" />
+      <!-- One octave at low frequency: their edge rolls in big smooth waves
+           with the odd sharp notch, not a fine fuzz of little lumps. -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.0055 0.0085" numOctaves="1" seed="11" result="noise" />
+      <feDisplacementMap in="goo" in2="noise" scale="32" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
 
@@ -623,7 +625,7 @@
       if (!swap || !rp || reduce) { swap && swap.remove(); rp && rp.remove(); return; }
 
       const rctx = rp.getContext('2d');
-      const MAXR = 60;          // px of ink blob at full tilt
+      const MAXR = 72;          // px of ink blob at full tilt
       const FULL = 7;           // px/frame of brush travel that counts as full size
       const EASE = 0.08;        // their lerp factor, so size swells and sags
       const LIFE = 1150;        // ms a blob of ink lasts
@@ -655,8 +657,10 @@
       })();
 
       for (let i = 0; i < POOL; i++) {
-        const el = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        el.setAttribute('r', '0');
+        // Ellipses, not circles: ink gets drawn out along the direction it
+        // was thrown, which is what stops the mass bulging round.
+        const el = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+        el.setAttribute('rx', '0'); el.setAttribute('ry', '0');
         paths.appendChild(el);
         pool.push(el);
       }
@@ -722,7 +726,9 @@
         // Inject ink at the brush. Not a stroke — a puff of blobs that then
         // go their own way, which is what makes the cloud rather than a line.
         if (brush && prev && size > 0.02 && moved > 0.4) {
-          const n = Math.min(1 + Math.round(moved / 9), 5);
+          // Fewer, bigger blobs: the body wants to read as one smooth mass
+          // that the displacement then tears, not as a row of lumps.
+          const n = Math.min(1 + Math.round(moved / 16), 3);
           for (let i = 0; i < n; i++) {
             const f = i / n;
             segs.push({
@@ -730,7 +736,9 @@
               y: prev.y + dy * f + (Math.random() - 0.5) * 22,
               vx: dx * SPREAD * (0.5 + Math.random()) + (Math.random() - 0.5) * 1.6,
               vy: dy * SPREAD * (0.5 + Math.random()) + (Math.random() - 0.5) * 1.6,
-              r: size * MAXR * (0.45 + Math.random() * 0.75),
+              r: size * MAXR * (0.7 + Math.random() * 1.0),
+              a: Math.atan2(dy, dx) * 57.2958,
+              s: 1 + Math.min(moved / 9, 1.5) * (0.6 + Math.random() * 0.7),
               t: now,
             });
           }
@@ -742,7 +750,8 @@
             segs.push({
               x: brush.x, y: brush.y,
               vx: Math.cos(a) * m, vy: Math.sin(a) * m,
-              r: size * MAXR * (0.18 + Math.random() * 0.3), t: now,
+              r: size * MAXR * (0.18 + Math.random() * 0.3),
+              a: a * 57.2958, s: 1 + Math.random() * 0.8, t: now,
             });
           }
           while (segs.length > POOL) segs.shift();
@@ -765,12 +774,18 @@
         for (let i = 0; i < POOL; i++) {
           const g = segs[i];
           const el = pool[i];
-          if (!g) { if (el.getAttribute('r') !== '0') el.setAttribute('r', '0'); continue; }
+          if (!g) { if (el.getAttribute('rx') !== '0') { el.setAttribute('rx', '0'); el.setAttribute('ry', '0'); } continue; }
           const age = (now - g.t) / LIFE;
           const k = 1 - age;
+          const r = g.r * (1 + age * SWELL);
+          // The stretch relaxes back towards round as the ink slows and
+          // spreads, the way a thrown drop settles.
+          const st = 1 + (g.s - 1) * k;
           el.setAttribute('cx', g.x.toFixed(1));
           el.setAttribute('cy', g.y.toFixed(1));
-          el.setAttribute('r', (g.r * (1 + age * SWELL)).toFixed(1));
+          el.setAttribute('rx', (r * st).toFixed(1));
+          el.setAttribute('ry', (r / Math.sqrt(st)).toFixed(1));
+          el.setAttribute('transform', `rotate(${g.a.toFixed(1)} ${g.x.toFixed(1)} ${g.y.toFixed(1)})`);
           el.setAttribute('opacity', Math.min(1, k * 2.6).toFixed(3));
         }
 
