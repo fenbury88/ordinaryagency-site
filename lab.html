@@ -633,6 +633,10 @@
       const FOLLOW = 0.17;      // how hard the brush chases the cursor
       const SPREAD = 0.55;      // how much of the brush's speed the ink inherits
       const SWELL = 0.9;        // how much each blob grows as it drifts
+      const DRAG = 0.965;       // how much speed ink keeps frame to frame
+      const PUSH = 0.42;        // how hard the brush shoves ink it passes through
+      const PUSH_R = 190;       // px the brush's wake reaches
+      const CURL = 0.14;        // strength of the swirl laid over the top
 
       // The brush doesn't sit on the cursor. It chases it, which is what gives
       // the ribbon its weight: it swings wide on a fast turn, overshoots, and
@@ -759,12 +763,24 @@
         if (brush) prev = { x: brush.x, y: brush.y };
         segs = segs.filter((g) => now - g.t < LIFE);
 
-        // Each blob drifts on, curls, slows and swells as it goes — ink
-        // spreading through water rather than paint sitting on a surface.
+        // Ink keeps the speed it was given and only slowly loses it, so a
+        // flick sends the cloud travelling and it carries on after you stop.
+        // Sweeping the brush back through it shoves it along as well, which is
+        // what makes it read as a fluid being pushed rather than a stamp.
+        const shove = moved > 0.5;
         segs.forEach((g) => {
+          if (shove && brush) {
+            const px = g.x - brush.x, py = g.y - brush.y;
+            const d = Math.hypot(px, py);
+            if (d < PUSH_R) {
+              const f = (1 - d / PUSH_R) * PUSH;
+              g.vx += dx * f;
+              g.vy += dy * f;
+            }
+          }
           const c = curl(g.x, g.y, now);
-          g.vx = g.vx * 0.9 + c.x;
-          g.vy = g.vy * 0.9 + c.y;
+          g.vx = g.vx * DRAG + c.x * CURL;
+          g.vy = g.vy * DRAG + c.y * CURL;
           g.x += g.vx;
           g.y += g.vy;
         });
@@ -778,9 +794,11 @@
           const age = (now - g.t) / LIFE;
           const k = 1 - age;
           const r = g.r * (1 + age * SWELL);
-          // The stretch relaxes back towards round as the ink slows and
-          // spreads, the way a thrown drop settles.
-          const st = 1 + (g.s - 1) * k;
+          // Stretch follows how fast the ink is actually travelling right now,
+          // so it draws out while it is flowing and rounds off as it settles.
+          const sp = Math.hypot(g.vx, g.vy);
+          const st = 1 + Math.min(sp / 6, 1.7);
+          g.a = sp > 0.4 ? Math.atan2(g.vy, g.vx) * 57.2958 : g.a;
           el.setAttribute('cx', g.x.toFixed(1));
           el.setAttribute('cy', g.y.toFixed(1));
           el.setAttribute('rx', (r * st).toFixed(1));
