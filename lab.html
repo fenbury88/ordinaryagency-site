@@ -277,6 +277,12 @@
     .ink {
       position: fixed; inset: 0; z-index: 59; pointer-events: none;
       filter: url(#gooify);
+      /* The whole trick. The trail is painted white and differenced against
+         the page, which inverts whatever is underneath it: over ink it comes
+         out paper, over paper it comes out ink, and text inside it flips with
+         it. Buttermax does the same thing by feeding the drawn mask into each
+         section's shader to swap its two colours. */
+      mix-blend-mode: difference;
     }
     .goo-def { position: absolute; width: 0; height: 0; pointer-events: none; }
     @media (prefers-reduced-motion: reduce) { .ink { display: none; } }
@@ -571,10 +577,10 @@
 
       const ctx = cv.getContext('2d');
       const rctx = rp.getContext('2d');
-      const MAXR = 70;          // px brush radius at full tilt
+      const MAXR = 88;          // px brush radius at full tilt
       const FULL = 10;          // px/frame of travel that counts as full size
       const EASE = 0.08;        // their lerp factor, so size swells and sags
-      const FADE = 0.045;       // alpha taken off the buffer each frame
+      const FADE = 0.033;       // alpha taken off the buffer each frame
 
       let w = 0, h = 0, dpr = 1, size = 0;
       let at = null, prev = null, raf = null, idle = 0, ripples = [];
@@ -591,8 +597,9 @@
       resize();
       addEventListener('resize', resize);
 
-      const ink = () => (parseFloat(getComputedStyle(document.documentElement)
-        .getPropertyValue('--p')) || 0) >= 0.5 ? '87,190,137' : '20,20,14';
+      // Always white: difference blending turns it into the opposite of
+      // whatever it is sitting on.
+      const INK = '255,255,255';
       const wake = () => { if (!raf) raf = requestAnimationFrame(draw); };
 
       // Soft-edged stamps. The gradient is what the goo filter needs: hard
@@ -645,7 +652,6 @@
         ctx.globalCompositeOperation = 'source-over';
 
         if (at && size > 0.015) {
-          const rgb = ink();
           const r = size * MAXR;
           if (prev) {
             // Walk from the last position to this one, so a fast flick is one
@@ -653,10 +659,10 @@
             const d = Math.hypot(at.x - prev.x, at.y - prev.y);
             const n = Math.min(Math.ceil(d / Math.max(r * 0.3, 2)), 48);
             for (let i = 1; i <= n; i++) {
-              stamp(prev.x + (at.x - prev.x) * i / n, prev.y + (at.y - prev.y) * i / n, r, rgb);
+              stamp(prev.x + (at.x - prev.x) * i / n, prev.y + (at.y - prev.y) * i / n, r, INK);
             }
           } else {
-            stamp(at.x, at.y, r, rgb);
+            stamp(at.x, at.y, r, INK);
           }
         }
         if (at) prev = { x: at.x, y: at.y };
