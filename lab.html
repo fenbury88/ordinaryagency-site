@@ -524,10 +524,9 @@
   <canvas class="trail" id="trail" aria-hidden="true"></canvas>
 
   <script>
-    // Paint. The cursor is a leaky bucket: every few seconds a load lets go
-    // and splats on the page behind it. Splats stick where they land, pop on
-    // impact and dry out after a while. No constant trail, no runs down the
-    // page — just the occasional thrown handful.
+    // Paint. The cursor is a bucket with momentum. Carry it gently and nothing
+    // happens; move fast and it sheds; stop dead and the load keeps going and
+    // lands in front of you; shake it and paint goes everywhere.
     (() => {
       const cv = document.getElementById('trail');
       const fine = matchMedia('(pointer: fine)').matches;
@@ -537,17 +536,18 @@
       if (!cv || reduce) { cv && cv.remove(); return; }
 
       const ctx = cv.getContext('2d');
-      const MAXSPLATS = 150;
-      const GAP = [2000, 5000];      // ms between splats, picked fresh each time
-      const BEHIND = [30, 95];       // px it lands behind the cursor
+      const MAXSPLATS = 170;
+      const SHED = 0.85;      // px/ms before the bucket starts throwing paint
+      const STOP = 0.85;      // px/ms you have to beat for a dead stop to count
+      const STILL = 70;       // ms without movement that counts as stopped
 
       // Two-tone, like the game. Mostly the house green, the odd clay one.
       const INK = ['#57BE89', '#57BE89', '#57BE89', '#3FA874', '#C2552F'];
       const DARK = '#14140E';
 
-      let splats = [], ripples = [];
-      let at = null, dir = { x: 0, y: 1 }, nextAt = 0, over = false;
-      let sy = scrollY, raf = null;
+      let splats = [], flying = [], ripples = [];
+      let at = null, v = { x: 0, y: 0 }, peak = 0, lastMove = 0, spent = true;
+      let raf = null;
 
       const rnd = (a, b) => a + Math.random() * (b - a);
       const pick = (a) => a[(Math.random() * a.length) | 0];
@@ -567,31 +567,20 @@
         .getPropertyValue('--p')) || 0) >= 0.5;
       const wake = () => { if (!raf) raf = requestAnimationFrame(draw); };
 
-      // A blob with uneven lobes, a few satellites, and maybe a run of paint
-      // down from it. Shape is rolled once and kept, so it doesn't crawl.
       function splat(x, y, r, colour) {
         const n = 7 + ((Math.random() * 5) | 0);
         const lobes = [];
         // Wide variance between lobes is what stops it reading as a circle.
         for (let i = 0; i < n; i++) lobes.push({ a: (i / n) * 6.283, r: r * rnd(0.52, 1.45) });
-        // Satellites scatter all round, but throw further along the direction
-        // the paint was travelling.
         const sats = [];
         const m = 3 + ((Math.random() * 6) | 0);
         for (let i = 0; i < m; i++) {
           const a = Math.random() * 6.283, d = r * rnd(1.1, 2.4);
-          sats.push({
-            x: Math.cos(a) * d + dir.x * r * rnd(0, 1.9),
-            y: Math.sin(a) * d * 0.85 + dir.y * r * rnd(0, 1.9),
-            r: r * rnd(0.07, 0.3),
-          });
+          sats.push({ x: Math.cos(a) * d, y: Math.sin(a) * d * 0.85, r: r * rnd(0.07, 0.3) });
         }
-        splats.push({
-          x, y, r, colour, lobes, sats,
-          t: performance.now(), grow: rnd(170, 300), life: rnd(9000, 15000),
-        });
+        splats.push({ x, y, r, colour, lobes, sats, t: performance.now(),
+                      grow: rnd(150, 280), life: rnd(9000, 15000) });
         if (splats.length > MAXSPLATS) splats.shift();
-        wake();
       }
 
       function blobPath(cx, cy, lobes, s) {
@@ -610,25 +599,54 @@
         ctx.closePath();
       }
 
+      // A blob of paint in the air, carrying the speed it was thrown with.
+      function throwPaint(x, y, vx, vy, r) {
+        flying.push({ x, y: y + scrollY, vx, vy, r, t: performance.now() });
+        if (flying.length > 260) flying.shift();
+        wake();
+      }
+
       if (fine) addEventListener('pointermove', (e) => {
         if (e.pointerType !== 'mouse') return;
-        over = true;
+        const now = performance.now();
         if (at) {
-          // Smoothed heading, so the splat knows which way to land behind.
-          const dx = e.clientX - at.x, dy = e.clientY - at.y;
-          const d = Math.hypot(dx, dy);
-          if (d > 0.6) dir = { x: dir.x * 0.75 + (dx / d) * 0.25, y: dir.y * 0.75 + (dy / d) * 0.25 };
+          const dt = Math.min(Math.max(now - lastMove, 1), 100);
+          const ix = (e.clientX - at.x) / dt, iy = (e.clientY - at.y) / dt;
+          const was = Math.hypot(v.x, v.y);
+          const before = was > 0.01 ? { x: v.x / was, y: v.y / was } : null;
+          v = { x: v.x * 0.55 + ix * 0.45, y: v.y * 0.55 + iy * 0.45 };
+          const sp = Math.hypot(v.x, v.y);
+          peak = Math.max(peak, sp);
+          if (sp > 0.2) spent = false;
+
+          // Shaking it: a sharp change of direction at speed throws paint off
+          // sideways, the way a loaded brush does.
+          if (before && sp > 0.75) {
+            const n = Math.hypot(ix, iy) || 1;
+            const dot = before.x * (ix / n) + before.y * (iy / n);
+            if (dot < 0.25) {
+              for (let i = 0; i < 2 + ((sp * 3) | 0); i++) {
+                const a = Math.random() * 6.283, m = rnd(3, 9) * Math.min(sp, 3.5);
+                throwPaint(e.clientX, e.clientY, Math.cos(a) * m, Math.sin(a) * m, rnd(3.5, 10));
+              }
+            }
+          }
+          // Moving fast sheds paint as you go.
+          if (sp > SHED && Math.random() < Math.min((sp - SHED) * 0.6, 0.8)) {
+            throwPaint(e.clientX, e.clientY,
+                       v.x * rnd(5, 11) + rnd(-3, 3), v.y * rnd(5, 11) + rnd(-3, 3),
+                       rnd(3, 9));
+          }
         }
         at = { x: e.clientX, y: e.clientY };
+        lastMove = now;
         wake();
       }, { passive: true });
 
-      addEventListener('pointerout', (e) => { if (!e.relatedTarget) over = false; });
       addEventListener('visibilitychange', () => {
-        if (document.hidden) { over = false; splats = []; ripples = []; }
+        if (document.hidden) { splats = []; flying = []; ripples = []; v = { x: 0, y: 0 }; }
       });
-
-      addEventListener('scroll', () => { sy = scrollY; wake(); }, { passive: true });
+      addEventListener('scroll', wake, { passive: true });
 
       // The landing ripple, kept from before.
       window.__ripple = (x, y) => {
@@ -641,28 +659,59 @@
       function draw() {
         const now = performance.now();
         ctx.clearRect(0, 0, innerWidth, innerHeight);
-
         splats = splats.filter((s) => now - s.t < s.life);
 
-        // Every two to five seconds the bucket lets a load go, and it lands
-        // behind the cursor rather than under it.
-        if (fine && over && at) {
-          if (!nextAt) nextAt = now + rnd(1200, 2800);
-          else if (now > nextAt) {
-            nextAt = now + rnd(GAP[0], GAP[1]);
-            const back = rnd(BEHIND[0], BEHIND[1]);
-            splat(at.x - dir.x * back + rnd(-14, 14),
-                  at.y + scrollY - dir.y * back + rnd(-14, 14),
-                  rnd(17, 36), wet() ? pick(INK) : DARK);
+        // Stopping dead. The bucket doesn't stop with you — whatever you were
+        // carrying keeps going and lands in front.
+        if (fine && at && !spent && now - lastMove > STILL) {
+          spent = true;
+          if (peak > STOP) {
+            const sp = Math.hypot(v.x, v.y) || peak;
+            const ux = (v.x || 0) / (sp || 1), uy = (v.y || 0) / (sp || 1);
+            const n = Math.min(6 + ((peak * 9) | 0), 30);
+            for (let i = 0; i < n; i++) {
+              const spread = rnd(-0.5, 0.5);                 // a cone, not a line
+              const cs = Math.cos(spread), sn = Math.sin(spread);
+              const m = rnd(4, 15) * Math.min(peak, 3.2);
+              throwPaint(at.x, at.y,
+                         (ux * cs - uy * sn) * m, (ux * sn + uy * cs) * m,
+                         rnd(4, 13));
+            }
           }
+          peak = 0;
+          v = { x: v.x * 0.3, y: v.y * 0.3 };
         }
+
+        // Paint in the air: it slows, sags a little, then lands.
+        flying = flying.filter((f) => {
+          f.vx *= 0.9; f.vy = f.vy * 0.9 + 0.22;
+          f.x += f.vx; f.y += f.vy;
+          const slow = Math.hypot(f.vx, f.vy) < 1.3;
+          if (slow || now - f.t > 900) {
+            splat(f.x, f.y, f.r * rnd(1.7, 2.6), wet() ? pick(INK) : DARK);
+            return false;
+          }
+          const y = f.y - scrollY;
+          if (y > innerHeight + 120 || y < -120) return false;
+          // Stretched along the direction of travel, like a thrown drop.
+          const a = Math.atan2(f.vy, f.vx);
+          const st = 1 + Math.min(Math.hypot(f.vx, f.vy) / 14, 1.3);
+          ctx.save();
+          ctx.translate(f.x, y);
+          ctx.rotate(a);
+          ctx.fillStyle = wet() ? '#57BE89' : DARK;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, f.r * st, f.r * 0.85, 0, 0, 6.283);
+          ctx.fill();
+          ctx.restore();
+          return true;
+        });
 
         // Splats: pop on impact, hold, then dry out.
         splats.forEach((s) => {
           const age = (now - s.t) / s.life;
           const g = Math.min((now - s.t) / s.grow, 1);
-          const sc = 1 + 0.16 * Math.sin(Math.min(g, 1) * Math.PI) * (1 - g * 0.3); // squash on landing
-          const k = g * sc;
+          const k = g * (1 + 0.16 * Math.sin(g * Math.PI) * (1 - g * 0.3));
           const fade = age > 0.78 ? 1 - (age - 0.78) / 0.22 : 1;
           const y = s.y - scrollY;
           if (y < -260 || y > innerHeight + 260) return;
@@ -698,7 +747,7 @@
           ctx.beginPath(); ctx.arc(r.x, r.y, Math.pow(a, 0.52) * REACH, 0, 6.283); ctx.stroke();
         });
 
-        raf = (splats.length || ripples.length || (fine && over))
+        raf = (splats.length || flying.length || ripples.length || !spent)
           ? requestAnimationFrame(draw) : null;
       }
     })();
