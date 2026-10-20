@@ -623,13 +623,19 @@
       if (!swap || !rp || reduce) { swap && swap.remove(); rp && rp.remove(); return; }
 
       const rctx = rp.getContext('2d');
-      const MAXR = 52;          // px brush radius at full tilt
-      const FULL = 10;          // px/frame of travel that counts as full size
+      const MAXR = 68;          // px brush radius at full tilt
+      const FULL = 7;           // px/frame of brush travel that counts as full size
       const EASE = 0.08;        // their lerp factor, so size swells and sags
-      const LIFE = 1500;        // ms a segment of trail lasts
+      const LIFE = 1750;        // ms a segment of trail lasts
       const POOL = 80;          // stroked segments the mask can hold
+      const FOLLOW = 0.17;      // how hard the brush chases the cursor
+      const DRIFT = 0.55;       // how much of the brush's speed the ink keeps
+      const DRAG = 0.9;         // how quickly that drift bleeds off
 
-      let size = 0, at = null, prev = null, raf = null;
+      // The brush doesn't sit on the cursor. It chases it, which is what gives
+      // the ribbon its weight: it swings wide on a fast turn, overshoots, and
+      // is still catching up after you have stopped.
+      let size = 0, at = null, brush = null, prev = null, raf = null;
       let segs = [], ripples = [], pool = [], on = false;
 
       // Build the opposite-palette copy once. Scripts and ids are stripped so
@@ -674,10 +680,10 @@
         wake();
       }, { passive: true });
 
-      const dry = () => { segs = []; size = 0; at = null; prev = null; };
+      const dry = () => { segs = []; size = 0; at = null; brush = null; prev = null; };
       addEventListener('visibilitychange', () => { if (document.hidden) dry(); });
       addEventListener('blur', dry);
-      document.addEventListener('mouseleave', () => { at = null; prev = null; });
+      document.addEventListener('mouseleave', () => { at = null; });
 
       window.__ripple = (x, y) => {
         const t = performance.now();
@@ -689,18 +695,41 @@
       function draw() {
         const now = performance.now();
 
-        // Size comes from distance travelled since the last frame, not from
-        // position. Stop moving and it falls away to nothing.
-        const moved = at && prev ? Math.hypot(at.x - prev.x, at.y - prev.y) : 0;
+        // Let the brush catch up to the cursor.
+        if (at && !brush) brush = { x: at.x, y: at.y };
+        if (at && brush) {
+          brush.x += (at.x - brush.x) * FOLLOW;
+          brush.y += (at.y - brush.y) * FOLLOW;
+        }
+
+        // Size comes from how far the BRUSH travelled this frame, so it keeps
+        // swelling for a moment after the cursor has stopped and the brush is
+        // still running on.
+        const dx = brush && prev ? brush.x - prev.x : 0;
+        const dy = brush && prev ? brush.y - prev.y : 0;
+        const moved = Math.hypot(dx, dy);
         const target = at ? Math.min(moved / FULL, 1) : 0;
         size += (target - size) * EASE;
 
-        if (at && prev && size > 0.02 && moved > 0.4) {
-          segs.push({ x1: prev.x, y1: prev.y, x2: at.x, y2: at.y, w: size * MAXR * 2, t: now });
+        if (brush && prev && size > 0.02 && moved > 0.4) {
+          segs.push({
+            x1: prev.x, y1: prev.y, x2: brush.x, y2: brush.y,
+            // Each bit of ink keeps some of the speed it was laid down with
+            // and carries on drifting after the brush has gone.
+            vx: dx * DRIFT, vy: dy * DRIFT,
+            w: size * MAXR * 2, t: now,
+          });
           if (segs.length > POOL) segs.shift();
         }
-        if (at) prev = { x: at.x, y: at.y };
+        if (brush) prev = { x: brush.x, y: brush.y };
         segs = segs.filter((g) => now - g.t < LIFE);
+
+        // Carry the laid ink along, bleeding off as it goes.
+        segs.forEach((g) => {
+          g.x1 += g.vx; g.y1 += g.vy;
+          g.x2 += g.vx; g.y2 += g.vy;
+          g.vx *= DRAG; g.vy *= DRAG;
+        });
 
         // Paint the mask. Each segment thins and fades with age; the goo
         // filter's alpha threshold then erodes the whole body from its edges.
