@@ -542,17 +542,17 @@
        contrast() filter can't do this: it works on colour, not alpha. -->
   <svg class="goo-def" aria-hidden="true" focusable="false">
     <filter id="gooify" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="11" result="b" />
+      <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="b" />
       <feColorMatrix in="b" type="matrix" result="goo"
         values="1 0 0 0 0
                 0 1 0 0 0
                 0 0 1 0 0
                 0 0 0 21 -9" />
-      <!-- A fixed noise field the ink is pushed through, so the edge tears and
-           wobbles as the shape travels across it. Cheap stand-in for the fluid
-           sim theirs runs. -->
-      <feTurbulence type="fractalNoise" baseFrequency="0.009 0.013" numOctaves="2" seed="11" result="noise" />
-      <feDisplacementMap in="goo" in2="noise" scale="34" xChannelSelector="R" yChannelSelector="G" />
+      <!-- Just enough displacement to stop the edge reading as a machine-made
+           curve. Theirs is a smooth, fat, calligraphic ribbon, not a torn one,
+           so this stays gentle. -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.005 0.007" numOctaves="2" seed="11" result="noise" />
+      <feDisplacementMap in="goo" in2="noise" scale="11" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
 
@@ -577,10 +577,10 @@
 
       const ctx = cv.getContext('2d');
       const rctx = rp.getContext('2d');
-      const MAXR = 88;          // px brush radius at full tilt
+      const MAXR = 104;         // px brush radius at full tilt
       const FULL = 10;          // px/frame of travel that counts as full size
       const EASE = 0.08;        // their lerp factor, so size swells and sags
-      const FADE = 0.033;       // alpha taken off the buffer each frame
+      const FADE = 0.021;       // alpha taken off the buffer each frame
 
       let w = 0, h = 0, dpr = 1, size = 0;
       let at = null, prev = null, raf = null, idle = 0, ripples = [];
