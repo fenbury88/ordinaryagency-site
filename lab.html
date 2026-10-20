@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Lab — Ordinary Agency</title>
+  <meta name="theme-color" content="#15150F" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
+
+  <!-- Prototype: deliberately self-contained. Nothing here touches style.css or
+       main.js, so the live site can't break while we play. -->
+  <style>
+    :root {
+      --paper: #FAFAF7;
+      --ink: #0E0E0A;
+      --ink-soft: #45443D;
+      --muted: #66645B;
+      --accent: #2C7A57;
+      --accent-bright: #57BE89;
+      --font-display: "Space Grotesk", -apple-system, sans-serif;
+      --font-sans: "Inter", -apple-system, sans-serif;
+      --font-logo: "Fraunces", Georgia, serif;
+      --gutter: clamp(1.25rem, 5vw, 4rem);
+      --maxw: 1240px;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+      /* 0 = ordinary, 1 = extraordinary. Set by JS on scroll. */
+      --p: 0;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    * { margin: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--ink);
+      color: var(--paper);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+    :focus-visible { outline: 2px solid var(--accent-bright); outline-offset: 4px; }
+
+    .container { width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter); }
+
+    /* ---------- Chrome ---------- */
+    .bar {
+      position: fixed; inset: 0 0 auto 0; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.1rem var(--gutter);
+      mix-blend-mode: difference; color: #fff;
+    }
+    .bar__mark { font-family: var(--font-logo); font-size: 1.15rem; font-weight: 600; letter-spacing: -0.02em; }
+    .bar__right { display: flex; gap: 1.5rem; font-size: 0.82rem; letter-spacing: 0.1em; text-transform: uppercase; }
+
+    /* ---------- The transformation ---------- */
+    /* Two layers in one sticky frame. The plain one is what everyone else's
+       site looks like; the scroll wipes it away. */
+    .track { height: 320vh; position: relative; }
+    .stage {
+      position: sticky; top: 0; height: 100vh; overflow: hidden;
+      background: var(--paper);
+      display: grid; place-items: center;
+    }
+
+    .plain {
+      position: absolute; inset: 0;
+      display: grid; align-content: center;
+      padding: 0 var(--gutter);
+      font-family: "Times New Roman", Times, serif;
+      color: #111;
+      opacity: calc(1 - var(--p) * 2.2);
+      transform: scale(calc(1 - var(--p) * 0.06));
+    }
+    .plain__inner { max-width: 34rem; margin-inline: auto; width: 100%; }
+    .plain h1 { font-size: 2rem; font-weight: 700; line-height: 1.15; margin-bottom: 0.6rem; }
+    .plain p { font-size: 1rem; margin-bottom: 0.9rem; }
+    .plain ul { margin: 0 0 0.9rem 1.2rem; font-size: 1rem; }
+    .plain a { color: #00e; text-decoration: underline; }
+    .plain hr { border: none; border-top: 1px solid #bbb; margin: 1.2rem 0; }
+    .plain .tiny { font-size: 0.8rem; color: #555; }
+
+    .elevated {
+      position: absolute; inset: 0;
+      background: var(--ink);
+      display: grid; align-content: center;
+      padding: 0 var(--gutter);
+      /* Grows from the middle of the page and swallows the plain version. */
+      clip-path: circle(calc(var(--p) * 135%) at 50% 50%);
+    }
+    .elevated__inner { max-width: var(--maxw); margin-inline: auto; width: 100%; }
+
+    .kicker {
+      font-size: 0.8rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--accent-bright); margin-bottom: clamp(1rem, 3vw, 2rem);
+      opacity: calc(var(--p) * 1.6 - 0.5);
+    }
+
+    .word {
+      font-family: var(--font-display); font-weight: 600;
+      font-size: clamp(2.6rem, 13.5vw, 13rem);
+      line-height: 0.86; letter-spacing: -0.045em;
+      display: flex; flex-wrap: wrap; align-items: baseline;
+      transform: scale(calc(0.84 + var(--p) * 0.16));
+      transform-origin: left center;
+    }
+    .word__extra {
+      color: var(--accent-bright);
+      display: inline-block; overflow: hidden; white-space: nowrap;
+      /* Unmasks letter by letter as the page elevates. */
+      max-width: calc(var(--p) * 6.2ch);
+      opacity: calc(var(--p) * 1.4);
+    }
+
+    .sub {
+      margin-top: clamp(1.5rem, 4vw, 2.5rem);
+      max-width: 36ch; font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+      color: rgba(250, 250, 247, 0.62);
+      opacity: calc(var(--p) * 2 - 1);
+    }
+
+    .cue {
+      position: absolute; left: 50%; bottom: 2.2rem; transform: translateX(-50%);
+      font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--muted); opacity: calc(1 - var(--p) * 3);
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .cue::after {
+      content: ""; width: 1px; height: 26px;
+      background: linear-gradient(var(--muted), transparent);
+    }
+
+    /* ---------- Sections ---------- */
+    .section { padding-block: clamp(5rem, 13vw, 11rem); }
+    .label {
+      font-size: 0.78rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--accent-bright); margin-bottom: 1.4rem;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .label::before { content: ""; width: 24px; height: 1px; background: var(--accent-bright); }
+    .big {
+      font-family: var(--font-display); font-weight: 600;
+      font-size: clamp(2rem, 5.4vw, 4.1rem); line-height: 1.02; letter-spacing: -0.035em;
+      max-width: 18ch;
+    }
+    .big em { font-style: normal; color: var(--accent-bright); }
+    .lede { margin-top: 1.8rem; max-width: 46ch; color: rgba(250, 250, 247, 0.6); font-size: 1.08rem; }
+
+    /* ---------- The vault ---------- */
+    /* The work is named by trade only. A sliver of the real site peeks out on
+       hover; you never get the whole thing without asking. */
+    .vault { border-top: 1px solid rgba(250, 250, 247, 0.12); }
+    .vault__head { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 5rem); align-items: end; }
+    .vault__note { color: rgba(250, 250, 247, 0.55); max-width: 40ch; }
+    .vault__note strong { color: var(--paper); font-weight: 500; }
+
+    .rows { list-style: none; padding: 0; margin-top: clamp(3rem, 7vw, 5rem); }
+    .row { border-top: 1px solid rgba(250, 250, 247, 0.12); }
+    .row:last-child { border-bottom: 1px solid rgba(250, 250, 247, 0.12); }
+    .row__btn {
+      width: 100%; background: none; border: 0; cursor: pointer; color: inherit;
+      font: inherit; text-align: left;
+      display: grid; grid-template-columns: 3.5rem 1fr auto 1.6rem;
+      gap: clamp(1rem, 3vw, 2.5rem); align-items: center;
+      padding: clamp(1.1rem, 2.6vw, 1.9rem) 0;
+      transition: color .4s var(--ease);
+    }
+    .row__n { font-family: var(--font-display); font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .row__trade {
+      font-family: var(--font-display); font-weight: 500;
+      font-size: clamp(1.3rem, 3.4vw, 2.4rem); letter-spacing: -0.025em; line-height: 1.1;
+      transition: color .35s var(--ease), transform .5s var(--ease);
+    }
+    .row__meta { font-size: 0.85rem; color: var(--muted); white-space: nowrap; }
+    .row__eye {
+      width: 1.6rem; height: 1.6rem; border-radius: 50%;
+      border: 1px solid rgba(250, 250, 247, 0.25);
+      display: grid; place-items: center; font-size: 0.7rem; color: var(--muted);
+      transition: background .35s var(--ease), color .35s var(--ease), border-color .35s var(--ease);
+    }
+    .row:hover .row__trade, .row.is-open .row__trade { color: var(--accent-bright); transform: translateX(10px); }
+    .row:hover .row__eye, .row.is-open .row__eye { background: var(--accent-bright); border-color: var(--accent-bright); color: var(--ink); }
+
+    /* The peek: a letterbox slice, never the whole page. */
+    .row__peek {
+      display: grid; grid-template-rows: 0fr;
+      transition: grid-template-rows .55s var(--ease);
+    }
+    .row.is-open .row__peek { grid-template-rows: 1fr; }
+    .row__peekinner { overflow: hidden; }
+    .row__frame {
+      display: flex; align-items: center; gap: clamp(1rem, 3vw, 2rem);
+      padding-bottom: clamp(1.25rem, 3vw, 2rem);
+    }
+    .row__slice {
+      width: clamp(150px, 34vw, 330px); flex-shrink: 0;
+      aspect-ratio: 16 / 7; overflow: hidden;
+      border-radius: 8px; border: 1px solid rgba(250, 250, 247, 0.16);
+      background: #1b1b16;
+      filter: grayscale(1) contrast(1.05) brightness(0.72);
+      transition: filter .6s var(--ease);
+    }
+    .row.is-open .row__slice { filter: grayscale(0.25) brightness(0.92); }
+    .row__slice img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+    .row__said { color: rgba(250, 250, 247, 0.62); font-size: 0.98rem; max-width: 34ch; }
+
+    .vault__foot { margin-top: clamp(2.5rem, 6vw, 4rem); color: var(--muted); font-size: 0.95rem; }
+    .vault__foot a { color: var(--accent-bright); border-bottom: 1px solid currentColor; }
+
+    /* ---------- Selectivity ---------- */
+    .gate { border-top: 1px solid rgba(250, 250, 247, 0.12); }
+    .gate__grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 5rem); align-items: start; }
+    .tally { display: grid; gap: 0.1rem; }
+    .tally__row {
+      display: flex; align-items: baseline; justify-content: space-between;
+      gap: 2rem; padding-block: 1rem;
+      border-bottom: 1px solid rgba(250, 250, 247, 0.12);
+    }
+    .tally__k { color: rgba(250, 250, 247, 0.6); font-size: 0.95rem; }
+    .tally__v { font-family: var(--font-display); font-size: clamp(1.5rem, 3vw, 2.2rem); letter-spacing: -0.03em; }
+    .tally__v em { font-style: normal; color: var(--accent-bright); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.7rem;
+      margin-top: 2.4rem; padding: 1rem 1.8rem; border-radius: 100px;
+      background: var(--accent-bright); color: var(--ink);
+      font-weight: 600; font-size: 0.98rem;
+      transition: transform .35s var(--ease), background .35s var(--ease);
+    }
+    .btn:hover { transform: translateY(-2px); background: #76d6a6; }
+
+    .foot {
+      border-top: 1px solid rgba(250, 250, 247, 0.12);
+      padding-block: 2.5rem; color: var(--muted); font-size: 0.85rem;
+      display: flex; flex-wrap: wrap; gap: 1rem 2rem; justify-content: space-between;
+    }
+
+    @media (max-width: 820px) {
+      .vault__head, .gate__grid { grid-template-columns: 1fr; }
+      .row__btn { grid-template-columns: 2.2rem 1fr 1.6rem; }
+      .row__meta { display: none; }
+      .row__frame { flex-direction: column; align-items: flex-start; gap: 1rem; }
+      .row__slice { width: 100%; aspect-ratio: 16 / 6; }
+      .row:hover .row__trade { transform: none; }
+      .bar__right a:not(:last-child) { display: none; }
+    }
+
+    /* Reduced motion and no-JS both land on the elevated state. */
+    @media (prefers-reduced-motion: reduce) {
+      * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+      .track { height: auto; }
+      .stage { position: relative; height: auto; padding-block: clamp(5rem, 14vw, 9rem); }
+      .plain { display: none; }
+      .elevated { position: relative; inset: auto; clip-path: none; }
+      .cue { display: none; }
+      :root { --p: 1; }
+    }
+    @media (scripting: none) {
+      .track { height: auto; }
+      .stage { position: relative; height: auto; padding-block: clamp(5rem, 14vw, 9rem); }
+      .plain { display: none; }
+      .elevated { position: relative; inset: auto; clip-path: none; }
+      .cue { display: none; }
+      :root { --p: 1; }
+      .row__peek { grid-template-rows: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="bar">
+    <a class="bar__mark" href="index.html">Ordinary<span style="color:var(--accent-bright)">.</span></a>
+    <nav class="bar__right">
+      <a href="#work">Work</a>
+      <a href="discovery.html">Enquire</a>
+    </nav>
+  </header>
+
+  <!-- ── The transformation ─────────────────────────────── -->
+  <section class="track" id="track">
+    <div class="stage">
+
+      <!-- What every other agency site in Perth looks like. -->
+      <div class="plain" aria-hidden="true">
+        <div class="plain__inner">
+          <h1>Ordinary Agency</h1>
+          <p>Digital marketing agency. Perth, Western Australia.</p>
+          <hr />
+          <p><b>Services</b></p>
+          <ul>
+            <li>Website development</li>
+            <li>Lead generation (SEO &amp; paid ads)</li>
+            <li>Automation &amp; AI</li>
+          </ul>
+          <p>We are a full service digital agency delivering quality solutions for small business. Contact us today for a free quote.</p>
+          <p><a href="#">mike@ordinaryagency.com.au</a> &nbsp;|&nbsp; <a href="#">0403 566 928</a></p>
+          <hr />
+          <p class="tiny">Copyright 2026. All rights reserved.</p>
+        </div>
+      </div>
+
+      <div class="elevated">
+        <div class="elevated__inner">
+          <p class="kicker">Perth, Western Australia</p>
+          <h1 class="word"><span class="word__extra">Extra</span><span>ordinary</span></h1>
+          <p class="sub">Most agencies make you a brochure. We make the business behind it impossible to ignore.</p>
+        </div>
+      </div>
+
+      <p class="cue">Scroll</p>
+    </div>
+  </section>
+
+  <!-- ── The vault ──────────────────────────────────────── -->
+  <section class="section vault" id="work">
+    <div class="container">
+      <div class="vault__head">
+        <div>
+          <p class="label">The work</p>
+          <h2 class="big">We don&rsquo;t keep it in a <em>shop window</em>.</h2>
+        </div>
+        <p class="vault__note">
+          Fourteen live sites, mostly trades, across Perth and WA. We don&rsquo;t publish the lot
+          with logos and lorem-ipsum testimonials. <strong>Open the one that matches your trade</strong>
+          and we&rsquo;ll show you a glimpse. The rest we walk you through properly, on a call.
+        </p>
+      </div>
+
+      <ul class="rows" id="rows">
+        <li class="row">
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">01</span>
+            <span class="row__trade">Cranes &amp; heavy parts</span>
+            <span class="row__meta">Welshpool · 2024</span>
+            <span class="row__eye" aria-hidden="true">+</span>
+          </button>
+          <div class="row__peek"><div class="row__peekinner"><div class="row__frame">
+            <div class="row__slice"><img src="assets/work/iceageind.webp" alt="" loading="lazy" /></div>
+            <p class="row__said">Rebuilt around the parts catalogue, because that&rsquo;s what people actually phone about.</p>
+          </div></div></div>
+        </li>
+        <li class="row">
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">02</span>
+            <span class="row__trade">Pest control</span>
+            <span class="row__meta">Perth metro · 2024</span>
+            <span class="row__eye" aria-hidden="true">+</span>
+          </button>
+          <div class="row__peek"><div class="row__peekinner"><div class="row__frame">
+            <div class="row__slice"><img src="assets/work/wapestconsultants.webp" alt="" loading="lazy" /></div>
+            <p class="row__said">Two sites, same trade, different towns. Neither competes with the other on search.</p>
+          </div></div></div>
+        </li>
+        <li class="row">
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">03</span>
+            <span class="row__trade">Glazing</span>
+            <span class="row__meta">Swan Valley · 2023</span>
+            <span class="row__eye" aria-hidden="true">+</span>
+          </button>
+          <div class="row__peek"><div class="row__peekinner"><div class="row__frame">
+            <div class="row__slice"><img src="assets/work/glazingontheswan.webp" alt="" loading="lazy" /></div>
+            <p class="row__said">Emergency work needed a phone number above the fold and nothing in its way.</p>
+          </div></div></div>
+        </li>
+        <li class="row">
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">04</span>
+            <span class="row__trade">Bathrooms</span>
+            <span class="row__meta">Perth · 2023</span>
+            <span class="row__eye" aria-hidden="true">+</span>
+          </button>
+          <div class="row__peek"><div class="row__peekinner"><div class="row__frame">
+            <div class="row__slice"><img src="assets/work/allstylebathrooms.webp" alt="" loading="lazy" /></div>
+            <p class="row__said">A renovation is a considered purchase. The gallery does the convincing.</p>
+          </div></div></div>
+        </li>
+        <li class="row">
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">05</span>
+            <span class="row__trade">Air conditioning</span>
+            <span class="row__meta">Perth · 2023</span>
+            <span class="row__eye" aria-hidden="true">+</span>
+          </button>
+          <div class="row__peek"><div class="row__peekinner"><div class="row__frame">
+            <div class="row__slice"><img src="assets/work/zencooling.webp" alt="" loading="lazy" /></div>
+            <p class="row__said">Built for the week in February when everyone&rsquo;s aircon dies at once.</p>
+          </div></div></div>
+        </li>
+        <li class="row">
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">06</span>
+            <span class="row__trade">Play equipment</span>
+            <span class="row__meta">E-commerce · 2023</span>
+            <span class="row__eye" aria-hidden="true">+</span>
+          </button>
+          <div class="row__peek"><div class="row__peekinner"><div class="row__frame">
+            <div class="row__slice"><img src="assets/work/instantfun.webp" alt="" loading="lazy" /></div>
+            <p class="row__said">Hire and buy in one shop, without two checkouts confusing everybody.</p>
+          </div></div></div>
+        </li>
+      </ul>
+
+      <p class="vault__foot">
+        Eight more we don&rsquo;t show here. <a href="discovery.html">Ask about your trade</a>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Selectivity ────────────────────────────────────── -->
+  <section class="section gate">
+    <div class="container gate__grid">
+      <div>
+        <p class="label">Taking work</p>
+        <h2 class="big">We say <em>no</em> more than we say yes.</h2>
+        <p class="lede">
+          One person runs every project here, and that person is Mike. So the number we can
+          take at once is small, and the ones we take are the ones we&rsquo;d be proud to point at.
+          If that sounds precious, it is. It&rsquo;s also why the work looks like it does.
+        </p>
+        <a class="btn" href="discovery.html">Start Website Discovery <span aria-hidden="true">&rarr;</span></a>
+      </div>
+      <div class="tally">
+        <div class="tally__row"><span class="tally__k">Live sites built</span><span class="tally__v">14</span></div>
+        <div class="tally__row"><span class="tally__k">Years at it</span><span class="tally__v">10<em>+</em></span></div>
+        <div class="tally__row"><span class="tally__k">Google rating</span><span class="tally__v">5.0</span></div>
+        <div class="tally__row"><span class="tally__k">Projects at once</span><span class="tally__v"><em>2</em></span></div>
+        <div class="tally__row"><span class="tally__k">Account managers</span><span class="tally__v"><em>0</em></span></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="container foot">
+    <span>Ordinary Agency · Claremont, Perth</span>
+    <span><a href="mailto:mike@ordinaryagency.com.au">mike@ordinaryagency.com.au</a></span>
+    <span><a href="tel:+61403566928">0403 566 928</a></span>
+  </footer>
+
+  <script>
+    // Scroll drives one number: 0 = the ordinary version, 1 = ours.
+    (() => {
+      const track = document.getElementById('track');
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!track || reduce) { document.documentElement.style.setProperty('--p', 1); return; }
+
+      let ticking = false;
+      const update = () => {
+        ticking = false;
+        const r = track.getBoundingClientRect();
+        // The sticky frame is pinned for (trackHeight - viewport) of scrolling.
+        const travel = track.offsetHeight - window.innerHeight;
+        const p = travel > 0 ? Math.min(Math.max(-r.top / travel, 0), 1) : 1;
+        // Hold the plain version briefly, then elevate over the rest.
+        const eased = Math.min(Math.max((p - 0.08) / 0.55, 0), 1);
+        document.documentElement.style.setProperty('--p', eased.toFixed(4));
+      };
+      update();
+      addEventListener('scroll', () => {
+        if (!ticking) { ticking = true; requestAnimationFrame(update); }
+      }, { passive: true });
+      addEventListener('resize', update);
+    })();
+
+    // The vault: one row open at a time, so it stays a glimpse.
+    document.querySelectorAll('.row__btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const row = btn.closest('.row');
+        const open = row.classList.contains('is-open');
+        document.querySelectorAll('.row.is-open').forEach((r) => {
+          r.classList.remove('is-open');
+          r.querySelector('.row__btn').setAttribute('aria-expanded', 'false');
+          r.querySelector('.row__eye').textContent = '+';
+        });
+        if (!open) {
+          row.classList.add('is-open');
+          btn.setAttribute('aria-expanded', 'true');
+          row.querySelector('.row__eye').textContent = '−';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
