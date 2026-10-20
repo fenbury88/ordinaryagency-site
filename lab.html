@@ -61,9 +61,9 @@
     /* ---------- The transformation ---------- */
     /* Two layers in one sticky frame. The plain one is what everyone else's
        site looks like; the scroll wipes it away. */
-    .track { height: 320vh; position: relative; }
+    .track { height: 100vh; position: relative; }
     .stage {
-      position: sticky; top: 0; height: 100vh; overflow: hidden;
+      position: relative; height: 100vh; overflow: hidden;
       background: var(--paper);
       display: grid; place-items: center;
     }
@@ -91,7 +91,7 @@
       display: grid; align-content: center;
       padding: 0 var(--gutter);
       /* Grows from the middle of the page and swallows the plain version. */
-      clip-path: circle(calc(var(--p) * 135%) at 50% 50%);
+      clip-path: circle(calc(var(--p) * 135%) at var(--ox, 50%) var(--oy, 45%));
     }
     .elevated__inner { max-width: var(--maxw); margin-inline: auto; width: 100%; }
 
@@ -273,7 +273,6 @@
       position: fixed; inset: 0; z-index: 60; pointer-events: none;
       opacity: 1;
     }
-    @media (pointer: coarse) { .trail { display: none; } }
     @media (prefers-reduced-motion: reduce) { .trail { display: none; } }
 
     .foot {
@@ -531,7 +530,9 @@
       const cv = document.getElementById('trail');
       const fine = matchMedia('(pointer: fine)').matches;
       const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (!cv || !fine || reduce) { cv && cv.remove(); return; }
+      // The canvas stays for touch devices too — they get no fire, but they do
+      // get the ripple when the page lands.
+      if (!cv || reduce) { cv && cv.remove(); return; }
 
       const ctx = cv.getContext('2d');
       const LIFE = 520;        // ms a smear point lasts
@@ -542,7 +543,7 @@
 
       // Embers and spot fires live in document coordinates so they scroll with
       // the page; the cursor flame lives in viewport coordinates.
-      let pts = [], embers = [], fires = [], cands = [];
+      let pts = [], embers = [], fires = [], cands = [], ripples = [];
       let last = null, heat = 0, over = false, gust = 0;
       let sy = scrollY, vel = 0, prev = performance.now(), raf = null;
 
@@ -570,6 +571,14 @@
         .getPropertyValue('--p')) || 0) >= 0.5;
       const wake = () => { if (!raf) { prev = performance.now(); raf = requestAnimationFrame(draw); } };
 
+      // Called when the page lands: a drop hitting, then rings going out.
+      window.__ripple = (x, y) => {
+        const t = performance.now();
+        ripples.push({ x, y, t, flash: true });
+        for (let i = 1; i <= 3; i++) ripples.push({ x, y, t: t + i * 130 });
+        wake();
+      };
+
       function ignite(x, y, r, life) {
         if (fires.length >= MAXFIRES) return;
         fires.push({ x, y, r, t0: performance.now(), life, seed: Math.random() * 997 });
@@ -593,7 +602,7 @@
         embers.push({ x, y, vx, vy, r, t: performance.now(), life });
       }
 
-      addEventListener('pointermove', (e) => {
+      if (fine) addEventListener('pointermove', (e) => {
         if (e.pointerType !== 'mouse') return;
         const now = performance.now();
         const sp = last ? Math.hypot(e.clientX - last.x, e.clientY - last.y) : 0;
@@ -756,34 +765,78 @@
           }
         });
 
+        // The landing: a bright point of impact, then rings spreading out and
+        // slowing as they go, the way water does.
+        const REACH = Math.hypot(innerWidth, innerHeight) * 0.78;
+        ripples = ripples.filter((r) => now - r.t < 1500);
+        ripples.forEach((r) => {
+          const a = (now - r.t) / 1500;
+          if (a < 0) return;
+          if (r.flash) {
+            const fr = 10 + a * 150;
+            const fg = ctx.createRadialGradient(r.x, r.y, 0, r.x, r.y, fr);
+            fg.addColorStop(0, `rgba(226,255,238,${(Math.max(0, 0.75 - a * 4)).toFixed(3)})`);
+            fg.addColorStop(1, 'rgba(87,190,137,0)');
+            ctx.fillStyle = fg;
+            ctx.beginPath(); ctx.arc(r.x, r.y, fr, 0, Math.PI * 2); ctx.fill();
+            return;
+          }
+          const rad = Math.pow(a, 0.52) * REACH;
+          ctx.strokeStyle = `rgba(87,190,137,${(Math.pow(1 - a, 1.6) * 0.45).toFixed(3)})`;
+          ctx.lineWidth = Math.max(0.4, (1 - a) * 7);
+          ctx.beginPath(); ctx.arc(r.x, r.y, rad, 0, Math.PI * 2); ctx.stroke();
+        });
+
         ctx.globalCompositeOperation = 'source-over';
-        raf = (pts.length || embers.length || fires.length || (over && heat > 0.02))
+        raf = (pts.length || embers.length || fires.length || ripples.length || (over && heat > 0.02))
           ? requestAnimationFrame(draw) : null;
       }
     })();
 
-    // Scroll drives one number: 0 = the ordinary version, 1 = ours.
+    // The first flick of the scroll wheel sets it off, and it plays out on its
+    // own — nobody gets parked half-transformed. It lands like a drop at the
+    // cursor, and the rings go out from there.
     (() => {
-      const track = document.getElementById('track');
+      const root = document.documentElement;
       const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (!track || reduce) { document.documentElement.style.setProperty('--p', 1); return; }
+      if (reduce) { root.style.setProperty('--p', 1); return; }
 
-      let ticking = false;
-      const update = () => {
-        ticking = false;
-        const r = track.getBoundingClientRect();
-        // The sticky frame is pinned for (trackHeight - viewport) of scrolling.
-        const travel = track.offsetHeight - window.innerHeight;
-        const p = travel > 0 ? Math.min(Math.max(-r.top / travel, 0), 1) : 1;
-        // Hold the plain version briefly, then elevate over the rest.
-        const eased = Math.min(Math.max((p - 0.08) / 0.55, 0), 1);
-        document.documentElement.style.setProperty('--p', eased.toFixed(4));
-      };
-      update();
-      addEventListener('scroll', () => {
-        if (!ticking) { ticking = true; requestAnimationFrame(update); }
-      }, { passive: true });
-      addEventListener('resize', update);
+      const DUR = 1050;
+      let at = null, fired = false;
+
+      addEventListener('pointermove', (e) => { at = { x: e.clientX, y: e.clientY }; }, { passive: true });
+
+      function land() {
+        if (fired) return;
+        fired = true;
+        // Where the drop hits: under the cursor, or just above centre.
+        const x = at ? at.x : innerWidth / 2;
+        const y = at ? at.y : innerHeight * 0.45;
+        root.style.setProperty('--ox', x + 'px');
+        root.style.setProperty('--oy', y + 'px');
+        if (typeof window.__ripple === 'function') window.__ripple(x, y);
+
+        const t0 = performance.now();
+        (function step(t) {
+          const k = Math.min((t - t0) / DUR, 1);
+          // Quick out, long settle — a drop spreading rather than a wipe.
+          const e = 1 - Math.pow(1 - k, 3.4);
+          root.style.setProperty('--p', e.toFixed(4));
+          if (k < 1) requestAnimationFrame(step);
+        })(t0);
+        // rAF is paused in a hidden tab, which would leave the page parked
+        // half-transformed. Whatever happens, it finishes.
+        setTimeout(() => root.style.setProperty('--p', 1), DUR + 250);
+      }
+
+      const keys = ['ArrowDown', 'PageDown', 'End', ' ', 'Spacebar', 'ArrowUp', 'PageUp', 'Home'];
+      const on = (ev, fn, opt) => addEventListener(ev, fn, opt);
+      on('wheel', land, { passive: true, once: true });
+      on('touchmove', land, { passive: true, once: true });
+      on('keydown', (e) => { if (keys.includes(e.key)) land(); }, { passive: true });
+      // Belt and braces: anything that actually moves the page counts too.
+      on('scroll', () => { if (scrollY > 4) land(); }, { passive: true });
+      if (scrollY > 4) land();
     })();
 
     // The vault: one row open at a time, so it stays a glimpse.
