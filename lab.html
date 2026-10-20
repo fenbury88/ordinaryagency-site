@@ -629,8 +629,6 @@
       const LIFE = 1750;        // ms a segment of trail lasts
       const POOL = 80;          // stroked segments the mask can hold
       const FOLLOW = 0.17;      // how hard the brush chases the cursor
-      const DRIFT = 0.55;       // how much of the brush's speed the ink keeps
-      const DRAG = 0.9;         // how quickly that drift bleeds off
 
       // The brush doesn't sit on the cursor. It chases it, which is what gives
       // the ribbon its weight: it swings wide on a fast turn, overshoots, and
@@ -712,24 +710,16 @@
         size += (target - size) * EASE;
 
         if (brush && prev && size > 0.02 && moved > 0.4) {
-          segs.push({
-            x1: prev.x, y1: prev.y, x2: brush.x, y2: brush.y,
-            // Each bit of ink keeps some of the speed it was laid down with
-            // and carries on drifting after the brush has gone.
-            vx: dx * DRIFT, vy: dy * DRIFT,
-            w: size * MAXR * 2, t: now,
-          });
+          segs.push({ x1: prev.x, y1: prev.y, x2: brush.x, y2: brush.y,
+                      w: size * MAXR * 2, t: now });
           if (segs.length > POOL) segs.shift();
         }
         if (brush) prev = { x: brush.x, y: brush.y };
         segs = segs.filter((g) => now - g.t < LIFE);
 
-        // Carry the laid ink along, bleeding off as it goes.
-        segs.forEach((g) => {
-          g.x1 += g.vx; g.y1 += g.vy;
-          g.x2 += g.vx; g.y2 += g.vy;
-          g.vx *= DRAG; g.vy *= DRAG;
-        });
+        // Laid ink stays exactly where it was put. Frame by frame in the
+        // reference it doesn't travel at all — it thins in place and the
+        // narrow parts drop out first.
 
         // Paint the mask. Each segment thins and fades with age; the goo
         // filter's alpha threshold then erodes the whole body from its edges.
@@ -739,8 +729,11 @@
           if (!g) { if (el.getAttribute('stroke-width') !== '0') el.setAttribute('stroke-width', '0'); continue; }
           const k = 1 - (now - g.t) / LIFE;
           el.setAttribute('d', `M${g.x1.toFixed(1)} ${g.y1.toFixed(1)}L${g.x2.toFixed(1)} ${g.y2.toFixed(1)}`);
-          el.setAttribute('stroke-width', (g.w * (0.45 + k * 0.55)).toFixed(1));
-          el.setAttribute('opacity', (k * k).toFixed(3));
+          // Thickness carries the ageing, not opacity: the body stays solid
+          // and the oldest end draws down to the thin spike the reference has
+          // trailing behind the head.
+          el.setAttribute('stroke-width', (g.w * (0.08 + 0.92 * k)).toFixed(1));
+          el.setAttribute('opacity', Math.min(1, k * 2.4).toFixed(3));
         }
 
         // The swapped copy only costs anything while there is trail to see.
