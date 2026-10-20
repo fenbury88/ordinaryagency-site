@@ -274,16 +274,48 @@
       position: fixed; inset: 0; z-index: 60; pointer-events: none;
       opacity: 1;
     }
-    .ink {
-      position: fixed; inset: 0; z-index: 59; pointer-events: none;
-      filter: url(#gooify);
-      /* The whole trick. The trail is painted white and differenced against
-         the page, which inverts whatever is underneath it: over ink it comes
-         out paper, over paper it comes out ink, and text inside it flips with
-         it. Buttermax does the same thing by feeding the drawn mask into each
-         section's shader to swap its two colours. */
-      mix-blend-mode: difference;
+    /* A second copy of the page in the opposite palette, shown only inside the
+       trail. This is how buttermax does it: the drawn shape is a mask, and
+       each section renders its two colours the other way round inside it.
+       Difference blending could only ever invert, which is why green came out
+       magenta; this swaps properly. Kept out of the render entirely until
+       there is ink on screen. */
+    .swap {
+      position: fixed; inset: 0; z-index: 59; overflow: hidden;
+      pointer-events: none; background: #FAFAF7;
+      /* visibility rather than display: the clone keeps its layout, so the
+         first stroke of a trail doesn't cost a full relayout of the page. */
+      visibility: hidden;
+      mask: url(#inkmask); -webkit-mask: url(#inkmask);
     }
+    .swap.is-on { visibility: visible; }
+    .swap__inner { position: absolute; inset: 0 0 auto 0; will-change: transform; }
+
+    /* The swap itself. Most of the page reads off these two tokens, so
+       exchanging them flips backgrounds and type in one go. */
+    .swap {
+      --paper: #0E0E0A;
+      --ink: #FAFAF7;
+      --ink-soft: #45443D;
+      --muted: #6E6C63;
+      --accent: #2C7A57;
+      --accent-bright: #2C7A57;
+    }
+    /* The handful of colours written as literal rgba rather than tokens. */
+    .swap .vault__note, .swap .lede, .swap .me__body p, .swap .sub,
+    .swap .row__meta, .swap .tally__k, .swap .foot, .swap .portrait,
+    .swap .vault__foot, .swap .portrait__cap, .swap .sig__role { color: rgba(14,14,10,.66) !important; }
+    .swap .big, .swap .word, .swap .row__trade, .swap .me__body .lead,
+    .swap .sig__name, .swap .tally__v, .swap .vault__note strong,
+    .swap .me__body strong { color: #0E0E0A !important; }
+    .swap .section, .swap .vault, .swap .gate, .swap .me, .swap .foot,
+    .swap .stage, .swap .elevated { background: #FAFAF7 !important; }
+    .swap .vault, .swap .gate, .swap .me, .swap .foot, .swap .row,
+    .swap .tally__row, .swap .sig { border-color: rgba(14,14,10,.16) !important; }
+    .swap .row__eye { border-color: rgba(14,14,10,.3) !important; color: rgba(14,14,10,.6) !important; }
+    .swap .btn { background: #0E0E0A; color: #FAFAF7; }
+    .swap .portrait { background: repeating-linear-gradient(135deg, rgba(14,14,10,.06) 0 10px, transparent 10px 20px), #EFEFE9 !important; }
+    .swap .plain { display: none !important; }
     .goo-def { position: absolute; width: 0; height: 0; pointer-events: none; }
     @media (prefers-reduced-motion: reduce) { .ink { display: none; } }
     @media (prefers-reduced-motion: reduce) { .trail { display: none; } }
@@ -533,7 +565,7 @@
     <span><a href="tel:+61403566928">0403 566 928</a></span>
   </footer>
 
-  <canvas class="ink" id="ink" aria-hidden="true"></canvas>
+  <div class="swap" id="swap" aria-hidden="true"><div class="swap__inner" id="swap-inner"></div></div>
   <canvas class="trail" id="trail" aria-hidden="true"></canvas>
 
   <!-- Blur, then crush the ALPHA channel with a colour matrix. That is what
@@ -541,6 +573,16 @@
        makes the trail erode from its edges as the buffer fades. A canvas
        contrast() filter can't do this: it works on colour, not alpha. -->
   <svg class="goo-def" aria-hidden="true" focusable="false">
+    <!-- The trail, as a mask. White shows the swapped copy through, black
+         hides it. The strokes are welded into one body by the same goo
+         filter, so the mask edge is a liquid shape rather than a row of
+         capsules. -->
+    <mask id="inkmask">
+      <!-- Sized from JS: percentage lengths here would resolve against this
+           SVG's own viewport, which is deliberately 0x0. -->
+      <rect id="maskbg" x="0" y="0" width="0" height="0" fill="#000" />
+      <g id="inkpaths" filter="url(#gooify)" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"></g>
+    </mask>
     <filter id="gooify" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="b" />
       <feColorMatrix in="b" type="matrix" result="goo"
@@ -557,69 +599,74 @@
   </svg>
 
   <script>
-    // Ink trail, built the way buttermax.net does it. Their bundle gives the
-    // model away: the brush follows the mouse, its size comes from how far the
-    // mouse moved since the last frame (0 to 10px maps to none to full) eased
-    // with a slow lerp, and it stamps into a buffer that fades a little every
-    // frame. So a still mouse paints nothing at all, a crawl paints a thread,
-    // and a fast sweep paints a thick mass that dissolves behind you.
+    // Ink trail, built the way buttermax.net builds it.
     //
-    // Theirs runs a fluid sim over that buffer. This stamps soft and lets the
-    // SVG goo filter weld the stamps into one liquid body — and because the
-    // filter thresholds alpha, the shape erodes from its edges as the buffer
-    // fades instead of shrinking blob by blob.
+    // Their bundle gives the model away: the brush follows the mouse, its size
+    // comes from how far the mouse moved since the last frame (0 to 10px maps
+    // to none to full) eased with a slow lerp. A still mouse paints nothing, a
+    // crawl paints a thread, a fast sweep paints a thick ribbon.
+    //
+    // And the shape is a MASK, not a mark. Theirs feeds the drawn shape into
+    // each section's shader, which then renders its two colours the other way
+    // round inside it — that is why one ribbon crossing their page comes out
+    // black over yellow and yellow over black, with the type flipping too.
+    // Here the same thing: a second copy of the page in the opposite palette,
+    // revealed only through the trail.
     (() => {
-      const cv = document.getElementById('ink');
+      const swap = document.getElementById('swap');
+      const inner = document.getElementById('swap-inner');
+      const paths = document.getElementById('inkpaths');
+      const maskbg = document.getElementById('maskbg');
       const rp = document.getElementById('trail');
       const fine = matchMedia('(pointer: fine)').matches;
       const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (!cv || !rp || reduce) { cv && cv.remove(); rp && rp.remove(); return; }
+      if (!swap || !rp || reduce) { swap && swap.remove(); rp && rp.remove(); return; }
 
-      const ctx = cv.getContext('2d');
       const rctx = rp.getContext('2d');
-      const MAXR = 104;         // px brush radius at full tilt
+      const MAXR = 52;          // px brush radius at full tilt
       const FULL = 10;          // px/frame of travel that counts as full size
       const EASE = 0.08;        // their lerp factor, so size swells and sags
-      const FADE = 0.021;       // alpha taken off the buffer each frame
+      const LIFE = 1500;        // ms a segment of trail lasts
+      const POOL = 80;          // stroked segments the mask can hold
 
-      let w = 0, h = 0, dpr = 1, size = 0;
-      // `wetness` tracks the strongest ink left on the canvas. The fade is
-      // multiplicative so it approaches zero without ever reaching it — left
-      // alone, the loop would stop and freeze the remainder on screen for
-      // good. This is what tells us when to wipe it properly.
-      let wetness = 0;
-      let at = null, prev = null, raf = null, ripples = [];
+      let size = 0, at = null, prev = null, raf = null;
+      let segs = [], ripples = [], pool = [], on = false;
 
-      const resize = () => {
-        w = innerWidth; h = innerHeight;
-        dpr = Math.min(devicePixelRatio || 1, 2);
-        [cv, rp].forEach((c) => {
-          c.width = w * dpr; c.height = h * dpr;
-          c.style.width = w + 'px'; c.style.height = h + 'px';
-          c.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+      // Build the opposite-palette copy once. Scripts and ids are stripped so
+      // nothing in it runs or collides with the real page.
+      (function clone() {
+        // The page's sections sit straight on the body — there is no <main> —
+        // so take every section and the footer, in order.
+        [...document.body.children].forEach((src) => {
+          if (!/^(SECTION|FOOTER)$/.test(src.tagName)) return;
+          const c = src.cloneNode(true);
+          c.querySelectorAll('script, canvas').forEach((n) => n.remove());
+          c.querySelectorAll('[id]').forEach((n) => n.removeAttribute('id'));
+          c.querySelectorAll('details').forEach((d) => { d.open = true; });
+          inner.appendChild(c);
         });
-      };
-      resize();
-      addEventListener('resize', resize);
+        inner.setAttribute('inert', '');
+      })();
 
-      // Always white: difference blending turns it into the opposite of
-      // whatever it is sitting on.
-      const INK = '255,255,255';
-      const wake = () => { if (!raf) raf = requestAnimationFrame(draw); };
-
-      // Soft-edged stamps. The gradient is what the goo filter needs: hard
-      // circles would stay circles, soft ones melt together.
-      function stamp(x, y, r, rgb) {
-        if (r < 0.5) return;
-        const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-        g.addColorStop(0, `rgba(${rgb},1)`);
-        g.addColorStop(0.5, `rgba(${rgb},0.9)`);
-        g.addColorStop(1, `rgba(${rgb},0)`);
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, 6.283);
-        ctx.fill();
+      for (let i = 0; i < POOL; i++) {
+        const el = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        el.setAttribute('stroke-width', '0');
+        paths.appendChild(el);
+        pool.push(el);
       }
+
+      const sizeCanvas = () => {
+        maskbg.setAttribute('width', innerWidth);
+        maskbg.setAttribute('height', innerHeight);
+        const dpr = Math.min(devicePixelRatio || 1, 2);
+        rp.width = innerWidth * dpr; rp.height = innerHeight * dpr;
+        rp.style.width = innerWidth + 'px'; rp.style.height = innerHeight + 'px';
+        rctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      };
+      sizeCanvas();
+      addEventListener('resize', sizeCanvas);
+
+      const wake = () => { if (!raf) raf = requestAnimationFrame(draw); };
 
       if (fine) addEventListener('pointermove', (e) => {
         if (e.pointerType !== 'mouse') return;
@@ -627,13 +674,9 @@
         wake();
       }, { passive: true });
 
-      const dry = () => {
-        ctx.clearRect(0, 0, w, h);
-        size = 0; wetness = 0; prev = null; at = null;
-      };
+      const dry = () => { segs = []; size = 0; at = null; prev = null; };
       addEventListener('visibilitychange', () => { if (document.hidden) dry(); });
       addEventListener('blur', dry);
-      // Mouse left the window entirely: stop drawing from a stale position.
       document.addEventListener('mouseleave', () => { at = null; prev = null; });
 
       window.__ripple = (x, y) => {
@@ -646,40 +689,38 @@
       function draw() {
         const now = performance.now();
 
-        // Size comes from how far the mouse moved since the last frame, not
-        // from where it is. Stop moving and it falls away to nothing.
+        // Size comes from distance travelled since the last frame, not from
+        // position. Stop moving and it falls away to nothing.
         const moved = at && prev ? Math.hypot(at.x - prev.x, at.y - prev.y) : 0;
         const target = at ? Math.min(moved / FULL, 1) : 0;
         size += (target - size) * EASE;
 
-        // Take a little alpha off the whole buffer every frame.
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.fillStyle = `rgba(0,0,0,${FADE})`;
-        ctx.fillRect(0, 0, w, h);
-        ctx.globalCompositeOperation = 'source-over';
-
-        wetness *= (1 - FADE);
-        if (at && size > 0.015) {
-          wetness = 1;
-          const r = size * MAXR;
-          if (prev) {
-            // Walk from the last position to this one, so a fast flick is one
-            // body rather than a row of dots.
-            const d = Math.hypot(at.x - prev.x, at.y - prev.y);
-            const n = Math.min(Math.ceil(d / Math.max(r * 0.3, 2)), 48);
-            for (let i = 1; i <= n; i++) {
-              stamp(prev.x + (at.x - prev.x) * i / n, prev.y + (at.y - prev.y) * i / n, r, INK);
-            }
-          } else {
-            stamp(at.x, at.y, r, INK);
-          }
+        if (at && prev && size > 0.02 && moved > 0.4) {
+          segs.push({ x1: prev.x, y1: prev.y, x2: at.x, y2: at.y, w: size * MAXR * 2, t: now });
+          if (segs.length > POOL) segs.shift();
         }
         if (at) prev = { x: at.x, y: at.y };
+        segs = segs.filter((g) => now - g.t < LIFE);
 
-        // The landing rings go on their own canvas, so the goo filter doesn't
-        // eat them.
-        rctx.clearRect(0, 0, w, h);
-        const REACH = Math.hypot(w, h) * 0.78;
+        // Paint the mask. Each segment thins and fades with age; the goo
+        // filter's alpha threshold then erodes the whole body from its edges.
+        for (let i = 0; i < POOL; i++) {
+          const g = segs[i];
+          const el = pool[i];
+          if (!g) { if (el.getAttribute('stroke-width') !== '0') el.setAttribute('stroke-width', '0'); continue; }
+          const k = 1 - (now - g.t) / LIFE;
+          el.setAttribute('d', `M${g.x1.toFixed(1)} ${g.y1.toFixed(1)}L${g.x2.toFixed(1)} ${g.y2.toFixed(1)}`);
+          el.setAttribute('stroke-width', (g.w * (0.45 + k * 0.55)).toFixed(1));
+          el.setAttribute('opacity', (k * k).toFixed(3));
+        }
+
+        // The swapped copy only costs anything while there is trail to see.
+        const want = segs.length > 0;
+        if (want !== on) { on = want; swap.classList.toggle('is-on', on); }
+        if (on) inner.style.transform = `translateY(${-scrollY}px)`;
+
+        rctx.clearRect(0, 0, innerWidth, innerHeight);
+        const REACH = Math.hypot(innerWidth, innerHeight) * 0.78;
         ripples = ripples.filter((r) => now - r.t < 1500);
         ripples.forEach((r) => {
           const a = (now - r.t) / 1500;
@@ -698,14 +739,7 @@
           rctx.beginPath(); rctx.arc(r.x, r.y, Math.pow(a, 0.52) * REACH, 0, 6.283); rctx.stroke();
         });
 
-        // Once the ink is spent, wipe the canvas for real and stop. Without
-        // this the last few percent sits there until the page reloads.
-        if (wetness < 0.02 && size < 0.015) {
-          ctx.clearRect(0, 0, w, h);
-          wetness = 0;
-          if (!ripples.length) { raf = null; return; }
-        }
-        raf = requestAnimationFrame(draw);
+        raf = (segs.length || ripples.length || size > 0.02) ? requestAnimationFrame(draw) : null;
       }
     })();
 
