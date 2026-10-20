@@ -524,33 +524,27 @@
   <canvas class="trail" id="trail" aria-hidden="true"></canvas>
 
   <script>
-    // Paint. The cursor is a bucket with momentum. Carry it gently and nothing
-    // happens; move fast and it sheds; stop dead and the load keeps going and
-    // lands in front of you; shake it and paint goes everywhere.
+    // Ink trail, after the one on buttermax.net: a thick solid mass with a
+    // ragged edge that follows the cursor and is gone within a second of you
+    // stopping. No persistence, no drips — it retracts to nothing.
     (() => {
       const cv = document.getElementById('trail');
       const fine = matchMedia('(pointer: fine)').matches;
       const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-      // The canvas stays for touch too — no painting, but the page still lands
+      // The canvas stays for touch too — no trail, but the page still lands
       // with its ripple.
       if (!cv || reduce) { cv && cv.remove(); return; }
 
       const ctx = cv.getContext('2d');
-      const MAXSPLATS = 170;
-      const SHED = 0.85;      // px/ms before the bucket starts throwing paint
-      const STOP = 0.85;      // px/ms you have to beat for a dead stop to count
-      const STILL = 70;       // ms without movement that counts as stopped
+      const LIFE = 620;        // ms from laid down to gone
+      const R = 68;            // px base radius of the mass
+      const SPACING = 11;      // px between blobs, so the trail never gaps
+      const MAXPTS = 90;
 
-      // Two-tone, like the game. Mostly the house green, the odd clay one.
-      const INK = ['#57BE89', '#57BE89', '#57BE89', '#3FA874', '#C2552F'];
-      const DARK = '#14140E';
-
-      let splats = [], flying = [], ripples = [];
-      let at = null, v = { x: 0, y: 0 }, peak = 0, lastMove = 0, spent = true;
-      let raf = null;
+      let pts = [], drips = [], ripples = [];
+      let at = null, raf = null, lastT = 0;
 
       const rnd = (a, b) => a + Math.random() * (b - a);
-      const pick = (a) => a[(Math.random() * a.length) | 0];
 
       const size = () => {
         const dpr = Math.min(devicePixelRatio || 1, 2);
@@ -563,31 +557,24 @@
       size();
       addEventListener('resize', size);
 
-      const wet = () => (parseFloat(getComputedStyle(document.documentElement)
-        .getPropertyValue('--p')) || 0) >= 0.5;
+      const ink = () => (parseFloat(getComputedStyle(document.documentElement)
+        .getPropertyValue('--p')) || 0) >= 0.5 ? '#57BE89' : '#14140E';
       const wake = () => { if (!raf) raf = requestAnimationFrame(draw); };
 
-      function splat(x, y, r, colour) {
-        const n = 7 + ((Math.random() * 5) | 0);
-        const lobes = [];
-        // Wide variance between lobes is what stops it reading as a circle.
-        for (let i = 0; i < n; i++) lobes.push({ a: (i / n) * 6.283, r: r * rnd(0.52, 1.45) });
-        const sats = [];
-        const m = 3 + ((Math.random() * 6) | 0);
-        for (let i = 0; i < m; i++) {
-          const a = Math.random() * 6.283, d = r * rnd(1.1, 2.4);
-          sats.push({ x: Math.cos(a) * d, y: Math.sin(a) * d * 0.85, r: r * rnd(0.07, 0.3) });
-        }
-        splats.push({ x, y, r, colour, lobes, sats, t: performance.now(),
-                      grow: rnd(150, 280), life: rnd(9000, 15000) });
-        if (splats.length > MAXSPLATS) splats.shift();
+      // A circle with a wavy, torn edge. Rolled once per blob and kept, so the
+      // outline doesn't crawl while it sits there.
+      function lobes() {
+        const n = 13 + ((Math.random() * 5) | 0);
+        const out = [];
+        for (let i = 0; i < n; i++) out.push({ a: (i / n) * 6.283, r: rnd(0.72, 1.33) });
+        return out;
       }
 
-      function blobPath(cx, cy, lobes, s) {
-        const n = lobes.length;
+      function blob(cx, cy, l, rad) {
+        const n = l.length;
         const pt = (i) => {
-          const l = lobes[((i % n) + n) % n];
-          return { x: cx + Math.cos(l.a) * l.r * s, y: cy + Math.sin(l.a) * l.r * s };
+          const o = l[((i % n) + n) % n];
+          return { x: cx + Math.cos(o.a) * o.r * rad, y: cy + Math.sin(o.a) * o.r * rad };
         };
         ctx.beginPath();
         let a = pt(0), b = pt(1);
@@ -597,56 +584,47 @@
           ctx.quadraticCurveTo(a.x, a.y, (a.x + b.x) / 2, (a.y + b.y) / 2);
         }
         ctx.closePath();
+        ctx.fill();
       }
 
-      // A blob of paint in the air, carrying the speed it was thrown with.
-      function throwPaint(x, y, vx, vy, r) {
-        flying.push({ x, y: y + scrollY, vx, vy, r, t: performance.now() });
-        if (flying.length > 260) flying.shift();
-        wake();
+      function lay(x, y, speed) {
+        pts.push({ x, y, t: performance.now(), l: lobes(), g: Math.min(1 + speed * 0.1, 1.5) });
+        if (pts.length > MAXPTS) pts.shift();
       }
 
       if (fine) addEventListener('pointermove', (e) => {
         if (e.pointerType !== 'mouse') return;
         const now = performance.now();
+        const dt = Math.min(Math.max(now - lastT, 1), 120);
         if (at) {
-          const dt = Math.min(Math.max(now - lastMove, 1), 100);
-          const ix = (e.clientX - at.x) / dt, iy = (e.clientY - at.y) / dt;
-          const was = Math.hypot(v.x, v.y);
-          const before = was > 0.01 ? { x: v.x / was, y: v.y / was } : null;
-          v = { x: v.x * 0.55 + ix * 0.45, y: v.y * 0.55 + iy * 0.45 };
-          const sp = Math.hypot(v.x, v.y);
-          peak = Math.max(peak, sp);
-          if (sp > 0.2) spent = false;
-
-          // Shaking it: a sharp change of direction at speed throws paint off
-          // sideways, the way a loaded brush does.
-          if (before && sp > 0.75) {
-            const n = Math.hypot(ix, iy) || 1;
-            const dot = before.x * (ix / n) + before.y * (iy / n);
-            if (dot < 0.25) {
-              for (let i = 0; i < 2 + ((sp * 3) | 0); i++) {
-                const a = Math.random() * 6.283, m = rnd(3, 9) * Math.min(sp, 3.5);
-                throwPaint(e.clientX, e.clientY, Math.cos(a) * m, Math.sin(a) * m, rnd(3.5, 10));
-              }
-            }
+          const dx = e.clientX - at.x, dy = e.clientY - at.y;
+          const d = Math.hypot(dx, dy);
+          const speed = d / dt;
+          // Fill in the gaps between events so a fast flick is one continuous
+          // mass rather than a dotted line.
+          const steps = Math.max(1, Math.min(Math.ceil(d / SPACING), 24));
+          for (let i = 1; i <= steps; i++) {
+            lay(at.x + (dx * i) / steps, at.y + (dy * i) / steps, speed);
           }
-          // Moving fast sheds paint as you go.
-          if (sp > SHED && Math.random() < Math.min((sp - SHED) * 0.6, 0.8)) {
-            throwPaint(e.clientX, e.clientY,
-                       v.x * rnd(5, 11) + rnd(-3, 3), v.y * rnd(5, 11) + rnd(-3, 3),
-                       rnd(3, 9));
+          // The odd blob thrown off the edge of a fast stroke.
+          if (speed > 1.6 && Math.random() < 0.25) {
+            const a = Math.atan2(dy, dx) + rnd(-1.4, 1.4);
+            drips.push({ x: e.clientX, y: e.clientY, vx: Math.cos(a) * rnd(1, 4),
+                         vy: Math.sin(a) * rnd(1, 4), r: rnd(4, 13),
+                         t: now, l: lobes() });
+            if (drips.length > 40) drips.shift();
           }
+        } else {
+          lay(e.clientX, e.clientY, 0);
         }
         at = { x: e.clientX, y: e.clientY };
-        lastMove = now;
+        lastT = now;
         wake();
       }, { passive: true });
 
       addEventListener('visibilitychange', () => {
-        if (document.hidden) { splats = []; flying = []; ripples = []; v = { x: 0, y: 0 }; }
+        if (document.hidden) { pts = []; drips = []; ripples = []; }
       });
-      addEventListener('scroll', wake, { passive: true });
 
       // The landing ripple, kept from before.
       window.__ripple = (x, y) => {
@@ -659,73 +637,28 @@
       function draw() {
         const now = performance.now();
         ctx.clearRect(0, 0, innerWidth, innerHeight);
-        splats = splats.filter((s) => now - s.t < s.life);
+        pts = pts.filter((p) => now - p.t < LIFE);
+        drips = drips.filter((d) => now - d.t < LIFE * 1.4);
 
-        // Stopping dead. The bucket doesn't stop with you — whatever you were
-        // carrying keeps going and lands in front.
-        if (fine && at && !spent && now - lastMove > STILL) {
-          spent = true;
-          if (peak > STOP) {
-            const sp = Math.hypot(v.x, v.y) || peak;
-            const ux = (v.x || 0) / (sp || 1), uy = (v.y || 0) / (sp || 1);
-            const n = Math.min(6 + ((peak * 9) | 0), 30);
-            for (let i = 0; i < n; i++) {
-              const spread = rnd(-0.5, 0.5);                 // a cone, not a line
-              const cs = Math.cos(spread), sn = Math.sin(spread);
-              const m = rnd(4, 15) * Math.min(peak, 3.2);
-              throwPaint(at.x, at.y,
-                         (ux * cs - uy * sn) * m, (ux * sn + uy * cs) * m,
-                         rnd(4, 13));
-            }
-          }
-          peak = 0;
-          v = { x: v.x * 0.3, y: v.y * 0.3 };
-        }
-
-        // Paint in the air: it slows, sags a little, then lands.
-        flying = flying.filter((f) => {
-          f.vx *= 0.9; f.vy = f.vy * 0.9 + 0.22;
-          f.x += f.vx; f.y += f.vy;
-          const slow = Math.hypot(f.vx, f.vy) < 1.3;
-          if (slow || now - f.t > 900) {
-            splat(f.x, f.y, f.r * rnd(1.7, 2.6), wet() ? pick(INK) : DARK);
-            return false;
-          }
-          const y = f.y - scrollY;
-          if (y > innerHeight + 120 || y < -120) return false;
-          // Stretched along the direction of travel, like a thrown drop.
-          const a = Math.atan2(f.vy, f.vx);
-          const st = 1 + Math.min(Math.hypot(f.vx, f.vy) / 14, 1.3);
-          ctx.save();
-          ctx.translate(f.x, y);
-          ctx.rotate(a);
-          ctx.fillStyle = wet() ? '#57BE89' : DARK;
-          ctx.beginPath();
-          ctx.ellipse(0, 0, f.r * st, f.r * 0.85, 0, 0, 6.283);
-          ctx.fill();
-          ctx.restore();
-          return true;
+        ctx.fillStyle = ink();
+        // One solid colour at full opacity, so the blobs union into a single
+        // mass with no seams. They shrink as they age, which reads as the ink
+        // retracting rather than fading.
+        pts.forEach((p, i) => {
+          const age = (now - p.t) / LIFE;
+          const head = i / pts.length;                 // 0 tail, 1 head
+          const k = Math.pow(1 - age, 0.75) * (0.42 + head * 0.58) * p.g;
+          if (k <= 0.02) return;
+          blob(p.x, p.y, p.l, R * k);
         });
 
-        // Splats: pop on impact, hold, then dry out.
-        splats.forEach((s) => {
-          const age = (now - s.t) / s.life;
-          const g = Math.min((now - s.t) / s.grow, 1);
-          const k = g * (1 + 0.16 * Math.sin(g * Math.PI) * (1 - g * 0.3));
-          const fade = age > 0.78 ? 1 - (age - 0.78) / 0.22 : 1;
-          const y = s.y - scrollY;
-          if (y < -260 || y > innerHeight + 260) return;
-          ctx.globalAlpha = Math.max(0, 0.92 * fade);
-          ctx.fillStyle = s.colour;
-          blobPath(s.x, y, s.lobes, k);
-          ctx.fill();
-          s.sats.forEach((p) => {
-            ctx.beginPath();
-            ctx.arc(s.x + p.x * k, y + p.y * k, Math.max(0, p.r * k), 0, 6.283);
-            ctx.fill();
-          });
+        drips.forEach((d) => {
+          const age = (now - d.t) / (LIFE * 1.4);
+          d.x += d.vx; d.y += d.vy;
+          d.vx *= 0.93; d.vy = d.vy * 0.93 + 0.25;
+          const k = Math.pow(1 - age, 0.7);
+          if (k > 0.02) blob(d.x, d.y, d.l, d.r * k);
         });
-        ctx.globalAlpha = 1;
 
         // The landing: impact, then rings spreading out.
         const REACH = Math.hypot(innerWidth, innerHeight) * 0.78;
@@ -740,6 +673,7 @@
             fg.addColorStop(1, 'rgba(87,190,137,0)');
             ctx.fillStyle = fg;
             ctx.beginPath(); ctx.arc(r.x, r.y, fr, 0, 6.283); ctx.fill();
+            ctx.fillStyle = ink();
             return;
           }
           ctx.strokeStyle = `rgba(87,190,137,${(Math.pow(1 - a, 1.6) * 0.45).toFixed(3)})`;
@@ -747,7 +681,7 @@
           ctx.beginPath(); ctx.arc(r.x, r.y, Math.pow(a, 0.52) * REACH, 0, 6.283); ctx.stroke();
         });
 
-        raf = (splats.length || flying.length || ripples.length || !spent)
+        raf = (pts.length || drips.length || ripples.length)
           ? requestAnimationFrame(draw) : null;
       }
     })();
