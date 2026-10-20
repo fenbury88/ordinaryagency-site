@@ -274,6 +274,12 @@
       position: fixed; inset: 0; z-index: 60; pointer-events: none;
       opacity: 1;
     }
+    .ink {
+      position: fixed; inset: 0; z-index: 59; pointer-events: none;
+      filter: url(#gooify);
+    }
+    .goo-def { position: absolute; width: 0; height: 0; pointer-events: none; }
+    @media (prefers-reduced-motion: reduce) { .ink { display: none; } }
     @media (prefers-reduced-motion: reduce) { .trail { display: none; } }
 
     .foot {
@@ -521,112 +527,101 @@
     <span><a href="tel:+61403566928">0403 566 928</a></span>
   </footer>
 
+  <canvas class="ink" id="ink" aria-hidden="true"></canvas>
   <canvas class="trail" id="trail" aria-hidden="true"></canvas>
 
+  <!-- Blur, then crush the ALPHA channel with a colour matrix. That is what
+       welds overlapping soft stamps into one hard-edged liquid body, and what
+       makes the trail erode from its edges as the buffer fades. A canvas
+       contrast() filter can't do this: it works on colour, not alpha. -->
+  <svg class="goo-def" aria-hidden="true" focusable="false">
+    <filter id="gooify" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="11" result="b" />
+      <feColorMatrix in="b" type="matrix" result="goo"
+        values="1 0 0 0 0
+                0 1 0 0 0
+                0 0 1 0 0
+                0 0 0 21 -9" />
+      <!-- A fixed noise field the ink is pushed through, so the edge tears and
+           wobbles as the shape travels across it. Cheap stand-in for the fluid
+           sim theirs runs. -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.009 0.013" numOctaves="2" seed="11" result="noise" />
+      <feDisplacementMap in="goo" in2="noise" scale="34" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </svg>
+
   <script>
-    // Ink trail, after the one on buttermax.net: a thick solid mass with a
-    // ragged edge that follows the cursor and is gone within a second of you
-    // stopping. No persistence, no drips — it retracts to nothing.
+    // Ink trail, built the way buttermax.net does it. Their bundle gives the
+    // model away: the brush follows the mouse, its size comes from how far the
+    // mouse moved since the last frame (0 to 10px maps to none to full) eased
+    // with a slow lerp, and it stamps into a buffer that fades a little every
+    // frame. So a still mouse paints nothing at all, a crawl paints a thread,
+    // and a fast sweep paints a thick mass that dissolves behind you.
+    //
+    // Theirs runs a fluid sim over that buffer. This stamps soft and lets the
+    // SVG goo filter weld the stamps into one liquid body — and because the
+    // filter thresholds alpha, the shape erodes from its edges as the buffer
+    // fades instead of shrinking blob by blob.
     (() => {
-      const cv = document.getElementById('trail');
+      const cv = document.getElementById('ink');
+      const rp = document.getElementById('trail');
       const fine = matchMedia('(pointer: fine)').matches;
       const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-      // The canvas stays for touch too — no trail, but the page still lands
-      // with its ripple.
-      if (!cv || reduce) { cv && cv.remove(); return; }
+      if (!cv || !rp || reduce) { cv && cv.remove(); rp && rp.remove(); return; }
 
       const ctx = cv.getContext('2d');
-      const LIFE = 620;        // ms from laid down to gone
-      const R = 68;            // px base radius of the mass
-      const SPACING = 11;      // px between blobs, so the trail never gaps
-      const MAXPTS = 90;
+      const rctx = rp.getContext('2d');
+      const MAXR = 70;          // px brush radius at full tilt
+      const FULL = 10;          // px/frame of travel that counts as full size
+      const EASE = 0.08;        // their lerp factor, so size swells and sags
+      const FADE = 0.045;       // alpha taken off the buffer each frame
 
-      let pts = [], drips = [], ripples = [];
-      let at = null, raf = null, lastT = 0;
+      let w = 0, h = 0, dpr = 1, size = 0;
+      let at = null, prev = null, raf = null, idle = 0, ripples = [];
 
-      const rnd = (a, b) => a + Math.random() * (b - a);
-
-      const size = () => {
-        const dpr = Math.min(devicePixelRatio || 1, 2);
-        cv.width = innerWidth * dpr;
-        cv.height = innerHeight * dpr;
-        cv.style.width = innerWidth + 'px';
-        cv.style.height = innerHeight + 'px';
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const resize = () => {
+        w = innerWidth; h = innerHeight;
+        dpr = Math.min(devicePixelRatio || 1, 2);
+        [cv, rp].forEach((c) => {
+          c.width = w * dpr; c.height = h * dpr;
+          c.style.width = w + 'px'; c.style.height = h + 'px';
+          c.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+        });
       };
-      size();
-      addEventListener('resize', size);
+      resize();
+      addEventListener('resize', resize);
 
       const ink = () => (parseFloat(getComputedStyle(document.documentElement)
-        .getPropertyValue('--p')) || 0) >= 0.5 ? '#57BE89' : '#14140E';
+        .getPropertyValue('--p')) || 0) >= 0.5 ? '87,190,137' : '20,20,14';
       const wake = () => { if (!raf) raf = requestAnimationFrame(draw); };
 
-      // A circle with a wavy, torn edge. Rolled once per blob and kept, so the
-      // outline doesn't crawl while it sits there.
-      function lobes() {
-        const n = 13 + ((Math.random() * 5) | 0);
-        const out = [];
-        for (let i = 0; i < n; i++) out.push({ a: (i / n) * 6.283, r: rnd(0.72, 1.33) });
-        return out;
-      }
-
-      function blob(cx, cy, l, rad) {
-        const n = l.length;
-        const pt = (i) => {
-          const o = l[((i % n) + n) % n];
-          return { x: cx + Math.cos(o.a) * o.r * rad, y: cy + Math.sin(o.a) * o.r * rad };
-        };
+      // Soft-edged stamps. The gradient is what the goo filter needs: hard
+      // circles would stay circles, soft ones melt together.
+      function stamp(x, y, r, rgb) {
+        if (r < 0.5) return;
+        const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+        g.addColorStop(0, `rgba(${rgb},1)`);
+        g.addColorStop(0.5, `rgba(${rgb},0.9)`);
+        g.addColorStop(1, `rgba(${rgb},0)`);
+        ctx.fillStyle = g;
         ctx.beginPath();
-        let a = pt(0), b = pt(1);
-        ctx.moveTo((a.x + b.x) / 2, (a.y + b.y) / 2);
-        for (let i = 1; i <= n; i++) {
-          a = pt(i); b = pt(i + 1);
-          ctx.quadraticCurveTo(a.x, a.y, (a.x + b.x) / 2, (a.y + b.y) / 2);
-        }
-        ctx.closePath();
+        ctx.arc(x, y, r, 0, 6.283);
         ctx.fill();
-      }
-
-      function lay(x, y, speed) {
-        pts.push({ x, y, t: performance.now(), l: lobes(), g: Math.min(1 + speed * 0.1, 1.5) });
-        if (pts.length > MAXPTS) pts.shift();
       }
 
       if (fine) addEventListener('pointermove', (e) => {
         if (e.pointerType !== 'mouse') return;
-        const now = performance.now();
-        const dt = Math.min(Math.max(now - lastT, 1), 120);
-        if (at) {
-          const dx = e.clientX - at.x, dy = e.clientY - at.y;
-          const d = Math.hypot(dx, dy);
-          const speed = d / dt;
-          // Fill in the gaps between events so a fast flick is one continuous
-          // mass rather than a dotted line.
-          const steps = Math.max(1, Math.min(Math.ceil(d / SPACING), 24));
-          for (let i = 1; i <= steps; i++) {
-            lay(at.x + (dx * i) / steps, at.y + (dy * i) / steps, speed);
-          }
-          // The odd blob thrown off the edge of a fast stroke.
-          if (speed > 1.6 && Math.random() < 0.25) {
-            const a = Math.atan2(dy, dx) + rnd(-1.4, 1.4);
-            drips.push({ x: e.clientX, y: e.clientY, vx: Math.cos(a) * rnd(1, 4),
-                         vy: Math.sin(a) * rnd(1, 4), r: rnd(4, 13),
-                         t: now, l: lobes() });
-            if (drips.length > 40) drips.shift();
-          }
-        } else {
-          lay(e.clientX, e.clientY, 0);
-        }
         at = { x: e.clientX, y: e.clientY };
-        lastT = now;
         wake();
       }, { passive: true });
 
       addEventListener('visibilitychange', () => {
-        if (document.hidden) { pts = []; drips = []; ripples = []; }
+        if (document.hidden) {
+          ctx.clearRect(0, 0, w, h);
+          size = 0; prev = null; at = null;
+        }
       });
 
-      // The landing ripple, kept from before.
       window.__ripple = (x, y) => {
         const t = performance.now();
         ripples.push({ x, y, t, flash: true });
@@ -636,53 +631,61 @@
 
       function draw() {
         const now = performance.now();
-        ctx.clearRect(0, 0, innerWidth, innerHeight);
-        pts = pts.filter((p) => now - p.t < LIFE);
-        drips = drips.filter((d) => now - d.t < LIFE * 1.4);
 
-        ctx.fillStyle = ink();
-        // One solid colour at full opacity, so the blobs union into a single
-        // mass with no seams. They shrink as they age, which reads as the ink
-        // retracting rather than fading.
-        pts.forEach((p, i) => {
-          const age = (now - p.t) / LIFE;
-          const head = i / pts.length;                 // 0 tail, 1 head
-          const k = Math.pow(1 - age, 0.75) * (0.42 + head * 0.58) * p.g;
-          if (k <= 0.02) return;
-          blob(p.x, p.y, p.l, R * k);
-        });
+        // Size comes from how far the mouse moved since the last frame, not
+        // from where it is. Stop moving and it falls away to nothing.
+        const moved = at && prev ? Math.hypot(at.x - prev.x, at.y - prev.y) : 0;
+        const target = at ? Math.min(moved / FULL, 1) : 0;
+        size += (target - size) * EASE;
 
-        drips.forEach((d) => {
-          const age = (now - d.t) / (LIFE * 1.4);
-          d.x += d.vx; d.y += d.vy;
-          d.vx *= 0.93; d.vy = d.vy * 0.93 + 0.25;
-          const k = Math.pow(1 - age, 0.7);
-          if (k > 0.02) blob(d.x, d.y, d.l, d.r * k);
-        });
+        // Take a little alpha off the whole buffer every frame.
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.fillStyle = `rgba(0,0,0,${FADE})`;
+        ctx.fillRect(0, 0, w, h);
+        ctx.globalCompositeOperation = 'source-over';
 
-        // The landing: impact, then rings spreading out.
-        const REACH = Math.hypot(innerWidth, innerHeight) * 0.78;
+        if (at && size > 0.015) {
+          const rgb = ink();
+          const r = size * MAXR;
+          if (prev) {
+            // Walk from the last position to this one, so a fast flick is one
+            // body rather than a row of dots.
+            const d = Math.hypot(at.x - prev.x, at.y - prev.y);
+            const n = Math.min(Math.ceil(d / Math.max(r * 0.3, 2)), 48);
+            for (let i = 1; i <= n; i++) {
+              stamp(prev.x + (at.x - prev.x) * i / n, prev.y + (at.y - prev.y) * i / n, r, rgb);
+            }
+          } else {
+            stamp(at.x, at.y, r, rgb);
+          }
+        }
+        if (at) prev = { x: at.x, y: at.y };
+
+        // The landing rings go on their own canvas, so the goo filter doesn't
+        // eat them.
+        rctx.clearRect(0, 0, w, h);
+        const REACH = Math.hypot(w, h) * 0.78;
         ripples = ripples.filter((r) => now - r.t < 1500);
         ripples.forEach((r) => {
           const a = (now - r.t) / 1500;
           if (a < 0) return;
           if (r.flash) {
             const fr = 10 + a * 150;
-            const fg = ctx.createRadialGradient(r.x, r.y, 0, r.x, r.y, fr);
+            const fg = rctx.createRadialGradient(r.x, r.y, 0, r.x, r.y, fr);
             fg.addColorStop(0, `rgba(226,255,238,${Math.max(0, 0.75 - a * 4).toFixed(3)})`);
             fg.addColorStop(1, 'rgba(87,190,137,0)');
-            ctx.fillStyle = fg;
-            ctx.beginPath(); ctx.arc(r.x, r.y, fr, 0, 6.283); ctx.fill();
-            ctx.fillStyle = ink();
+            rctx.fillStyle = fg;
+            rctx.beginPath(); rctx.arc(r.x, r.y, fr, 0, 6.283); rctx.fill();
             return;
           }
-          ctx.strokeStyle = `rgba(87,190,137,${(Math.pow(1 - a, 1.6) * 0.45).toFixed(3)})`;
-          ctx.lineWidth = Math.max(0.4, (1 - a) * 7);
-          ctx.beginPath(); ctx.arc(r.x, r.y, Math.pow(a, 0.52) * REACH, 0, 6.283); ctx.stroke();
+          rctx.strokeStyle = `rgba(87,190,137,${(Math.pow(1 - a, 1.6) * 0.45).toFixed(3)})`;
+          rctx.lineWidth = Math.max(0.4, (1 - a) * 7);
+          rctx.beginPath(); rctx.arc(r.x, r.y, Math.pow(a, 0.52) * REACH, 0, 6.283); rctx.stroke();
         });
 
-        raf = (pts.length || drips.length || ripples.length)
-          ? requestAnimationFrame(draw) : null;
+        // Keep going while there is still ink left to fade out.
+        idle = (size < 0.015 && target < 0.015) ? idle + 1 : 0;
+        raf = (idle < 80 || ripples.length) ? requestAnimationFrame(draw) : null;
       }
     })();
 
