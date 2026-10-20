@@ -267,8 +267,9 @@
     .sig__name { font-family: var(--font-logo); font-size: 1.4rem; font-weight: 600; letter-spacing: -0.02em; }
     .sig__role { color: var(--muted); font-size: 0.9rem; }
 
-    /* The pointer trail. Drawn on a canvas by the script below; it only wakes
-       up for a real mouse, and only after the page has elevated. */
+    /* Paint. Splats, drips and the landing ripple are all drawn on this one
+       canvas by the script below. Painting needs a real mouse; the ripple
+       works on touch too. */
     .trail {
       position: fixed; inset: 0; z-index: 60; pointer-events: none;
       opacity: 1;
@@ -523,33 +524,33 @@
   <canvas class="trail" id="trail" aria-hidden="true"></canvas>
 
   <script>
-    // Fire. The cursor carries a flame that builds while you hold still; the
-    // embers it throws land on the page and set bits of it alight, and
-    // scrolling fans the lot. Everything burns out on its own.
+    // Paint. The cursor is a leaky bucket: it drips while you hold it still,
+    // lays a roller stroke when you drag it, and throws satellites when you
+    // flick it. Splats stick to the page, grow on impact, run a drip and
+    // eventually dry out.
     (() => {
       const cv = document.getElementById('trail');
       const fine = matchMedia('(pointer: fine)').matches;
       const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-      // The canvas stays for touch devices too — they get no fire, but they do
-      // get the ripple when the page lands.
+      // The canvas stays for touch too — no painting, but the page still lands
+      // with its ripple.
       if (!cv || reduce) { cv && cv.remove(); return; }
 
       const ctx = cv.getContext('2d');
-      const LIFE = 520;        // ms a smear point lasts
-      const BASEW = 30;        // px at the head of a cold smear
-      const BUILD = 2600;      // ms of stillness for a full flame
-      const CORE = 26;         // px flame radius at full heat
-      const MAXFIRES = 14;     // spot fires burning on the page at once
+      const MAXSPLATS = 150;
+      const DRIP_EVERY = 105;        // ms between drips from a held bucket
+      const STEP = 12;               // px of travel per roller blob
 
-      // Embers and spot fires live in document coordinates so they scroll with
-      // the page; the cursor flame lives in viewport coordinates.
-      let pts = [], embers = [], fires = [], cands = [], ripples = [];
-      let last = null, heat = 0, over = false, gust = 0;
-      let sy = scrollY, vel = 0, prev = performance.now(), raf = null;
+      // Two-tone, like the game. Mostly the house green, the odd clay one.
+      const INK = ['#57BE89', '#57BE89', '#57BE89', '#3FA874', '#C2552F'];
+      const DARK = '#14140E';
+
+      let splats = [], drops = [], ripples = [];
+      let at = null, since = 0, lastDrip = 0, over = false;
+      let sy = scrollY, vel = 0, raf = null;
 
       const rnd = (a, b) => a + Math.random() * (b - a);
-      // Cheap deterministic noise, so every flame flickers to its own rhythm.
-      const hash = (n) => { const x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); };
+      const pick = (a) => a[(Math.random() * a.length) | 0];
 
       const size = () => {
         const dpr = Math.min(devicePixelRatio || 1, 2);
@@ -559,19 +560,97 @@
         cv.style.height = innerHeight + 'px';
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       };
-      const findCandidates = () => {
-        cands = [...document.querySelectorAll(
-          '.row, .big, .word, .tally__row, .label, .portrait, .me__body p, .sub, .sig, .btn, .vault__note'
-        )];
-      };
-      size(); findCandidates();
-      addEventListener('resize', () => { size(); findCandidates(); });
+      size();
+      addEventListener('resize', size);
 
-      const hot = () => (parseFloat(getComputedStyle(document.documentElement)
+      const wet = () => (parseFloat(getComputedStyle(document.documentElement)
         .getPropertyValue('--p')) || 0) >= 0.5;
-      const wake = () => { if (!raf) { prev = performance.now(); raf = requestAnimationFrame(draw); } };
+      const wake = () => { if (!raf) raf = requestAnimationFrame(draw); };
 
-      // Called when the page lands: a drop hitting, then rings going out.
+      // A blob with uneven lobes, a few satellites, and maybe a run of paint
+      // down from it. Shape is rolled once and kept, so it doesn't crawl.
+      function splat(x, y, r, colour) {
+        const n = 7 + ((Math.random() * 5) | 0);
+        const lobes = [];
+        for (let i = 0; i < n; i++) lobes.push({ a: (i / n) * 6.283, r: r * rnd(0.68, 1.3) });
+        const sats = [];
+        const m = 1 + ((Math.random() * 5) | 0);
+        for (let i = 0; i < m; i++) {
+          const a = Math.random() * 6.283, d = r * rnd(1.15, 2.1);
+          sats.push({ x: Math.cos(a) * d, y: Math.sin(a) * d * 0.8, r: r * rnd(0.08, 0.3) });
+        }
+        splats.push({
+          x, y, r, colour, lobes, sats,
+          drip: Math.random() < 0.45
+            ? { w: r * rnd(0.18, 0.3), len: r * rnd(0.8, 2.6), off: rnd(-0.5, 0.5) * r }
+            : null,
+          t: performance.now(), grow: rnd(170, 300), life: rnd(9000, 15000),
+        });
+        if (splats.length > MAXSPLATS) splats.shift();
+        wake();
+      }
+
+      function blobPath(cx, cy, lobes, s) {
+        const n = lobes.length;
+        const pt = (i) => {
+          const l = lobes[((i % n) + n) % n];
+          return { x: cx + Math.cos(l.a) * l.r * s, y: cy + Math.sin(l.a) * l.r * s };
+        };
+        ctx.beginPath();
+        let a = pt(0), b = pt(1);
+        ctx.moveTo((a.x + b.x) / 2, (a.y + b.y) / 2);
+        for (let i = 1; i <= n; i++) {
+          a = pt(i); b = pt(i + 1);
+          ctx.quadraticCurveTo(a.x, a.y, (a.x + b.x) / 2, (a.y + b.y) / 2);
+        }
+        ctx.closePath();
+      }
+
+      function fall(x, y, vx, r) {
+        drops.push({ x, y, vx, vy: rnd(0.2, 1.2), r, t: performance.now(), drop: rnd(70, 360) });
+        if (drops.length > 90) drops.shift();
+        wake();
+      }
+
+      if (fine) addEventListener('pointermove', (e) => {
+        if (e.pointerType !== 'mouse') return;
+        const x = e.clientX, y = e.clientY + scrollY;
+        const sp = at ? Math.hypot(e.clientX - at.x, e.clientY - at.y) : 0;
+        over = true;
+        if (at) {
+          // Dragging rolls paint on: overlapping blobs along the path.
+          since += sp;
+          while (since > STEP) {
+            since -= STEP;
+            splat(x + rnd(-4, 4), y + rnd(-4, 4), rnd(9, 19), wet() ? pick(INK) : DARK);
+          }
+          // A hard flick throws paint off the bucket.
+          if (sp > 26 && Math.random() < 0.5) {
+            for (let i = 0; i < 1 + (sp / 40 | 0); i++) {
+              fall(x + rnd(-14, 14), y, (e.clientX - at.x) * rnd(0.04, 0.14), rnd(3, 8));
+            }
+          }
+        }
+        at = { x: e.clientX, y: e.clientY };
+        wake();
+      }, { passive: true });
+
+      addEventListener('pointerout', (e) => { if (!e.relatedTarget) over = false; });
+      addEventListener('visibilitychange', () => {
+        if (document.hidden) { over = false; splats = []; drops = []; ripples = []; }
+      });
+
+      // Scrolling slops the bucket about.
+      addEventListener('scroll', () => {
+        const d = scrollY - sy; sy = scrollY;
+        vel = vel * 0.6 + d * 0.4;
+        if (fine && wet() && at && over && Math.abs(vel) > 14 && Math.random() < 0.4) {
+          fall(at.x + rnd(-20, 20), at.y + scrollY, rnd(-0.6, 0.6), rnd(3, 9));
+        }
+        wake();
+      }, { passive: true });
+
+      // The landing ripple, kept from before.
       window.__ripple = (x, y) => {
         const t = performance.now();
         ripples.push({ x, y, t, flash: true });
@@ -579,194 +658,76 @@
         wake();
       };
 
-      function ignite(x, y, r, life) {
-        if (fires.length >= MAXFIRES) return;
-        fires.push({ x, y, r, t0: performance.now(), life, seed: Math.random() * 997 });
-      }
-
-      // Set light to a random spot along the top edge of something on screen.
-      function catchSomething(strength) {
-        const vis = cands.filter((el) => {
-          const r = el.getBoundingClientRect();
-          return r.bottom > 40 && r.top < innerHeight - 20 && r.width > 40;
-        });
-        if (!vis.length) return;
-        const el = vis[(Math.random() * vis.length) | 0];
-        const r = el.getBoundingClientRect();
-        ignite(r.left + rnd(0.08, 0.92) * r.width, r.top + scrollY + rnd(-2, 6),
-               rnd(9, 20) * strength, rnd(1700, 4200));
-      }
-
-      function spark(x, y, vx, vy, r, life) {
-        if (embers.length > 220) embers.shift();
-        embers.push({ x, y, vx, vy, r, t: performance.now(), life });
-      }
-
-      if (fine) addEventListener('pointermove', (e) => {
-        if (e.pointerType !== 'mouse') return;
+      function draw() {
         const now = performance.now();
-        const sp = last ? Math.hypot(e.clientX - last.x, e.clientY - last.y) : 0;
-        over = true;
-        pts.push({ x: e.clientX, y: e.clientY, t: now, h: heat });
-        if (pts.length > 80) pts.shift();
-
-        if (sp > 1) {
-          // Moving spends the heat, and the faster the flick the more it throws.
-          const spent = Math.min(sp / 90, 1) * (0.25 + heat * 0.9);
-          for (let i = 0; i < spent * 14; i++) {
-            const a = Math.random() * Math.PI * 2;
-            const v = 0.6 + Math.random() * Math.min(sp, 70) * 0.06;
-            spark(e.clientX, e.clientY + scrollY, Math.cos(a) * v, Math.sin(a) * v - 0.5,
-                  rnd(1, 4.4), rnd(600, 1300));
-          }
-          heat = Math.max(0, heat - spent * 0.85);
-        }
-        last = { x: e.clientX, y: e.clientY };
-        wake();
-      }, { passive: true });
-
-      addEventListener('pointerout', (e) => { if (!e.relatedTarget) { over = false; heat = 0; } });
-      addEventListener('visibilitychange', () => {
-        if (document.hidden) { over = false; heat = 0; pts = []; embers = []; fires = []; }
-      });
-
-      // Scrolling fans the flames: it leans everything, and a decent shove can
-      // set something new alight on its own.
-      addEventListener('scroll', () => {
-        const d = scrollY - sy;
-        sy = scrollY;
-        vel = vel * 0.6 + d * 0.4;
-        gust = Math.min(1, Math.abs(vel) / 45);
-        if (hot() && Math.abs(vel) > 7 && Math.random() < 0.16 + gust * 0.3) catchSomething(0.7 + gust);
-        wake();
-      }, { passive: true });
-
-      // One flame, drawn wherever it's told. Seed decides its flicker.
-      function flame(x, y, R, alpha, now, seed, lean, fire) {
-        if (!(R > 0.5) || !Number.isFinite(x) || !Number.isFinite(y)) return;
-        const col = (a) => fire ? `rgba(87,190,137,${a})` : `rgba(14,14,10,${a})`;
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.scale(1, 1.45);                         // taller than wide
-        for (let i = 0; i < 9; i++) {
-          const ph = hash(seed + i * 3.7) * 6.283;
-          const f = 0.8 + 0.2 * Math.sin(now / (52 + hash(seed + i) * 40) + ph);
-          const rr = R * Math.pow(1 - i * 0.097, 1.25) * f;
-          if (rr <= 0.5) continue;
-          const yy = -R * i * 0.30 * (0.88 + 0.2 * Math.sin(now / 90 + ph));
-          const xx = Math.sin(now / (95 + hash(seed + i * 2) * 60) + ph) * R * 0.11 * i
-                   + lean * i * 0.9;
-          const g = ctx.createRadialGradient(xx, yy, 0, xx, yy, rr);
-          const a = (fire ? 0.34 : 0.055) * (1 - i * 0.08) * alpha;
-          g.addColorStop(0, col((a * 1.6).toFixed(3)));
-          g.addColorStop(0.5, col((a * 0.85).toFixed(3)));
-          g.addColorStop(1, col(0));
-          ctx.fillStyle = g;
-          ctx.beginPath();
-          ctx.arc(xx, yy, rr, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.restore();
-      }
-
-      function draw(ts) {
-        const now = ts || performance.now();
-        const dt = Math.min(now - prev, 50); prev = now;
         ctx.clearRect(0, 0, innerWidth, innerHeight);
+        vel *= 0.86;
 
-        vel *= 0.86; gust *= 0.9;
-        const lean = Math.max(-1.6, Math.min(1.6, vel * 0.06));   // wind from scrolling
-        const fire = hot();
-        const col = (a) => fire ? `rgba(87,190,137,${a})` : `rgba(14,14,10,${a})`;
-        ctx.globalCompositeOperation = fire ? 'lighter' : 'source-over';
+        splats = splats.filter((s) => now - s.t < s.life);
+        drops = drops.filter((d) => d.alive !== false);
 
-        // Stillness feeds the cursor flame, with the odd gust to keep it alive.
-        if (over && last) heat = Math.min(1, heat + dt / BUILD);
-        pts = pts.filter((p) => now - p.t < LIFE);
-        embers = embers.filter((e) => now - e.t < e.life);
-        fires = fires.filter((f) => now - f.t0 < f.life);
-
-        // The smear.
-        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-        for (let i = 1; i < pts.length; i++) {
-          const a = pts[i - 1], c = pts[i];
-          if (Math.hypot(c.x - a.x, c.y - a.y) < 1.5) continue;
-          const k = 1 - (now - c.t) / LIFE;
-          const mid = { x: (a.x + c.x) / 2, y: (a.y + c.y) / 2 };
-          const bef = pts[i - 2] || a;
-          ctx.strokeStyle = col((Math.pow(k, 1.3) * (fire ? 0.5 : 0.55)).toFixed(3));
-          ctx.lineWidth = Math.max(0.5, (BASEW + c.h * 40) * Math.pow(k, 1.45));
-          ctx.beginPath();
-          ctx.moveTo((bef.x + a.x) / 2, (bef.y + a.y) / 2);
-          ctx.quadraticCurveTo(a.x, a.y, mid.x, mid.y);
-          ctx.stroke();
+        // A held bucket keeps dripping in one place, so a puddle builds.
+        if (fine && over && at && now - lastDrip > DRIP_EVERY) {
+          lastDrip = now;
+          fall(at.x + rnd(-11, 11), at.y + scrollY, rnd(-0.35, 0.35), rnd(4, 11));
         }
 
-        // Spot fires: flare up, burn, die back. They throw their own embers, so
-        // a fire can spread to whatever is sitting next to it.
-        fires.forEach((f) => {
-          const age = (now - f.t0) / f.life;
-          // Clamped: a frame landing past the end gives a negative sine, and
-          // a negative to a fractional power is NaN, which poisons the canvas.
-          const env = Math.pow(Math.max(0, Math.sin(Math.PI * Math.min(age, 1))), 0.7);
-          const wob = 0.75 + 0.25 * Math.sin(now / 160 + f.seed);
-          flame(f.x, f.y - scrollY, f.r * env * wob, env, now, f.seed, lean, fire);
-          if (env > 0.35 && Math.random() < 0.22) {
-            spark(f.x + rnd(-f.r, f.r) * 0.6, f.y - f.r * 0.4,
-                  rnd(-0.3, 0.3) + lean * 0.4, -0.5 - Math.random() * 1.0,
-                  rnd(0.8, 2.4), rnd(700, 1500));
-          }
-        });
-
-        // The cursor flame.
-        if (last && over && heat > 0.02) {
-          const R = CORE * (0.45 + heat * 1.9) * (0.9 + 0.1 * Math.sin(now / 220));
-          flame(last.x, last.y, R, heat, now, 7.3, lean, fire);
-          if (fire) {
-            const cr = R * 0.5;
-            const cg = ctx.createRadialGradient(last.x, last.y, 0, last.x, last.y, cr);
-            cg.addColorStop(0, `rgba(226,255,238,${(0.36 * heat).toFixed(3)})`);
-            cg.addColorStop(0.45, `rgba(140,230,180,${(0.22 * heat).toFixed(3)})`);
-            cg.addColorStop(1, 'rgba(87,190,137,0)');
-            ctx.fillStyle = cg;
-            ctx.beginPath();
-            ctx.arc(last.x, last.y, cr, 0, Math.PI * 2);
-            ctx.fill();
-          }
-          if (heat > 0.3 && Math.random() < heat * 0.5) {
-            spark(last.x + rnd(-R, R) * 0.5, last.y + scrollY - R * 0.3,
-                  rnd(-0.25, 0.25) + lean * 0.3, -0.7 - Math.random() * 1.1,
-                  rnd(0.9, 2.9), rnd(700, 1500));
-          }
-          // A flame left burning on the spot eventually takes hold of the page.
-          if (fire && heat > 0.75 && Math.random() < 0.012) {
-            ignite(last.x + rnd(-30, 30), last.y + scrollY + rnd(-6, 14), rnd(10, 22), rnd(2000, 4500));
-          }
-        }
-
-        // Embers rise, drift on the wind, and sometimes land on something and
-        // take hold.
-        embers.forEach((e) => {
-          const k = 1 - (now - e.t) / e.life;
-          e.x += e.vx + Math.sin((now + e.t) / 220) * 0.25 + lean * 0.5;
-          e.y += e.vy;
-          e.vx *= 0.985; e.vy = e.vy * 0.985 - 0.012;
-          ctx.fillStyle = col((k * (fire ? 0.85 : 0.5)).toFixed(3));
-          ctx.beginPath();
-          ctx.arc(e.x, e.y - scrollY, Math.max(0, e.r * k), 0, Math.PI * 2);
+        // Splats: pop on impact, hold, then dry out.
+        splats.forEach((s) => {
+          const age = (now - s.t) / s.life;
+          const g = Math.min((now - s.t) / s.grow, 1);
+          const sc = 1 + 0.16 * Math.sin(Math.min(g, 1) * Math.PI) * (1 - g * 0.3); // squash on landing
+          const k = g * sc;
+          const fade = age > 0.78 ? 1 - (age - 0.78) / 0.22 : 1;
+          const y = s.y - scrollY;
+          if (y < -260 || y > innerHeight + 260) return;
+          ctx.globalAlpha = Math.max(0, 0.92 * fade);
+          ctx.fillStyle = s.colour;
+          blobPath(s.x, y, s.lobes, k);
           ctx.fill();
-          // Burning out over something on screen can start a new fire there.
-          if (fire && k < 0.08 && !e.done) {
-            e.done = true;
-            if (e.r > 1.8 && Math.random() < 0.3) {
-              const vy = e.y - scrollY;
-              if (vy > 0 && vy < innerHeight) ignite(e.x, e.y, rnd(8, 17), rnd(1600, 3600));
+          s.sats.forEach((p) => {
+            ctx.beginPath();
+            ctx.arc(s.x + p.x * k, y + p.y * k, Math.max(0, p.r * k), 0, 6.283);
+            ctx.fill();
+          });
+          // The run of paint underneath, which creeps down after it lands.
+          if (s.drip) {
+            const dl = s.drip.len * Math.min(1, Math.max(0, (now - s.t - 260) / 1400));
+            if (dl > 1) {
+              const w = s.drip.w, x = s.x + s.drip.off;
+              ctx.beginPath();
+              ctx.moveTo(x - w, y);
+              ctx.lineTo(x - w * 0.7, y + dl);
+              ctx.arc(x, y + dl, w * 0.7, Math.PI, 0, true);
+              ctx.lineTo(x + w, y);
+              ctx.closePath();
+              ctx.fill();
             }
           }
         });
+        ctx.globalAlpha = 1;
 
-        // The landing: a bright point of impact, then rings spreading out and
-        // slowing as they go, the way water does.
+        // Falling drops. They stretch as they go, then hit and splat.
+        drops.forEach((d) => {
+          d.vy += 0.42;
+          d.y += d.vy;
+          d.x += d.vx;
+          d.vx *= 0.99;
+          const fallen = d.y - (d.t0 || (d.t0 = d.y));
+          const y = d.y - scrollY;
+          if (fallen > d.drop) {
+            d.alive = false;
+            splat(d.x, d.y, d.r * rnd(1.6, 2.6), wet() ? pick(INK) : DARK);
+            return;
+          }
+          if (y > innerHeight + 60) { d.alive = false; return; }
+          ctx.fillStyle = wet() ? '#57BE89' : DARK;
+          ctx.beginPath();
+          ctx.ellipse(d.x, y, d.r * 0.8, d.r * (1 + Math.min(d.vy / 9, 1.1)), 0, 0, 6.283);
+          ctx.fill();
+        });
+
+        // The landing: impact, then rings spreading out.
         const REACH = Math.hypot(innerWidth, innerHeight) * 0.78;
         ripples = ripples.filter((r) => now - r.t < 1500);
         ripples.forEach((r) => {
@@ -775,20 +736,18 @@
           if (r.flash) {
             const fr = 10 + a * 150;
             const fg = ctx.createRadialGradient(r.x, r.y, 0, r.x, r.y, fr);
-            fg.addColorStop(0, `rgba(226,255,238,${(Math.max(0, 0.75 - a * 4)).toFixed(3)})`);
+            fg.addColorStop(0, `rgba(226,255,238,${Math.max(0, 0.75 - a * 4).toFixed(3)})`);
             fg.addColorStop(1, 'rgba(87,190,137,0)');
             ctx.fillStyle = fg;
-            ctx.beginPath(); ctx.arc(r.x, r.y, fr, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(r.x, r.y, fr, 0, 6.283); ctx.fill();
             return;
           }
-          const rad = Math.pow(a, 0.52) * REACH;
           ctx.strokeStyle = `rgba(87,190,137,${(Math.pow(1 - a, 1.6) * 0.45).toFixed(3)})`;
           ctx.lineWidth = Math.max(0.4, (1 - a) * 7);
-          ctx.beginPath(); ctx.arc(r.x, r.y, rad, 0, Math.PI * 2); ctx.stroke();
+          ctx.beginPath(); ctx.arc(r.x, r.y, Math.pow(a, 0.52) * REACH, 0, 6.283); ctx.stroke();
         });
 
-        ctx.globalCompositeOperation = 'source-over';
-        raf = (pts.length || embers.length || fires.length || ripples.length || (over && heat > 0.02))
+        raf = (splats.length || drops.length || ripples.length || (fine && over))
           ? requestAnimationFrame(draw) : null;
       }
     })();
