@@ -581,7 +581,7 @@
       <!-- Sized from JS: percentage lengths here would resolve against this
            SVG's own viewport, which is deliberately 0x0. -->
       <rect id="maskbg" x="0" y="0" width="0" height="0" fill="#000" />
-      <g id="inkpaths" filter="url(#gooify)" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"></g>
+      <g id="inkpaths" filter="url(#gooify)" fill="#fff"></g>
     </mask>
     <filter id="gooify" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="b" />
@@ -593,8 +593,8 @@
       <!-- Just enough displacement to stop the edge reading as a machine-made
            curve. Theirs is a smooth, fat, calligraphic ribbon, not a torn one,
            so this stays gentle. -->
-      <feTurbulence type="fractalNoise" baseFrequency="0.005 0.007" numOctaves="2" seed="11" result="noise" />
-      <feDisplacementMap in="goo" in2="noise" scale="11" xChannelSelector="R" yChannelSelector="G" />
+      <feTurbulence type="fractalNoise" baseFrequency="0.008 0.011" numOctaves="3" seed="11" result="noise" />
+      <feDisplacementMap in="goo" in2="noise" scale="26" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
 
@@ -623,12 +623,14 @@
       if (!swap || !rp || reduce) { swap && swap.remove(); rp && rp.remove(); return; }
 
       const rctx = rp.getContext('2d');
-      const MAXR = 68;          // px brush radius at full tilt
+      const MAXR = 60;          // px of ink blob at full tilt
       const FULL = 7;           // px/frame of brush travel that counts as full size
       const EASE = 0.08;        // their lerp factor, so size swells and sags
-      const LIFE = 1750;        // ms a segment of trail lasts
-      const POOL = 80;          // stroked segments the mask can hold
+      const LIFE = 1150;        // ms a blob of ink lasts
+      const POOL = 150;         // blobs the mask can hold
       const FOLLOW = 0.17;      // how hard the brush chases the cursor
+      const SPREAD = 0.55;      // how much of the brush's speed the ink inherits
+      const SWELL = 0.9;        // how much each blob grows as it drifts
 
       // The brush doesn't sit on the cursor. It chases it, which is what gives
       // the ribbon its weight: it swings wide on a fast turn, overshoots, and
@@ -653,11 +655,19 @@
       })();
 
       for (let i = 0; i < POOL; i++) {
-        const el = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        el.setAttribute('stroke-width', '0');
+        const el = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        el.setAttribute('r', '0');
         paths.appendChild(el);
         pool.push(el);
       }
+
+      // A rolling noise field, so the ink curls as it spreads instead of
+      // flying out in straight lines.
+      const curl = (x, y, t) => {
+        const a = Math.sin(x * 0.011 + t * 0.0007) + Math.cos(y * 0.013 - t * 0.0009);
+        const b = Math.cos(x * 0.009 - t * 0.0008) + Math.sin(y * 0.012 + t * 0.0006);
+        return { x: a * 0.42, y: b * 0.42 };
+      };
 
       const sizeCanvas = () => {
         maskbg.setAttribute('width', innerWidth);
@@ -709,31 +719,59 @@
         const target = at ? Math.min(moved / FULL, 1) : 0;
         size += (target - size) * EASE;
 
+        // Inject ink at the brush. Not a stroke — a puff of blobs that then
+        // go their own way, which is what makes the cloud rather than a line.
         if (brush && prev && size > 0.02 && moved > 0.4) {
-          segs.push({ x1: prev.x, y1: prev.y, x2: brush.x, y2: brush.y,
-                      w: size * MAXR * 2, t: now });
-          if (segs.length > POOL) segs.shift();
+          const n = Math.min(1 + Math.round(moved / 9), 5);
+          for (let i = 0; i < n; i++) {
+            const f = i / n;
+            segs.push({
+              x: prev.x + dx * f + (Math.random() - 0.5) * 22,
+              y: prev.y + dy * f + (Math.random() - 0.5) * 22,
+              vx: dx * SPREAD * (0.5 + Math.random()) + (Math.random() - 0.5) * 1.6,
+              vy: dy * SPREAD * (0.5 + Math.random()) + (Math.random() - 0.5) * 1.6,
+              r: size * MAXR * (0.45 + Math.random() * 0.75),
+              t: now,
+            });
+          }
+          // The odd blob thrown clear of the cloud, which the goo filter
+          // leaves as a detached fragment.
+          if (moved > 14 && Math.random() < 0.35) {
+            const a = Math.atan2(dy, dx) + (Math.random() - 0.5) * 2.2;
+            const m = 2 + Math.random() * 5;
+            segs.push({
+              x: brush.x, y: brush.y,
+              vx: Math.cos(a) * m, vy: Math.sin(a) * m,
+              r: size * MAXR * (0.18 + Math.random() * 0.3), t: now,
+            });
+          }
+          while (segs.length > POOL) segs.shift();
         }
         if (brush) prev = { x: brush.x, y: brush.y };
         segs = segs.filter((g) => now - g.t < LIFE);
 
-        // Laid ink stays exactly where it was put. Frame by frame in the
-        // reference it doesn't travel at all — it thins in place and the
-        // narrow parts drop out first.
+        // Each blob drifts on, curls, slows and swells as it goes — ink
+        // spreading through water rather than paint sitting on a surface.
+        segs.forEach((g) => {
+          const c = curl(g.x, g.y, now);
+          g.vx = g.vx * 0.9 + c.x;
+          g.vy = g.vy * 0.9 + c.y;
+          g.x += g.vx;
+          g.y += g.vy;
+        });
 
-        // Paint the mask. Each segment thins and fades with age; the goo
-        // filter's alpha threshold then erodes the whole body from its edges.
+        // Paint the mask. Blobs grow as they age and drop out at the end; the
+        // goo filter welds the overlaps and tears the edges where they thin.
         for (let i = 0; i < POOL; i++) {
           const g = segs[i];
           const el = pool[i];
-          if (!g) { if (el.getAttribute('stroke-width') !== '0') el.setAttribute('stroke-width', '0'); continue; }
-          const k = 1 - (now - g.t) / LIFE;
-          el.setAttribute('d', `M${g.x1.toFixed(1)} ${g.y1.toFixed(1)}L${g.x2.toFixed(1)} ${g.y2.toFixed(1)}`);
-          // Thickness carries the ageing, not opacity: the body stays solid
-          // and the oldest end draws down to the thin spike the reference has
-          // trailing behind the head.
-          el.setAttribute('stroke-width', (g.w * (0.08 + 0.92 * k)).toFixed(1));
-          el.setAttribute('opacity', Math.min(1, k * 2.4).toFixed(3));
+          if (!g) { if (el.getAttribute('r') !== '0') el.setAttribute('r', '0'); continue; }
+          const age = (now - g.t) / LIFE;
+          const k = 1 - age;
+          el.setAttribute('cx', g.x.toFixed(1));
+          el.setAttribute('cy', g.y.toFixed(1));
+          el.setAttribute('r', (g.r * (1 + age * SWELL)).toFixed(1));
+          el.setAttribute('opacity', Math.min(1, k * 2.6).toFixed(3));
         }
 
         // The swapped copy only costs anything while there is trail to see.
