@@ -584,19 +584,21 @@
       <g id="inkpaths" filter="url(#gooify)" fill="#fff"></g>
     </mask>
     <filter id="gooify" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="b" />
+      <!-- Blur has to scale with the ink: too wide for the blob size and the
+           alpha threshold below erases the shape entirely. -->
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="b" />
       <feColorMatrix in="b" type="matrix" result="goo"
         values="1 0 0 0 0
                 0 1 0 0 0
                 0 0 1 0 0
-                0 0 0 21 -9" />
+                0 0 0 15 -5.5" />
       <!-- Just enough displacement to stop the edge reading as a machine-made
            curve. Theirs is a smooth, fat, calligraphic ribbon, not a torn one,
            so this stays gentle. -->
       <!-- One octave at low frequency: their edge rolls in big smooth waves
            with the odd sharp notch, not a fine fuzz of little lumps. -->
       <feTurbulence type="fractalNoise" baseFrequency="0.0055 0.0085" numOctaves="1" seed="11" result="noise" />
-      <feDisplacementMap in="goo" in2="noise" scale="32" xChannelSelector="R" yChannelSelector="G" />
+      <feDisplacementMap in="goo" in2="noise" scale="14" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
 
@@ -625,18 +627,18 @@
       if (!swap || !rp || reduce) { swap && swap.remove(); rp && rp.remove(); return; }
 
       const rctx = rp.getContext('2d');
-      const MAXR = 72;          // px of ink blob at full tilt
+      const MAXR = 32;          // px of ink blob at full tilt
       const FULL = 7;           // px/frame of brush travel that counts as full size
       const EASE = 0.08;        // their lerp factor, so size swells and sags
-      const LIFE = 1150;        // ms a blob of ink lasts
-      const POOL = 150;         // blobs the mask can hold
+      const LIFE = 760;         // ms a blob of ink lasts
+      const POOL = 90;          // blobs the mask can hold
       const FOLLOW = 0.17;      // how hard the brush chases the cursor
-      const SPREAD = 0.55;      // how much of the brush's speed the ink inherits
-      const SWELL = 0.9;        // how much each blob grows as it drifts
+      const SPREAD = 0.34;      // how much of the brush's speed the ink inherits
+      const SWELL = 0.5;        // how much each blob grows as it drifts
       const DRAG = 0.965;       // how much speed ink keeps frame to frame
-      const PUSH = 0.42;        // how hard the brush shoves ink it passes through
-      const PUSH_R = 190;       // px the brush's wake reaches
-      const CURL = 0.14;        // strength of the swirl laid over the top
+      const PUSH = 0.2;         // how hard the brush shoves ink it passes through
+      const PUSH_R = 125;       // px the brush's wake reaches
+      const CURL = 0.08;        // strength of the swirl laid over the top
 
       // The brush doesn't sit on the cursor. It chases it, which is what gives
       // the ribbon its weight: it swings wide on a fast turn, overshoots, and
@@ -732,15 +734,15 @@
         if (brush && prev && size > 0.02 && moved > 0.4) {
           // Fewer, bigger blobs: the body wants to read as one smooth mass
           // that the displacement then tears, not as a row of lumps.
-          const n = Math.min(1 + Math.round(moved / 16), 3);
+          const n = Math.min(1 + Math.round(moved / 15), 3);
           for (let i = 0; i < n; i++) {
             const f = i / n;
             segs.push({
-              x: prev.x + dx * f + (Math.random() - 0.5) * 22,
-              y: prev.y + dy * f + (Math.random() - 0.5) * 22,
+              x: prev.x + dx * f + (Math.random() - 0.5) * 13,
+              y: prev.y + dy * f + (Math.random() - 0.5) * 13,
               vx: dx * SPREAD * (0.5 + Math.random()) + (Math.random() - 0.5) * 1.6,
               vy: dy * SPREAD * (0.5 + Math.random()) + (Math.random() - 0.5) * 1.6,
-              r: size * MAXR * (0.7 + Math.random() * 1.0),
+              r: size * MAXR * (0.75 + Math.random() * 0.8),
               a: Math.atan2(dy, dx) * 57.2958,
               s: 1 + Math.min(moved / 9, 1.5) * (0.6 + Math.random() * 0.7),
               t: now,
@@ -748,7 +750,7 @@
           }
           // The odd blob thrown clear of the cloud, which the goo filter
           // leaves as a detached fragment.
-          if (moved > 14 && Math.random() < 0.35) {
+          if (moved > 24 && Math.random() < 0.16) {
             const a = Math.atan2(dy, dx) + (Math.random() - 0.5) * 2.2;
             const m = 2 + Math.random() * 5;
             segs.push({
