@@ -588,19 +588,19 @@
            alpha threshold below erases the shape entirely. -->
       <!-- Tight: spatter is discrete drops, so neighbours should stay apart
            rather than welding into one body. -->
-      <feGaussianBlur in="SourceGraphic" stdDeviation="1.8" result="b" />
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.2" result="b" />
       <feColorMatrix in="b" type="matrix" result="goo"
         values="1 0 0 0 0
                 0 1 0 0 0
                 0 0 1 0 0
-                0 0 0 13 -4.2" />
+                0 0 0 11 -3.4" />
       <!-- Just enough displacement to stop the edge reading as a machine-made
            curve. Theirs is a smooth, fat, calligraphic ribbon, not a torn one,
            so this stays gentle. -->
       <!-- One octave at low frequency: their edge rolls in big smooth waves
            with the odd sharp notch, not a fine fuzz of little lumps. -->
       <feTurbulence type="fractalNoise" baseFrequency="0.0055 0.0085" numOctaves="1" seed="11" result="noise" />
-      <feDisplacementMap in="goo" in2="noise" scale="7" xChannelSelector="R" yChannelSelector="G" />
+      <feDisplacementMap in="goo" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
 
@@ -629,15 +629,17 @@
       if (!swap || !rp || reduce) { swap && swap.remove(); rp && rp.remove(); return; }
 
       const rctx = rp.getContext('2d');
-      const MAXR = 26;          // px of the largest drop at full tilt
+      const MAXR = 16;          // px of the largest drop at full tilt
       const FULL = 7;           // px/frame of brush travel that counts as full size
       const EASE = 0.08;        // the lerp that makes the swing swell and sag
       const LIFE = 610;         // ms a drop lasts before it fades out
-      const POOL = 72;          // drops on screen at once
+      const POOL = 95;          // drops on screen at once
       const FOLLOW = 0.17;      // how hard the weapon chases the cursor
-      const THROW = 0.75;       // how much of the swing's speed a drop leaves with
-      const AIRDRAG = 0.8;      // drops shed speed fast, then land and stay put
-      const LANDED = 0.6;       // px/frame below which a drop has landed
+      const THROW = 0.45;       // how much of the swing's speed a drop leaves with
+      // Slower off the weapon but far less drag, so drops carry well out
+      // across the page instead of dropping at your feet.
+      const AIRDRAG = 0.93;     // speed kept per frame while in flight
+      const LANDED = 0.3;       // px/frame below which a drop has landed
 
       // The brush doesn't sit on the cursor. It chases it, which is what gives
       // the ribbon its weight: it swings wide on a fast turn, overshoots, and
@@ -739,13 +741,13 @@
             // Mostly small, occasionally one big one — the size spread is what
             // reads as spatter rather than as dots.
             const big = Math.pow(Math.random(), 2.4);
-            const a = dir + (Math.random() - 0.5) * 1.5;
-            const sp = moved * THROW * (0.35 + Math.random() * 0.95);
+            const a = dir + (Math.random() - 0.5) * 2.1;
+            const sp = moved * THROW * (0.3 + Math.random() * 1.1);
             segs.push({
               x: prev.x + dx * f + (Math.random() - 0.5) * 10,
               y: prev.y + dy * f + (Math.random() - 0.5) * 10,
               vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
-              r: Math.max(2.4, size * MAXR * (0.24 + big * 0.9)),
+              r: Math.max(1.8, size * MAXR * (0.22 + big * 0.95)),
               a: a * 57.2958, st: 1, down: false, t: now,
             });
           }
@@ -757,16 +759,16 @@
         // A blunt stop: the weapon was moving and isn't any more, so the load
         // it was carrying comes off in a radial burst rather than an arc.
         if (brush && lastSpeed > 9 && moved < lastSpeed * 0.35) {
-          const n = Math.min(4 + Math.round(lastSpeed / 4), 16);
+          const n = Math.min(6 + Math.round(lastSpeed / 3), 22);
           for (let i = 0; i < n; i++) {
             const a = Math.random() * 6.283;
-            const sp = lastSpeed * (0.18 + Math.random() * 0.6);
+            const sp = lastSpeed * (0.12 + Math.random() * 0.45);
             const big = Math.pow(Math.random(), 2.6);
             segs.push({
               x: brush.x + (Math.random() - 0.5) * 14,
               y: brush.y + (Math.random() - 0.5) * 14,
               vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
-              r: Math.max(2.4, size * MAXR * (0.2 + big * 1.0)),
+              r: Math.max(1.8, size * MAXR * (0.18 + big * 1.0)),
               a: a * 57.2958, st: 1, down: false, t: now,
             });
           }
