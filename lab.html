@@ -632,10 +632,14 @@
       const MAXR = 16;          // px of the largest drop at full tilt
       const FULL = 7;           // px/frame of brush travel that counts as full size
       const EASE = 0.08;        // the lerp that makes the swing swell and sag
-      const LIFE = 610;         // ms a drop lasts before it fades out
-      const POOL = 95;          // drops on screen at once
+      // Spatter lands and holds, so you get a moment to read the pattern
+      // before it goes.
+      const LIFE = 2300;        // ms a drop lasts before it fades out
+      const POOL = 110;         // drops on screen at once
       const FOLLOW = 0.17;      // how hard the weapon chases the cursor
       const THROW = 0.45;       // how much of the swing's speed a drop leaves with
+      const SWING = 11;         // px/frame the swing must reach to land a blow
+      const COOLDOWN = 260;     // ms before another blow can land
       // Slower off the weapon but far less drag, so drops carry well out
       // across the page instead of dropping at your feet.
       const AIRDRAG = 0.93;     // speed kept per frame while in flight
@@ -644,7 +648,9 @@
       // The brush doesn't sit on the cursor. It chases it, which is what gives
       // the ribbon its weight: it swings wide on a fast turn, overshoots, and
       // is still catching up after you have stopped.
-      let size = 0, at = null, brush = null, prev = null, raf = null, lastSpeed = 0;
+      let size = 0, at = null, brush = null, prev = null, raf = null;
+      // The arc of the swing, kept so a blow can throw cast-off back along it.
+      let arc = [], peak = 0, lastHit = 0;
       let segs = [], ripples = [], pool = [], on = false;
 
       // Build the opposite-palette copy once. Scripts and ids are stripped so
@@ -672,13 +678,32 @@
         pool.push(el);
       }
 
-      // A rolling noise field, so the ink curls as it spreads instead of
-      // flying out in straight lines.
-      const curl = (x, y, t) => {
-        const a = Math.sin(x * 0.011 + t * 0.0007) + Math.cos(y * 0.013 - t * 0.0009);
-        const b = Math.cos(x * 0.009 - t * 0.0008) + Math.sin(y * 0.012 + t * 0.0006);
-        return { x: a * 0.42, y: b * 0.42 };
-      };
+      // One drop. Size is on a steep curve so most are small and the odd one
+      // is fat, and each gets its own elongation: some land near round, some
+      // as teardrops, some as long streaks. That mix is what reads as spatter
+      // rather than as a scatter of identical marks.
+      function fling(x, y, ang, sp, force, now) {
+        const big = Math.pow(Math.random(), 2.8);
+        const roll = Math.random();
+        const sh = roll < 0.3 ? 1 + Math.random() * 0.35        // near round
+                 : roll < 0.8 ? 1.5 + Math.random() * 1.1       // teardrop
+                              : 2.8 + Math.random() * 2.4;      // long streak
+        segs.push({
+          x, y,
+          vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
+          r: Math.max(1.4, size * MAXR * (0.16 + big * 1.05) * (0.7 + force * 0.3)),
+          sh, st: 1, a: ang * 57.2958, down: false, t: now,
+        });
+        // A fine satellite trailing the drop, the way a real one breaks up.
+        if (Math.random() < 0.35) {
+          segs.push({
+            x: x - Math.cos(ang) * 6, y: y - Math.sin(ang) * 6,
+            vx: Math.cos(ang) * sp * 0.6, vy: Math.sin(ang) * sp * 0.6,
+            r: Math.max(1.1, size * MAXR * 0.12), sh: 1.2, st: 1,
+            a: ang * 57.2958, down: false, t: now,
+          });
+        }
+      }
 
       const sizeCanvas = () => {
         maskbg.setAttribute('width', innerWidth);
@@ -730,55 +755,49 @@
         const target = at ? Math.min(moved / FULL, 1) : 0;
         size += (target - size) * EASE;
 
-        // Cast-off. A swing throws drops off the weapon in an arc: a few big
-        // ones and a lot of small, all leaving along the direction of travel
-        // with some scatter. They fly, lose speed fast, then land and stay.
-        if (brush && prev && size > 0.02 && moved > 1.2) {
-          const dir = Math.atan2(dy, dx);
-          const n = Math.min(1 + Math.round(moved / 7), 7);
+        // Nothing comes off the weapon while it is just being carried about.
+        // Spatter is a blow: the swing builds speed, then stops dead, and at
+        // that moment the load comes off — cast-off back along the arc, and a
+        // burst at the point of impact.
+        if (brush) {
+          // Clamped: a cursor re-entering the window jumps hundreds of pixels
+          // in one frame, which would otherwise read as an enormous blow.
+          const swung = Math.min(moved, 55);
+          arc.push({ x: brush.x, y: brush.y, sp: swung, a: Math.atan2(dy, dx) });
+          if (arc.length > 16) arc.shift();
+          peak = Math.max(peak, swung);
+        }
+
+        const blow = brush && peak > SWING && Math.min(moved, 55) < peak * 0.3 && now - lastHit > COOLDOWN;
+        if (blow) {
+          lastHit = now;
+          const force = Math.min(peak / 16, 2.2);
+
+          // Cast-off: drops flung off the weapon all the way along the swing.
+          arc.forEach((pt, i) => {
+            if (pt.sp < 3) return;
+            const n = 1 + ((Math.random() * 2.6 * force) | 0);
+            for (let j = 0; j < n; j++) {
+              fling(pt.x, pt.y, pt.a + (Math.random() - 0.5) * 1.5,
+                    pt.sp * THROW * (0.3 + Math.random() * 1.1), force, now);
+            }
+          });
+
+          // Impact: a radial burst where the weapon stopped.
+          const n = Math.min(8 + Math.round(peak / 3), 26);
           for (let i = 0; i < n; i++) {
-            const f = i / n;
-            // Mostly small, occasionally one big one — the size spread is what
-            // reads as spatter rather than as dots.
-            const big = Math.pow(Math.random(), 2.4);
-            const a = dir + (Math.random() - 0.5) * 2.1;
-            const sp = moved * THROW * (0.3 + Math.random() * 1.1);
-            segs.push({
-              x: prev.x + dx * f + (Math.random() - 0.5) * 10,
-              y: prev.y + dy * f + (Math.random() - 0.5) * 10,
-              vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
-              r: Math.max(1.8, size * MAXR * (0.22 + big * 0.95)),
-              a: a * 57.2958, st: 1, down: false, t: now,
-            });
+            fling(brush.x + (Math.random() - 0.5) * 12, brush.y + (Math.random() - 0.5) * 12,
+                  Math.random() * 6.283, peak * (0.1 + Math.random() * 0.5), force, now);
           }
           while (segs.length > POOL) segs.shift();
+          peak = 0;
+          arc = [];
         }
         if (brush) prev = { x: brush.x, y: brush.y };
         segs = segs.filter((g) => now - g.t < LIFE);
 
-        // A blunt stop: the weapon was moving and isn't any more, so the load
-        // it was carrying comes off in a radial burst rather than an arc.
-        if (brush && lastSpeed > 9 && moved < lastSpeed * 0.35) {
-          const n = Math.min(6 + Math.round(lastSpeed / 3), 22);
-          for (let i = 0; i < n; i++) {
-            const a = Math.random() * 6.283;
-            const sp = lastSpeed * (0.12 + Math.random() * 0.45);
-            const big = Math.pow(Math.random(), 2.6);
-            segs.push({
-              x: brush.x + (Math.random() - 0.5) * 14,
-              y: brush.y + (Math.random() - 0.5) * 14,
-              vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
-              r: Math.max(1.8, size * MAXR * (0.18 + big * 1.0)),
-              a: a * 57.2958, st: 1, down: false, t: now,
-            });
-          }
-          while (segs.length > POOL) segs.shift();
-        }
-        lastSpeed = moved;
-
-        // In the air a drop stretches along its flight and sheds speed fast.
-        // Once it's slow enough it has landed: it stops dead and keeps the
-        // shape it hit at.
+        // In flight a drop stretches along its line and sheds speed; once it is
+        // slow enough it has landed, stops dead, and keeps its shape.
         segs.forEach((g) => {
           if (g.down) return;
           g.x += g.vx;
@@ -786,9 +805,9 @@
           g.vx *= AIRDRAG;
           g.vy *= AIRDRAG;
           const sp = Math.hypot(g.vx, g.vy);
-          g.st = 1 + Math.min(sp / 3.5, 2.6);
+          g.st = 1 + (g.sh - 1) * Math.min(sp / 3.2, 1);
           if (sp > 0.4) g.a = Math.atan2(g.vy, g.vx) * 57.2958;
-          if (sp < LANDED) { g.down = true; g.st = 1 + (g.st - 1) * 0.45; }
+          if (sp < LANDED) { g.down = true; g.st = 1 + (g.sh - 1) * 0.7; }
         });
 
         // Paint the mask. Blobs grow as they age and drop out at the end; the
@@ -807,7 +826,7 @@
           el.setAttribute('rx', (r * st).toFixed(1));
           el.setAttribute('ry', (r / Math.sqrt(st)).toFixed(1));
           el.setAttribute('transform', `rotate(${g.a.toFixed(1)} ${g.x.toFixed(1)} ${g.y.toFixed(1)})`);
-          el.setAttribute('opacity', Math.min(1, k * 2.6).toFixed(3));
+          el.setAttribute('opacity', Math.min(1, k * 6).toFixed(3));
         }
 
         // The swapped copy only costs anything while there is trail to see.
