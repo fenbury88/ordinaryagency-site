@@ -586,19 +586,21 @@
     <filter id="gooify" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
       <!-- Blur has to scale with the ink: too wide for the blob size and the
            alpha threshold below erases the shape entirely. -->
-      <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="b" />
+      <!-- Tight: spatter is discrete drops, so neighbours should stay apart
+           rather than welding into one body. -->
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.8" result="b" />
       <feColorMatrix in="b" type="matrix" result="goo"
         values="1 0 0 0 0
                 0 1 0 0 0
                 0 0 1 0 0
-                0 0 0 15 -5.5" />
+                0 0 0 13 -4.2" />
       <!-- Just enough displacement to stop the edge reading as a machine-made
            curve. Theirs is a smooth, fat, calligraphic ribbon, not a torn one,
            so this stays gentle. -->
       <!-- One octave at low frequency: their edge rolls in big smooth waves
            with the odd sharp notch, not a fine fuzz of little lumps. -->
       <feTurbulence type="fractalNoise" baseFrequency="0.0055 0.0085" numOctaves="1" seed="11" result="noise" />
-      <feDisplacementMap in="goo" in2="noise" scale="14" xChannelSelector="R" yChannelSelector="G" />
+      <feDisplacementMap in="goo" in2="noise" scale="7" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
 
@@ -627,23 +629,20 @@
       if (!swap || !rp || reduce) { swap && swap.remove(); rp && rp.remove(); return; }
 
       const rctx = rp.getContext('2d');
-      const MAXR = 32;          // px of ink blob at full tilt
+      const MAXR = 26;          // px of the largest drop at full tilt
       const FULL = 7;           // px/frame of brush travel that counts as full size
-      const EASE = 0.08;        // their lerp factor, so size swells and sags
-      const LIFE = 760;         // ms a blob of ink lasts
-      const POOL = 90;          // blobs the mask can hold
-      const FOLLOW = 0.17;      // how hard the brush chases the cursor
-      const SPREAD = 0.34;      // how much of the brush's speed the ink inherits
-      const SWELL = 0.5;        // how much each blob grows as it drifts
-      const DRAG = 0.965;       // how much speed ink keeps frame to frame
-      const PUSH = 0.2;         // how hard the brush shoves ink it passes through
-      const PUSH_R = 125;       // px the brush's wake reaches
-      const CURL = 0.08;        // strength of the swirl laid over the top
+      const EASE = 0.08;        // the lerp that makes the swing swell and sag
+      const LIFE = 610;         // ms a drop lasts before it fades out
+      const POOL = 72;          // drops on screen at once
+      const FOLLOW = 0.17;      // how hard the weapon chases the cursor
+      const THROW = 0.75;       // how much of the swing's speed a drop leaves with
+      const AIRDRAG = 0.8;      // drops shed speed fast, then land and stay put
+      const LANDED = 0.6;       // px/frame below which a drop has landed
 
       // The brush doesn't sit on the cursor. It chases it, which is what gives
       // the ribbon its weight: it swings wide on a fast turn, overshoots, and
       // is still catching up after you have stopped.
-      let size = 0, at = null, brush = null, prev = null, raf = null;
+      let size = 0, at = null, brush = null, prev = null, raf = null, lastSpeed = 0;
       let segs = [], ripples = [], pool = [], on = false;
 
       // Build the opposite-palette copy once. Scripts and ids are stripped so
@@ -729,35 +728,25 @@
         const target = at ? Math.min(moved / FULL, 1) : 0;
         size += (target - size) * EASE;
 
-        // Inject ink at the brush. Not a stroke — a puff of blobs that then
-        // go their own way, which is what makes the cloud rather than a line.
-        if (brush && prev && size > 0.02 && moved > 0.4) {
-          // Fewer, bigger blobs: the body wants to read as one smooth mass
-          // that the displacement then tears, not as a row of lumps.
-          const n = Math.min(1 + Math.round(moved / 15), 3);
+        // Cast-off. A swing throws drops off the weapon in an arc: a few big
+        // ones and a lot of small, all leaving along the direction of travel
+        // with some scatter. They fly, lose speed fast, then land and stay.
+        if (brush && prev && size > 0.02 && moved > 1.2) {
+          const dir = Math.atan2(dy, dx);
+          const n = Math.min(1 + Math.round(moved / 7), 7);
           for (let i = 0; i < n; i++) {
             const f = i / n;
+            // Mostly small, occasionally one big one — the size spread is what
+            // reads as spatter rather than as dots.
+            const big = Math.pow(Math.random(), 2.4);
+            const a = dir + (Math.random() - 0.5) * 1.5;
+            const sp = moved * THROW * (0.35 + Math.random() * 0.95);
             segs.push({
-              x: prev.x + dx * f + (Math.random() - 0.5) * 13,
-              y: prev.y + dy * f + (Math.random() - 0.5) * 13,
-              vx: dx * SPREAD * (0.5 + Math.random()) + (Math.random() - 0.5) * 1.6,
-              vy: dy * SPREAD * (0.5 + Math.random()) + (Math.random() - 0.5) * 1.6,
-              r: size * MAXR * (0.75 + Math.random() * 0.8),
-              a: Math.atan2(dy, dx) * 57.2958,
-              s: 1 + Math.min(moved / 9, 1.5) * (0.6 + Math.random() * 0.7),
-              t: now,
-            });
-          }
-          // The odd blob thrown clear of the cloud, which the goo filter
-          // leaves as a detached fragment.
-          if (moved > 24 && Math.random() < 0.16) {
-            const a = Math.atan2(dy, dx) + (Math.random() - 0.5) * 2.2;
-            const m = 2 + Math.random() * 5;
-            segs.push({
-              x: brush.x, y: brush.y,
-              vx: Math.cos(a) * m, vy: Math.sin(a) * m,
-              r: size * MAXR * (0.18 + Math.random() * 0.3),
-              a: a * 57.2958, s: 1 + Math.random() * 0.8, t: now,
+              x: prev.x + dx * f + (Math.random() - 0.5) * 10,
+              y: prev.y + dy * f + (Math.random() - 0.5) * 10,
+              vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+              r: Math.max(2.4, size * MAXR * (0.24 + big * 0.9)),
+              a: a * 57.2958, st: 1, down: false, t: now,
             });
           }
           while (segs.length > POOL) segs.shift();
@@ -765,26 +754,39 @@
         if (brush) prev = { x: brush.x, y: brush.y };
         segs = segs.filter((g) => now - g.t < LIFE);
 
-        // Ink keeps the speed it was given and only slowly loses it, so a
-        // flick sends the cloud travelling and it carries on after you stop.
-        // Sweeping the brush back through it shoves it along as well, which is
-        // what makes it read as a fluid being pushed rather than a stamp.
-        const shove = moved > 0.5;
-        segs.forEach((g) => {
-          if (shove && brush) {
-            const px = g.x - brush.x, py = g.y - brush.y;
-            const d = Math.hypot(px, py);
-            if (d < PUSH_R) {
-              const f = (1 - d / PUSH_R) * PUSH;
-              g.vx += dx * f;
-              g.vy += dy * f;
-            }
+        // A blunt stop: the weapon was moving and isn't any more, so the load
+        // it was carrying comes off in a radial burst rather than an arc.
+        if (brush && lastSpeed > 9 && moved < lastSpeed * 0.35) {
+          const n = Math.min(4 + Math.round(lastSpeed / 4), 16);
+          for (let i = 0; i < n; i++) {
+            const a = Math.random() * 6.283;
+            const sp = lastSpeed * (0.18 + Math.random() * 0.6);
+            const big = Math.pow(Math.random(), 2.6);
+            segs.push({
+              x: brush.x + (Math.random() - 0.5) * 14,
+              y: brush.y + (Math.random() - 0.5) * 14,
+              vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+              r: Math.max(2.4, size * MAXR * (0.2 + big * 1.0)),
+              a: a * 57.2958, st: 1, down: false, t: now,
+            });
           }
-          const c = curl(g.x, g.y, now);
-          g.vx = g.vx * DRAG + c.x * CURL;
-          g.vy = g.vy * DRAG + c.y * CURL;
+          while (segs.length > POOL) segs.shift();
+        }
+        lastSpeed = moved;
+
+        // In the air a drop stretches along its flight and sheds speed fast.
+        // Once it's slow enough it has landed: it stops dead and keeps the
+        // shape it hit at.
+        segs.forEach((g) => {
+          if (g.down) return;
           g.x += g.vx;
           g.y += g.vy;
+          g.vx *= AIRDRAG;
+          g.vy *= AIRDRAG;
+          const sp = Math.hypot(g.vx, g.vy);
+          g.st = 1 + Math.min(sp / 3.5, 2.6);
+          if (sp > 0.4) g.a = Math.atan2(g.vy, g.vx) * 57.2958;
+          if (sp < LANDED) { g.down = true; g.st = 1 + (g.st - 1) * 0.45; }
         });
 
         // Paint the mask. Blobs grow as they age and drop out at the end; the
@@ -795,12 +797,9 @@
           if (!g) { if (el.getAttribute('rx') !== '0') { el.setAttribute('rx', '0'); el.setAttribute('ry', '0'); } continue; }
           const age = (now - g.t) / LIFE;
           const k = 1 - age;
-          const r = g.r * (1 + age * SWELL);
-          // Stretch follows how fast the ink is actually travelling right now,
-          // so it draws out while it is flowing and rounds off as it settles.
-          const sp = Math.hypot(g.vx, g.vy);
-          const st = 1 + Math.min(sp / 6, 1.7);
-          g.a = sp > 0.4 ? Math.atan2(g.vy, g.vx) * 57.2958 : g.a;
+          // A landed drop doesn't grow or move; it just dries off.
+          const r = g.r;
+          const st = g.st;
           el.setAttribute('cx', g.x.toFixed(1));
           el.setAttribute('cy', g.y.toFixed(1));
           el.setAttribute('rx', (r * st).toFixed(1));
