@@ -842,13 +842,17 @@
                 t0: now,
                 // Lengths vary wildly in the reference: plenty of stubs, the
                 // odd one running most of the page.
-                max: g.r * (3 + Math.pow(Math.random(), 2.2) * 40),
+                max: g.r * (3 + Math.pow(Math.random(), 2.4) * 26),
                 // The thread is a hairline and the bead at the tip is several
                 // times fatter — that contrast is the whole look.
                 w: Math.max(1, g.r * 0.17),
                 bead: g.r * 0.62,
                 // Some threads leave a bead behind partway down.
                 mid: Math.random() < 0.35 ? 0.42 + Math.random() * 0.3 : 0,
+                // Nothing runs down a wall dead straight, and a long one
+                // wanders more than a short one.
+                sway: (Math.random() - 0.5) * 26,
+                ph: Math.random() * 6.283,
               };
             }
           }
@@ -883,18 +887,32 @@
           // Quick at first, then creeping — a run slows as it thins out.
           const len = g.run.max * (1 - Math.exp(-(now - g.run.t0) / 1100));
           if (len < 3) { el.setAttribute('d', ''); continue; }
-          const x = g.x, y = g.y, w = g.run.w, b = g.run.bead;
-          const tip = y + len;
-          const f = (v) => v.toFixed(1);
-          let d = `M${f(x - w)} ${f(y)} L${f(x - b * 0.62)} ${f(tip - b)} ` +
-                  `Q${f(x - b)} ${f(tip + b * 0.85)} ${f(x)} ${f(tip + b)} ` +
-                  `Q${f(x + b)} ${f(tip + b * 0.85)} ${f(x + b * 0.62)} ${f(tip - b)} ` +
-                  `L${f(x + w)} ${f(y)} Z`;
+          const w = g.run.w, b = g.run.bead, f = (v) => v.toFixed(1);
+          // Walk the thread down in steps: it drifts off the vertical and
+          // thins as it goes, the way a run does as the bead drains it.
+          const steps = 8, L = [], R = [];
+          for (let j = 0; j <= steps; j++) {
+            const t = j / steps;
+            const px = g.x + Math.sin(g.run.ph + t * 2.3) * g.run.sway * t * t;
+            const py = g.y + len * t;
+            const pw = w * (1 - 0.52 * t);
+            L.push(`${f(px - pw)} ${f(py)}`);
+            R.push(`${f(px + pw)} ${f(py)}`);
+          }
+          const tipX = g.x + Math.sin(g.run.ph + 2.3) * g.run.sway;
+          const tip = g.y + len;
+          let d = `M${L[0]} ` + L.slice(1).map((pt) => `L${pt}`).join(' ') +
+                  ` L${f(tipX - b * 0.62)} ${f(tip - b)}` +
+                  ` Q${f(tipX - b)} ${f(tip + b * 0.85)} ${f(tipX)} ${f(tip + b)}` +
+                  ` Q${f(tipX + b)} ${f(tip + b * 0.85)} ${f(tipX + b * 0.62)} ${f(tip - b)}` +
+                  ` ` + R.slice().reverse().map((pt) => `L${pt}`).join(' ') + ' Z';
           // A bead left behind on the way down, as its own round subpath.
           if (g.run.mid) {
-            const my = y + len * g.run.mid, mb = b * 0.75;
-            d += ` M${f(x - mb)} ${f(my)} A${f(mb)} ${f(mb)} 0 1 0 ${f(x + mb)} ${f(my)}` +
-                 ` A${f(mb)} ${f(mb)} 0 1 0 ${f(x - mb)} ${f(my)} Z`;
+            const mt = g.run.mid;
+            const mx = g.x + Math.sin(g.run.ph + mt * 2.3) * g.run.sway * mt * mt;
+            const my = g.y + len * mt, mb = b * 0.75;
+            d += ` M${f(mx - mb)} ${f(my)} A${f(mb)} ${f(mb)} 0 1 0 ${f(mx + mb)} ${f(my)}` +
+                 ` A${f(mb)} ${f(mb)} 0 1 0 ${f(mx - mb)} ${f(my)} Z`;
           }
           el.setAttribute('d', d);
           el.setAttribute('opacity', Math.min(1, (1 - (now - g.t) / LIFE) * 6).toFixed(3));
