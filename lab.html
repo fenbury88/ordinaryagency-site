@@ -633,8 +633,14 @@
       const FULL = 10;          // px/frame of brush travel that counts as full
       const EASE = 0.08;        // their lerp, so the size swells and sags
       const FOLLOW = 0.16;      // the brush chases the cursor, it doesn't sit on it
-      const LIFE = 760;         // ms a stamp lasts
-      const POOL = 110;         // stamps on screen at once
+      // Ink doesn't flash up and vanish. Watching theirs, a blob is still
+      // sitting there 14 seconds later, so a stamp lasts a long time and only
+      // fades right at the end. The pool size is what really clears the page:
+      // keep drawing and the oldest ink is pushed out.
+      const LIFE = 16000;       // ms a stamp lasts
+      const POOL = 120;         // stamps on screen at once
+      const COHESION = 0.022;   // how hard ink pulls itself together
+      const NEIGH = 95;         // px within which ink feels its neighbours
 
       let size = 0, at = null, brush = null, prev = null, raf = null;
       let stamps = [], pool = [], on = false;
@@ -702,8 +708,27 @@
         if (brush) prev = { x: brush.x, y: brush.y };
         stamps = stamps.filter((g) => now - g.t < LIFE);
 
-        // Stamps hold their ground and shrink away. Opacity stays up until
-        // late so the goo filter keeps a hard edge while the body thins.
+        // Surface tension. Each bit of ink creeps toward the middle of the ink
+        // around it, so a smeared trail gathers itself into round pools over a
+        // second or two and then sits there — which is exactly what theirs
+        // does once you stop moving.
+        for (let i = 0; i < stamps.length; i++) {
+          const g = stamps[i];
+          let sx = 0, sy = 0, n = 0;
+          for (let j = 0; j < stamps.length; j++) {
+            if (i === j) continue;
+            const o = stamps[j];
+            const dx2 = o.x - g.x, dy2 = o.y - g.y;
+            if (dx2 * dx2 + dy2 * dy2 < NEIGH * NEIGH) { sx += o.x; sy += o.y; n++; }
+          }
+          if (n) {
+            g.x += (sx / n - g.x) * COHESION;
+            g.y += (sy / n - g.y) * COHESION;
+          }
+        }
+
+        // Stamps sit where the ink gathered them and hold their size until
+        // the very end, so pools stay put instead of flashing away.
         for (let i = 0; i < POOL; i++) {
           const g = stamps[i];
           const el = pool[i];
@@ -711,8 +736,9 @@
           const k = 1 - (now - g.t) / LIFE;
           el.setAttribute('cx', g.x.toFixed(1));
           el.setAttribute('cy', g.y.toFixed(1));
-          el.setAttribute('r', (g.r * Math.pow(k, 0.55)).toFixed(1));
-          el.setAttribute('opacity', Math.min(1, k * 3.5).toFixed(3));
+          // Holds its size, then goes at the very end of its life.
+          el.setAttribute('r', (g.r * Math.min(1, k * 7)).toFixed(1));
+          el.setAttribute('opacity', Math.min(1, k * 9).toFixed(3));
         }
 
         // The swapped copy only costs anything while there is trail to see.
