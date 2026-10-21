@@ -837,12 +837,18 @@
             g.st = 1 + (g.sh - 1) * 0.7;
             // The heavier ones can't hold on and start to run, each going a
             // different distance before it stops.
-            if (g.r > 2.8 && Math.random() < 0.55) {
+            if (g.r > 2.2 && Math.random() < 0.72) {
               g.run = {
                 t0: now,
-                max: g.r * (2.5 + Math.pow(Math.random(), 1.8) * 22),
-                w: Math.max(1.7, g.r * 0.3),
-                bead: g.r * 0.58,
+                // Lengths vary wildly in the reference: plenty of stubs, the
+                // odd one running most of the page.
+                max: g.r * (3 + Math.pow(Math.random(), 2.2) * 40),
+                // The thread is a hairline and the bead at the tip is several
+                // times fatter — that contrast is the whole look.
+                w: Math.max(1, g.r * 0.17),
+                bead: g.r * 0.62,
+                // Some threads leave a bead behind partway down.
+                mid: Math.random() < 0.35 ? 0.42 + Math.random() * 0.3 : 0,
               };
             }
           }
@@ -880,11 +886,17 @@
           const x = g.x, y = g.y, w = g.run.w, b = g.run.bead;
           const tip = y + len;
           const f = (v) => v.toFixed(1);
-          el.setAttribute('d',
-            `M${f(x - w)} ${f(y)} L${f(x - b * 0.7)} ${f(tip - b)} ` +
-            `Q${f(x - b)} ${f(tip + b * 0.8)} ${f(x)} ${f(tip + b)} ` +
-            `Q${f(x + b)} ${f(tip + b * 0.8)} ${f(x + b * 0.7)} ${f(tip - b)} ` +
-            `L${f(x + w)} ${f(y)} Z`);
+          let d = `M${f(x - w)} ${f(y)} L${f(x - b * 0.62)} ${f(tip - b)} ` +
+                  `Q${f(x - b)} ${f(tip + b * 0.85)} ${f(x)} ${f(tip + b)} ` +
+                  `Q${f(x + b)} ${f(tip + b * 0.85)} ${f(x + b * 0.62)} ${f(tip - b)} ` +
+                  `L${f(x + w)} ${f(y)} Z`;
+          // A bead left behind on the way down, as its own round subpath.
+          if (g.run.mid) {
+            const my = y + len * g.run.mid, mb = b * 0.75;
+            d += ` M${f(x - mb)} ${f(my)} A${f(mb)} ${f(mb)} 0 1 0 ${f(x + mb)} ${f(my)}` +
+                 ` A${f(mb)} ${f(mb)} 0 1 0 ${f(x - mb)} ${f(my)} Z`;
+          }
+          el.setAttribute('d', d);
           el.setAttribute('opacity', Math.min(1, (1 - (now - g.t) / LIFE) * 6).toFixed(3));
         }
         for (; ri < RUNS_MAX; ri++) {
