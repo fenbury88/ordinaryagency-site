@@ -632,7 +632,11 @@
       const MAXR = 38;          // px of the brush at full tilt
       const FULL = 10;          // px/frame of brush travel that counts as full
       const EASE = 0.08;        // their lerp, so the size swells and sags
-      const FOLLOW = 0.16;      // the brush chases the cursor, it doesn't sit on it
+      // The brush lags badly. Flick the cursor across the page on theirs and
+      // the ink stays near where it started, then creeps after you for
+      // seconds — it is still catching up long after the mouse has stopped.
+      const FOLLOW = 0.055;     // how hard the brush chases the cursor
+      const GROW = 0.55;        // how much a pool spreads over its life
       // Ink doesn't flash up and vanish. Watching theirs, a blob is still
       // sitting there 14 seconds later, so a stamp lasts a long time and only
       // fades right at the end. The pool size is what really clears the page:
@@ -736,8 +740,10 @@
           const k = 1 - (now - g.t) / LIFE;
           el.setAttribute('cx', g.x.toFixed(1));
           el.setAttribute('cy', g.y.toFixed(1));
-          // Holds its size, then goes at the very end of its life.
-          el.setAttribute('r', (g.r * Math.min(1, k * 7)).toFixed(1));
+          // Ink spreads as it sits. Theirs plainly grows over the seconds
+          // after you stop rather than shrinking away.
+          const age = 1 - k;
+          el.setAttribute('r', (g.r * (1 + age * GROW) * Math.min(1, k * 7)).toFixed(1));
           el.setAttribute('opacity', Math.min(1, k * 9).toFixed(3));
         }
 
