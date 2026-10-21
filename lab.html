@@ -646,6 +646,9 @@
       // across the page instead of dropping at your feet.
       const AIRDRAG = 0.93;     // speed kept per frame while in flight
       const LANDED = 0.3;       // px/frame below which a drop has landed
+      const GRAV = 0.34;        // pull on a drop while it is still in the air
+      const FLIGHT = 280;       // ms of flight before it hits and sticks
+      const RUNS_MAX = 34;      // landed drops that can be running at once
 
       // The brush doesn't sit on the cursor. It chases it, which is what gives
       // the ribbon its weight: it swings wide on a fast turn, overshoots, and
@@ -670,6 +673,14 @@
         });
         inner.setAttribute('inert', '');
       })();
+
+      const runPool = [];
+      for (let i = 0; i < RUNS_MAX; i++) {
+        const el = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        el.setAttribute('d', '');
+        paths.appendChild(el);
+        runPool.push(el);
+      }
 
       for (let i = 0; i < POOL; i++) {
         // Ellipses, not circles: ink gets drawn out along the direction it
@@ -807,6 +818,10 @@
         // slow enough it has landed, stops dead, and keeps its shape.
         segs.forEach((g) => {
           if (g.down) return;
+          // Gravity bends the throw downward, but only while it is still in
+          // the air. After that drag brings it to rest and it sticks, the way
+          // spatter does when it meets a wall.
+          if (now - g.t < FLIGHT) g.vy += GRAV;
           g.x += g.vx;
           g.y += g.vy;
           // Flick lines hold their speed longer, so they run out across the
@@ -817,7 +832,20 @@
           const sp = Math.hypot(g.vx, g.vy);
           g.st = 1 + (g.sh - 1) * Math.min(sp / 3.2, 1);
           if (sp > 0.4) g.a = Math.atan2(g.vy, g.vx) * 57.2958;
-          if (sp < LANDED) { g.down = true; g.st = 1 + (g.sh - 1) * 0.7; }
+          if (sp < LANDED || now - g.t > FLIGHT * 2.4) {
+            g.down = true;
+            g.st = 1 + (g.sh - 1) * 0.7;
+            // The heavier ones can't hold on and start to run, each going a
+            // different distance before it stops.
+            if (g.r > 2.8 && Math.random() < 0.55) {
+              g.run = {
+                t0: now,
+                max: g.r * (2.5 + Math.pow(Math.random(), 1.8) * 22),
+                w: Math.max(1.7, g.r * 0.3),
+                bead: g.r * 0.58,
+              };
+            }
+          }
         });
 
         // Paint the mask. Blobs grow as they age and drop out at the end; the
@@ -837,6 +865,30 @@
           el.setAttribute('ry', (r / Math.sqrt(st)).toFixed(1));
           el.setAttribute('transform', `rotate(${g.a.toFixed(1)} ${g.x.toFixed(1)} ${g.y.toFixed(1)})`);
           el.setAttribute('opacity', Math.min(1, k * 6).toFixed(3));
+        }
+
+        // Runs: a narrow column down from the drop, ending in the bead that
+        // gathers at the tip and drags it further.
+        let ri = 0;
+        for (let i = 0; i < segs.length && ri < RUNS_MAX; i++) {
+          const g = segs[i];
+          if (!g.run) continue;
+          const el = runPool[ri++];
+          // Quick at first, then creeping — a run slows as it thins out.
+          const len = g.run.max * (1 - Math.exp(-(now - g.run.t0) / 1100));
+          if (len < 3) { el.setAttribute('d', ''); continue; }
+          const x = g.x, y = g.y, w = g.run.w, b = g.run.bead;
+          const tip = y + len;
+          const f = (v) => v.toFixed(1);
+          el.setAttribute('d',
+            `M${f(x - w)} ${f(y)} L${f(x - b * 0.7)} ${f(tip - b)} ` +
+            `Q${f(x - b)} ${f(tip + b * 0.8)} ${f(x)} ${f(tip + b)} ` +
+            `Q${f(x + b)} ${f(tip + b * 0.8)} ${f(x + b * 0.7)} ${f(tip - b)} ` +
+            `L${f(x + w)} ${f(y)} Z`);
+          el.setAttribute('opacity', Math.min(1, (1 - (now - g.t) / LIFE) * 6).toFixed(3));
+        }
+        for (; ri < RUNS_MAX; ri++) {
+          if (runPool[ri].getAttribute('d')) runPool[ri].setAttribute('d', '');
         }
 
         // The swapped copy only costs anything while there is trail to see.
@@ -876,7 +928,7 @@
       const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (reduce) { root.style.setProperty('--p', 1); return; }
 
-      const DUR = 1500;
+      const DUR = 2600;
       let at = null, fired = false;
 
       addEventListener('pointermove', (e) => { at = { x: e.clientX, y: e.clientY }; }, { passive: true });
@@ -885,13 +937,13 @@
       // paint outrunning it, drawn as a clip path: the main sheet plus a
       // separate capsule for each run, which union into one shape.
       const RUNS = (() => {
-        const n = 9, out = [];
+        const n = 7, out = [];
         for (let i = 0; i < n; i++) {
           // Lengths on a curve, so most are stubs and one or two really run.
           const long = Math.pow(Math.random(), 2);
           out.push({
             at: (i + 0.5) / n + (Math.random() - 0.5) * 0.07,   // across the width
-            w: 9 + Math.random() * 22,                          // fat at the shoulder
+            w: 12 + Math.random() * 26,                         // fat at the shoulder
             len: 40 + long * 420,                               // how far it outruns
             lead: Math.random() * 0.3,                          // how early it starts
           });
@@ -918,21 +970,23 @@
         }
         d += 'L0 0 Z ';
 
-        // The runs: each one broad at the shoulder where it leaves the sheet,
-        // drawing in to a blunt tip. Flat-sided ones read as a barcode.
+        // The runs. Near-parallel columns with a heavy rounded tip, the way
+        // paint actually hangs off an edge — not tapering needles.
         RUNS.forEach((r) => {
           const t = Math.max(0, Math.min((k - r.lead) / (1 - r.lead), 1));
           if (t <= 0) return;
           const x = r.at * W;
           const top = front - 70;
-          const tip = top + 70 + r.len * Math.pow(t, 0.75);
+          // Fast at first then creeping, so they ease to a stop.
+          const tip = top + 70 + r.len * (1 - Math.pow(1 - t, 2.4));
           const w = r.w;
-          const n = w * 0.38;                       // width at the tip
+          const n = w * 0.84;                       // barely narrower at the tip
           const f = (v) => v.toFixed(1);
           d += `M${f(x - w)} ${f(top)} `
-             + `C${f(x - w)} ${f(top + (tip - top) * 0.55)} ${f(x - n)} ${f(tip - n * 2.4)} ${f(x - n)} ${f(tip - n)} `
-             + `Q${f(x)} ${f(tip + n * 1.5)} ${f(x + n)} ${f(tip - n)} `
-             + `C${f(x + n)} ${f(tip - n * 2.4)} ${f(x + w)} ${f(top + (tip - top) * 0.55)} ${f(x + w)} ${f(top)} Z `;
+             + `L${f(x - n)} ${f(tip - n)} `
+             + `Q${f(x - n)} ${f(tip + n * 0.75)} ${f(x)} ${f(tip + n * 0.35)} `
+             + `Q${f(x + n)} ${f(tip + n * 0.75)} ${f(x + n)} ${f(tip - n)} `
+             + `L${f(x + w)} ${f(top)} Z `;
         });
         return `path('${d.trim()}')`;
       }
@@ -945,8 +999,8 @@
         const t0 = performance.now();
         (function step(t) {
           const k = Math.min((t - t0) / DUR, 1);
-          // Quick to get going, then easing out as the sheet covers the page.
-          const e = 1 - Math.pow(1 - k, 3.4);
+          // Gentler than a wipe: it creeps down rather than snapping over.
+          const e = 1 - Math.pow(1 - k, 2.1);
           root.style.setProperty('--p', e.toFixed(4));
           root.style.setProperty('--pour', pour(e, W, H));
           if (k < 1) requestAnimationFrame(step);
