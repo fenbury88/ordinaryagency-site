@@ -91,7 +91,9 @@
       display: grid; align-content: center;
       padding: 0 var(--gutter);
       /* Grows from the middle of the page and swallows the plain version. */
-      clip-path: circle(calc(var(--p) * 135%) at var(--ox, 50%) var(--oy, 45%));
+      /* Paint poured over the top edge, running down the page. The shape is
+         built in JS and handed over as --pour; until then nothing shows. */
+      clip-path: var(--pour, inset(100% 0 0 0));
     }
     .elevated__inner { max-width: var(--maxw); margin-inline: auto; width: 100%; }
 
@@ -685,14 +687,19 @@
       function fling(x, y, ang, sp, force, now) {
         const big = Math.pow(Math.random(), 2.8);
         const roll = Math.random();
-        const sh = roll < 0.3 ? 1 + Math.random() * 0.35        // near round
-                 : roll < 0.8 ? 1.5 + Math.random() * 1.1       // teardrop
-                              : 2.8 + Math.random() * 2.4;      // long streak
+        // One in eight is a flick line: much longer, fatter, and it keeps
+        // going, so it draws right out the way paint does off a loaded brush.
+        const streak = roll < 0.12;
+        const sh = streak ? 6 + Math.random() * 6.5              // flicked line
+                 : roll < 0.4 ? 1 + Math.random() * 0.35         // near round
+                 : roll < 0.85 ? 1.5 + Math.random() * 1.1       // teardrop
+                               : 2.8 + Math.random() * 2.4;      // long drop
         segs.push({
           x, y,
           vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
-          r: Math.max(1.4, size * MAXR * (0.16 + big * 1.05) * (0.7 + force * 0.3)),
-          sh, st: 1, a: ang * 57.2958, down: false, t: now,
+          r: Math.max(1.4, size * MAXR * (0.16 + big * 1.05) * (0.7 + force * 0.3)
+                           * (streak ? 1.7 : 1)),
+          sh, streak, st: 1, a: ang * 57.2958, down: false, t: now,
         });
         // A fine satellite trailing the drop, the way a real one breaks up.
         if (Math.random() < 0.35) {
@@ -802,8 +809,11 @@
           if (g.down) return;
           g.x += g.vx;
           g.y += g.vy;
-          g.vx *= AIRDRAG;
-          g.vy *= AIRDRAG;
+          // Flick lines hold their speed longer, so they run out across the
+          // page rather than stopping short.
+          const drag = g.streak ? 0.968 : AIRDRAG;
+          g.vx *= drag;
+          g.vy *= drag;
           const sp = Math.hypot(g.vx, g.vy);
           g.st = 1 + (g.sh - 1) * Math.min(sp / 3.2, 1);
           if (sp > 0.4) g.a = Math.atan2(g.vy, g.vx) * 57.2958;
@@ -866,32 +876,88 @@
       const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (reduce) { root.style.setProperty('--p', 1); return; }
 
-      const DUR = 1050;
+      const DUR = 1500;
       let at = null, fired = false;
 
       addEventListener('pointermove', (e) => { at = { x: e.clientX, y: e.clientY }; }, { passive: true });
 
+      // The pour. One wobbling front running down the page with tongues of
+      // paint outrunning it, drawn as a clip path: the main sheet plus a
+      // separate capsule for each run, which union into one shape.
+      const RUNS = (() => {
+        const n = 9, out = [];
+        for (let i = 0; i < n; i++) {
+          // Lengths on a curve, so most are stubs and one or two really run.
+          const long = Math.pow(Math.random(), 2);
+          out.push({
+            at: (i + 0.5) / n + (Math.random() - 0.5) * 0.07,   // across the width
+            w: 9 + Math.random() * 22,                          // fat at the shoulder
+            len: 40 + long * 420,                               // how far it outruns
+            lead: Math.random() * 0.3,                          // how early it starts
+          });
+        }
+        return out;
+      })();
+      const WOB = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(() => Math.random() * 6.283);
+
+      function pour(k, W, H) {
+        // The front runs past the bottom so the last of the page is covered.
+        const front = -70 + k * (H + 230);
+        const cols = 8;
+        const y = (i) => front
+          + Math.sin(WOB[i] + i * 0.9) * 34 * Math.min(1, k * 3)
+          + Math.sin(WOB[i] * 2 + i * 2.1) * 14;
+
+        let d = `M0 0 L${W} 0 L${W} ${y(cols).toFixed(1)} `;
+        for (let i = cols; i > 0; i--) {
+          const x1 = (i / cols) * W, x0 = ((i - 1) / cols) * W;
+          const mx = (x0 + x1) / 2;
+          // Bulge each span a little so the front sags between high points.
+          const my = (y(i) + y(i - 1)) / 2 + 26;
+          d += `Q${mx.toFixed(1)} ${my.toFixed(1)} ${x0.toFixed(1)} ${y(i - 1).toFixed(1)} `;
+        }
+        d += 'L0 0 Z ';
+
+        // The runs: each one broad at the shoulder where it leaves the sheet,
+        // drawing in to a blunt tip. Flat-sided ones read as a barcode.
+        RUNS.forEach((r) => {
+          const t = Math.max(0, Math.min((k - r.lead) / (1 - r.lead), 1));
+          if (t <= 0) return;
+          const x = r.at * W;
+          const top = front - 70;
+          const tip = top + 70 + r.len * Math.pow(t, 0.75);
+          const w = r.w;
+          const n = w * 0.38;                       // width at the tip
+          const f = (v) => v.toFixed(1);
+          d += `M${f(x - w)} ${f(top)} `
+             + `C${f(x - w)} ${f(top + (tip - top) * 0.55)} ${f(x - n)} ${f(tip - n * 2.4)} ${f(x - n)} ${f(tip - n)} `
+             + `Q${f(x)} ${f(tip + n * 1.5)} ${f(x + n)} ${f(tip - n)} `
+             + `C${f(x + n)} ${f(tip - n * 2.4)} ${f(x + w)} ${f(top + (tip - top) * 0.55)} ${f(x + w)} ${f(top)} Z `;
+        });
+        return `path('${d.trim()}')`;
+      }
+
       function land() {
         if (fired) return;
         fired = true;
-        // Where the drop hits: under the cursor, or just above centre.
-        const x = at ? at.x : innerWidth / 2;
-        const y = at ? at.y : innerHeight * 0.45;
-        root.style.setProperty('--ox', x + 'px');
-        root.style.setProperty('--oy', y + 'px');
-        if (typeof window.__ripple === 'function') window.__ripple(x, y);
+        const W = innerWidth, H = innerHeight;
 
         const t0 = performance.now();
         (function step(t) {
           const k = Math.min((t - t0) / DUR, 1);
-          // Quick out, long settle — a drop spreading rather than a wipe.
+          // Quick to get going, then easing out as the sheet covers the page.
           const e = 1 - Math.pow(1 - k, 3.4);
           root.style.setProperty('--p', e.toFixed(4));
+          root.style.setProperty('--pour', pour(e, W, H));
           if (k < 1) requestAnimationFrame(step);
+          else root.style.setProperty('--pour', 'inset(0 0 0 0)');
         })(t0);
         // rAF is paused in a hidden tab, which would leave the page parked
         // half-transformed. Whatever happens, it finishes.
-        setTimeout(() => root.style.setProperty('--p', 1), DUR + 250);
+        setTimeout(() => {
+          root.style.setProperty('--p', 1);
+          root.style.setProperty('--pour', 'inset(0 0 0 0)');
+        }, DUR + 250);
       }
 
       const keys = ['ArrowDown', 'PageDown', 'End', ' ', 'Spacebar', 'ArrowUp', 'PageUp', 'Home'];
