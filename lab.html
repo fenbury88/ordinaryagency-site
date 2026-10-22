@@ -593,14 +593,15 @@
         values="1 0 0 0 0
                 0 1 0 0 0
                 0 0 1 0 0
-                0 0 0 19 -7.5" />
+                0 0 0 12 -4" />
       <!-- Just enough displacement to stop the edge reading as a machine-made
            curve. Theirs is a smooth, fat, calligraphic ribbon, not a torn one,
            so this stays gentle. -->
       <!-- One octave at low frequency: their edge rolls in big smooth waves
            with the odd sharp notch, not a fine fuzz of little lumps. -->
       <feTurbulence type="fractalNoise" baseFrequency="0.0055 0.0085" numOctaves="1" seed="11" result="noise" />
-      <feDisplacementMap in="goo" in2="noise" scale="9" xChannelSelector="R" yChannelSelector="G" />
+      <!-- Oil is smooth. Barely any tearing at the edge. -->
+      <feDisplacementMap in="goo" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
 
@@ -633,19 +634,27 @@
       // across, a real slice of the viewport, not a puddle.
       const MAXR = 104;         // px of the brush at full tilt
       const FULL = 10;          // px/frame of brush travel that counts as full
-      const EASE = 0.08;        // their lerp, so the size swells and sags
+      // Viscous, so it is slow to answer: the size takes its time swelling and
+      // longer still to sag back.
+      const EASE = 0.045;       // how fast the brush size answers the speed
       // The brush lags badly. Flick the cursor across the page on theirs and
       // the ink stays near where it started, then creeps after you for
       // seconds — it is still catching up long after the mouse has stopped.
       const FOLLOW = 0.055;     // how hard the brush chases the cursor
-      const GROW = 0.55;        // how much a pool spreads over its life
+      // A slick spreads out into a broad film rather than holding its shape.
+      const GROW = 1.15;        // how much a pool spreads over its life
       // Ink doesn't flash up and vanish. Watching theirs, a blob is still
       // sitting there 14 seconds later, so a stamp lasts a long time and only
       // fades right at the end. The pool size is what really clears the page:
       // keep drawing and the oldest ink is pushed out.
       const LIFE = 16000;       // ms a stamp lasts
       const POOL = 85;          // stamps on screen at once
-      const COHESION = 0.03;    // how hard ink pulls itself together
+      // Barely any. Cohesion is surface tension, and surface tension is what
+      // makes mercury ball up into tight spheres — the opposite of an oily
+      // slick. It also compounds every frame, so even a small number rounds
+      // the whole body off within a couple of seconds. This is just enough to
+      // stop the body drifting apart.
+      const COHESION = 0.0013;  // how hard ink pulls itself together
       // Wide enough that the ink holds together as one body instead of
       // breaking into separate puddles the way mine was.
       const NEIGH = 230;        // px within which ink feels its neighbours
@@ -709,7 +718,10 @@
         const target = at ? Math.min(moved / FULL, 1) : 0;
         size += (target - size) * EASE;
 
-        if (brush && size > 0.02) {
+        // Only movement lays ink down. Without this the brush keeps stamping
+        // on the same spot once you stop — a hundred odd circles piled up —
+        // and the whole slick ends as one fat disc.
+        if (brush && size > 0.02 && moved > 0.35) {
           stamps.push({ x: brush.x, y: brush.y, r: size * MAXR, t: now });
           if (stamps.length > POOL) stamps.shift();
         }
