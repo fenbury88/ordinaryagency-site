@@ -588,7 +588,7 @@
     <filter id="gooify" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
       <!-- Blur has to scale with the ink: too wide for the blob size and the
            alpha threshold below erases the shape entirely. -->
-      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b" />
+      <feGaussianBlur in="SourceGraphic" stdDeviation="11" result="b" />
       <feColorMatrix in="b" type="matrix" result="goo"
         values="1 0 0 0 0
                 0 1 0 0 0
@@ -629,7 +629,9 @@
       const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (!swap || reduce) { swap && swap.remove(); return; }
 
-      const MAXR = 38;          // px of the brush at full tilt
+      // Theirs is far bigger than I had it: a single blob runs to roughly 200px
+      // across, a real slice of the viewport, not a puddle.
+      const MAXR = 104;         // px of the brush at full tilt
       const FULL = 10;          // px/frame of brush travel that counts as full
       const EASE = 0.08;        // their lerp, so the size swells and sags
       // The brush lags badly. Flick the cursor across the page on theirs and
@@ -642,9 +644,11 @@
       // fades right at the end. The pool size is what really clears the page:
       // keep drawing and the oldest ink is pushed out.
       const LIFE = 16000;       // ms a stamp lasts
-      const POOL = 120;         // stamps on screen at once
-      const COHESION = 0.022;   // how hard ink pulls itself together
-      const NEIGH = 95;         // px within which ink feels its neighbours
+      const POOL = 85;          // stamps on screen at once
+      const COHESION = 0.03;    // how hard ink pulls itself together
+      // Wide enough that the ink holds together as one body instead of
+      // breaking into separate puddles the way mine was.
+      const NEIGH = 230;        // px within which ink feels its neighbours
 
       let size = 0, at = null, brush = null, prev = null, raf = null;
       let stamps = [], pool = [], on = false;
