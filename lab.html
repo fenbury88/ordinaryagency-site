@@ -105,9 +105,11 @@
 
     .word {
       font-family: var(--font-display); font-weight: 600;
-      font-size: clamp(2.6rem, 13.5vw, 13rem);
-      line-height: 0.86; letter-spacing: -0.045em;
-      display: flex; flex-wrap: wrap; align-items: baseline;
+      /* Big enough to run off the right edge. The word is the picture, and
+         you don't need all of it to read it. */
+      font-size: clamp(3rem, 19vw, 19rem);
+      line-height: 0.82; letter-spacing: -0.05em;
+      display: flex; align-items: baseline; white-space: nowrap;
       transform: scale(calc(0.84 + var(--p) * 0.16));
       transform-origin: left center;
     }
@@ -147,8 +149,8 @@
     .label::before { content: ""; width: 24px; height: 1px; background: var(--accent-bright); }
     .big {
       font-family: var(--font-display); font-weight: 600;
-      font-size: clamp(2rem, 5.4vw, 4.1rem); line-height: 1.02; letter-spacing: -0.035em;
-      max-width: 18ch;
+      font-size: clamp(2.4rem, 8vw, 6.4rem); line-height: 0.96; letter-spacing: -0.042em;
+      max-width: 15ch;
     }
     .big em { font-style: normal; color: var(--accent-bright); }
     .lede { margin-top: 1.8rem; max-width: 46ch; color: rgba(250, 250, 247, 0.6); font-size: 1.08rem; }
@@ -293,31 +295,37 @@
     .swap.is-on { visibility: visible; }
     .swap__inner { position: absolute; inset: 0 0 auto 0; will-change: transform; }
 
-    /* The swap itself. Most of the page reads off these two tokens, so
-       exchanging them flips backgrounds and type in one go. */
-    .swap {
+    /* Inversion, as a class rather than a one-off. A section carrying .inv
+       renders the palette the other way round: paper ground, ink type. It is
+       used two ways — down the page, so scrolling flips the whole thing, and
+       inside the trail, where the clone toggles each section's state so the
+       ink always reveals the opposite of whatever it is sitting on. */
+    .inv {
       --paper: #0E0E0A;
       --ink: #FAFAF7;
       --ink-soft: #45443D;
       --muted: #6E6C63;
       --accent: #2C7A57;
       --accent-bright: #2C7A57;
+      background: #FAFAF7;
+      color: #0E0E0A;
     }
     /* The handful of colours written as literal rgba rather than tokens. */
-    .swap .vault__note, .swap .lede, .swap .me__body p, .swap .sub,
-    .swap .row__meta, .swap .tally__k, .swap .foot, .swap .portrait,
-    .swap .vault__foot, .swap .portrait__cap, .swap .sig__role { color: rgba(14,14,10,.66) !important; }
-    .swap .big, .swap .word, .swap .row__trade, .swap .me__body .lead,
-    .swap .sig__name, .swap .tally__v, .swap .vault__note strong,
-    .swap .me__body strong { color: #0E0E0A !important; }
-    .swap .section, .swap .vault, .swap .gate, .swap .me, .swap .foot,
-    .swap .stage, .swap .elevated { background: #FAFAF7 !important; }
-    .swap .vault, .swap .gate, .swap .me, .swap .foot, .swap .row,
-    .swap .tally__row, .swap .sig { border-color: rgba(14,14,10,.16) !important; }
-    .swap .row__eye { border-color: rgba(14,14,10,.3) !important; color: rgba(14,14,10,.6) !important; }
-    .swap .btn { background: #0E0E0A; color: #FAFAF7; }
-    .swap .portrait { background: repeating-linear-gradient(135deg, rgba(14,14,10,.06) 0 10px, transparent 10px 20px), #EFEFE9 !important; }
-    .swap .plain { display: none !important; }
+    .inv .vault__note, .inv .lede, .inv .me__body p, .inv .sub,
+    .inv .row__meta, .inv .tally__k, .inv .foot, .inv .portrait,
+    .inv .vault__foot, .inv .portrait__cap, .inv .sig__role,
+    .inv.foot { color: rgba(14,14,10,.66) !important; }
+    .inv .big, .inv .word, .inv .row__trade, .inv .me__body .lead,
+    .inv .sig__name, .inv .tally__v, .inv .vault__note strong,
+    .inv .me__body strong { color: #0E0E0A !important; }
+    .inv, .inv .stage, .inv .elevated { background: #FAFAF7 !important; }
+    .inv, .inv .row, .inv .tally__row, .inv .sig { border-color: rgba(14,14,10,.16) !important; }
+    .inv .row__eye { border-color: rgba(14,14,10,.3) !important; color: rgba(14,14,10,.6) !important; }
+    .inv .btn { background: #0E0E0A; color: #FAFAF7; }
+    .inv .portrait { background: repeating-linear-gradient(135deg, rgba(14,14,10,.06) 0 10px, transparent 10px 20px), #EFEFE9 !important; }
+    .inv .plain { display: none !important; }
+    .inv .label::before, .inv .label { color: #2C7A57; }
+    .inv .label::before { background: #2C7A57; }
     .goo-def { position: absolute; width: 0; height: 0; pointer-events: none; }
     @media (prefers-reduced-motion: reduce) { .ink { display: none; } }
     @media (prefers-reduced-motion: reduce) { .trail { display: none; } }
@@ -502,7 +510,7 @@
   </section>
 
   <!-- ── Who you'd be working with ──────────────────────── -->
-  <section class="section me" id="mike">
+  <section class="section me inv" id="mike">
     <div class="container">
       <p class="label">Who you&rsquo;d be working with</p>
       <div class="me__grid">
@@ -561,7 +569,7 @@
     </div>
   </section>
 
-  <footer class="container foot">
+  <footer class="container foot inv">
     <span>Ordinary Agency · Claremont, Perth</span>
     <span><a href="mailto:mike@ordinaryagency.com.au">mike@ordinaryagency.com.au</a></span>
     <span><a href="tel:+61403566928">0403 566 928</a></span>
@@ -670,6 +678,10 @@
           c.querySelectorAll('script, canvas, svg').forEach((n) => n.remove());
           c.querySelectorAll('[id]').forEach((n) => n.removeAttribute('id'));
           c.querySelectorAll('details').forEach((d) => { d.open = true; });
+          // Flip whatever this section already is, so the ink always reveals
+          // the opposite of what it sits on — including on sections that are
+          // inverted on the page already.
+          c.classList.toggle('inv');
           inner.appendChild(c);
         });
         inner.setAttribute('inert', '');
