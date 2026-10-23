@@ -642,7 +642,7 @@
     <filter id="gooify" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
       <!-- Blur has to scale with the ink: too wide for the blob size and the
            alpha threshold below erases the shape entirely. -->
-      <feGaussianBlur in="SourceGraphic" stdDeviation="13" result="b" />
+      <feGaussianBlur in="SourceGraphic" stdDeviation="11" result="b" />
       <feColorMatrix in="b" type="matrix" result="goo"
         values="1 0 0 0 0
                 0 1 0 0 0
@@ -727,6 +727,14 @@
       const D_DISS = 0.97;      // DENSITY_DISSIPATION
       const CURL = 1.15;        // vorticity confinement, scaled to this grid
       const ITER = 12;          // pressure iterations; theirs runs 20
+      // Viscosity: how strongly neighbouring cells drag on each other.
+      // Theirs has no explicit term — a 128-cell grid is fine enough not to
+      // need one — but this grid is coarse, so vorticity throws off noise at
+      // cell scale and the ink trembles. Diffusing velocity damps exactly
+      // that, leaves the big swirls alone, and is the literal definition of
+      // the thing Mike kept pointing at: high viscosity.
+      const VISC = 0.42;        // velocity diffusion per step
+      const VISC_IT = 3;        // diffusion iterations
       // Carry, not launch. These were first tuned against a field that was
       // silently receiving zero velocity, so they were all far too strong
       // once the injection was fixed — at 0.44 the whole slick migrated off
@@ -736,8 +744,8 @@
 
       // Oil shears: a blob pulled through moving fluid draws out into a
       // ribbon rather than staying round. SHEAR is how far it will stretch.
-      const SHEAR = 1.9;        // most a blob will draw out along the flow
-      const SHEAR_AT = 9;       // px/frame of flow that counts as full stretch
+      const SHEAR = 2.4;        // most a blob will draw out along the flow
+      const SHEAR_AT = 6;       // px/frame of flow that counts as full stretch
 
       let size = 0, at = null, brush = null, prev = null, raf = null;
       let stamps = [], pool = [], on = false;
@@ -868,6 +876,20 @@
           vy[k] -= 0.5 * (pr[k + gw] - pr[k - gw]);
         }
 
+        // Viscous drag. Each cell is pulled toward the average of the four
+        // around it, which smooths the cell-scale chatter out of the field
+        // while the large swirls survive it.
+        for (let it = 0; it < VISC_IT; it++) {
+          for (let j = 1; j < gh - 1; j++) for (let i = 1; i < gw - 1; i++) {
+            const k = i + j * gw;
+            tx[k] = (vx[k] + VISC * (vx[k - 1] + vx[k + 1] + vx[k - gw] + vx[k + gw])) / (1 + 4 * VISC);
+            ty[k] = (vy[k] + VISC * (vy[k - 1] + vy[k + 1] + vy[k - gw] + vy[k + gw])) / (1 + 4 * VISC);
+          }
+          for (let j = 1; j < gh - 1; j++) for (let i = 1; i < gw - 1; i++) {
+            const k = i + j * gw; vx[k] = tx[k]; vy[k] = ty[k];
+          }
+        }
+
         // Self-advection: the field carries itself downstream, which is what
         // lets a swirl travel across the page instead of sitting still.
         for (let j = 1; j < gh - 1; j++) for (let i = 1; i < gw - 1; i++) {
@@ -944,14 +966,14 @@
           const fx = sample(vx, gx, gy), fy = sample(vy, gx, gy);
           const sp = Math.hypot(fx, fy);
           const want = 1 + Math.min(sp / SHEAR_AT, 1) * SHEAR;
-          g.s += (want - g.s) * 0.08;
-          if (sp > 0.4) {
+          g.s += (want - g.s) * (want > g.s ? 0.05 : 0.13);
+          if (sp > 0.8) {
             const a = Math.atan2(fy, fx);
             // Shortest way round, so a blob never spins to find its angle.
             let d = a - g.a;
             while (d > Math.PI) d -= Math.PI * 2;
             while (d < -Math.PI) d += Math.PI * 2;
-            g.a += d * 0.14;
+            g.a += d * 0.06;
           }
 
           el.setAttribute('cx', g.x.toFixed(1));
@@ -959,7 +981,7 @@
           // Stretching along the flow thins it across the flow, so the blob
           // keeps roughly the same area instead of simply growing.
           el.setAttribute('rx', (r * g.s).toFixed(1));
-          el.setAttribute('ry', (r / Math.sqrt(g.s)).toFixed(1));
+          el.setAttribute('ry', (r / Math.pow(g.s, 0.55)).toFixed(1));
           el.setAttribute('transform', `rotate(${(g.a * 180 / Math.PI).toFixed(1)} ${g.x.toFixed(1)} ${g.y.toFixed(1)})`);
           el.setAttribute('opacity', Math.min(1, k * 9).toFixed(3));
         }
