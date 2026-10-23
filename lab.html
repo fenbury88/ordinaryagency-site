@@ -74,8 +74,14 @@
       padding: 0 var(--gutter);
       font-family: "Times New Roman", Times, serif;
       color: #111;
-      opacity: calc(1 - var(--p) * 2.2);
-      transform: scale(calc(1 - var(--p) * 0.06));
+      z-index: 2;
+      /* Its own ground, not the stage's. It sits over the dark page and has
+         to be opaque, or you are looking through the sheet you are tearing. */
+      background: var(--paper);
+      /* It does not fade. A sheet being torn off is still fully there right
+         up until the moment it is gone — it just gets dragged away. */
+      clip-path: var(--tear, inset(0 0 0 0));
+      transform: translateY(calc(var(--p) * 7vh)) rotate(calc(var(--p) * 1.1deg));
     }
     .plain__inner { max-width: 34rem; margin-inline: auto; width: 100%; }
     .plain h1 { font-size: 2rem; font-weight: 700; line-height: 1.15; margin-bottom: 0.6rem; }
@@ -90,10 +96,9 @@
       background: var(--ink);
       display: grid; align-content: center;
       padding: 0 var(--gutter);
-      /* Grows from the middle of the page and swallows the plain version. */
-      /* Paint poured over the top edge, running down the page. The shape is
-         built in JS and handed over as --pour; until then nothing shows. */
-      clip-path: var(--pour, inset(100% 0 0 0));
+      /* Underneath, whole, the entire time. Nothing is revealed by being
+         drawn on top — it is revealed by what covers it being torn away. */
+      z-index: 1;
     }
     .elevated__inner { max-width: var(--maxw); margin-inline: auto; width: 100%; }
 
@@ -117,6 +122,10 @@
     @media (prefers-reduced-motion: reduce) {
       .word__extra { animation: none; max-width: 7.2em; opacity: 1; }
     }
+    /* Held until the sheet comes off, so the word is not already written
+       by the time anyone sees it. */
+    .word__extra { animation-play-state: paused; }
+    .torn .word__extra { animation-play-state: running; }
     .word__extra {
       font-family: var(--font-logo); font-style: italic; font-weight: 400;
       letter-spacing: -0.015em; padding-right: 0.04em;
@@ -941,89 +950,70 @@
       const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (reduce) { root.style.setProperty('--p', 1); return; }
 
-      const DUR = 2600;
+      const DUR = 1500;
       let at = null, fired = false;
 
       addEventListener('pointermove', (e) => { at = { x: e.clientX, y: e.clientY }; }, { passive: true });
 
-      // The pour. One wobbling front running down the page with tongues of
-      // paint outrunning it, drawn as a clip path: the main sheet plus a
-      // separate capsule for each run, which union into one shape.
-      const RUNS = (() => {
-        const n = 7, out = [];
-        for (let i = 0; i < n; i++) {
-          // Lengths on a curve, so most are stubs and one or two really run.
-          const long = Math.pow(Math.random(), 2);
-          out.push({
-            at: (i + 0.5) / n + (Math.random() - 0.5) * 0.07,   // across the width
-            w: 12 + Math.random() * 26,                         // fat at the shoulder
-            len: 40 + long * 420,                               // how far it outruns
-            lead: Math.random() * 0.3,                          // how early it starts
-          });
+      // The tear. The ordinary page is a sheet lying on top of the real
+      // one, and it gets ripped off downward. Torn paper is angular, not
+      // curvy — straight runs between a lot of closely spaced points, mostly
+      // small deviations with the occasional deep notch where the fibres
+      // gave way all at once. Deliberately unlike the ink, which is all
+      // curves: one is a liquid, this is a material failing.
+      const EDGE = (() => {
+        const n = 110, out = [];
+        for (let i = 0; i <= n; i++) {
+          const fine = (Math.random() - 0.5) * 13;
+          const slow = Math.sin(i * 0.17 + 1.3) * 16 + Math.sin(i * 0.41) * 7;
+          // Every so often the tear jumps ahead of itself.
+          const notch = Math.random() < 0.09 ? -Math.random() * 52 : 0;
+          out.push(fine + slow + notch);
         }
         return out;
       })();
-      const WOB = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(() => Math.random() * 6.283);
 
-      function pour(k, W, H) {
-        // The front runs past the bottom so the last of the page is covered.
-        const front = -70 + k * (H + 230);
-        const cols = 8;
-        const y = (i) => front
-          + Math.sin(WOB[i] + i * 0.9) * 34 * Math.min(1, k * 3)
-          + Math.sin(WOB[i] * 2 + i * 2.1) * 14;
-
-        let d = `M0 0 L${W} 0 L${W} ${y(cols).toFixed(1)} `;
-        for (let i = cols; i > 0; i--) {
-          const x1 = (i / cols) * W, x0 = ((i - 1) / cols) * W;
-          const mx = (x0 + x1) / 2;
-          // Bulge each span a little so the front sags between high points.
-          const my = (y(i) + y(i - 1)) / 2 + 26;
-          d += `Q${mx.toFixed(1)} ${my.toFixed(1)} ${x0.toFixed(1)} ${y(i - 1).toFixed(1)} `;
+      function tear(k, W, H) {
+        // Starts just off the top, finishes past the bottom.
+        const base = -90 + k * (H + 260);
+        const n = EDGE.length - 1;
+        const f = (v) => v.toFixed(1);
+        let d = `M0 ${f(base + EDGE[0])} `;
+        for (let i = 1; i <= n; i++) {
+          const x = (i / n) * W;
+          let y = base + EDGE[i];
+          d += `L${f(x)} ${f(y)} `;
+          // A fibre still hanging on: a thin spike back up into the gap.
+          if (i % 17 === 3) {
+            d += `L${f(x - W / n * 0.35)} ${f(y - 26)} L${f(x + W / n * 0.2)} ${f(y)} `;
+          }
         }
-        d += 'L0 0 Z ';
-
-        // The runs. Near-parallel columns with a heavy rounded tip, the way
-        // paint actually hangs off an edge — not tapering needles.
-        RUNS.forEach((r) => {
-          const t = Math.max(0, Math.min((k - r.lead) / (1 - r.lead), 1));
-          if (t <= 0) return;
-          const x = r.at * W;
-          const top = front - 70;
-          // Fast at first then creeping, so they ease to a stop.
-          const tip = top + 70 + r.len * (1 - Math.pow(1 - t, 2.4));
-          const w = r.w;
-          const n = w * 0.84;                       // barely narrower at the tip
-          const f = (v) => v.toFixed(1);
-          d += `M${f(x - w)} ${f(top)} `
-             + `L${f(x - n)} ${f(tip - n)} `
-             + `Q${f(x - n)} ${f(tip + n * 0.75)} ${f(x)} ${f(tip + n * 0.35)} `
-             + `Q${f(x + n)} ${f(tip + n * 0.75)} ${f(x + n)} ${f(tip - n)} `
-             + `L${f(x + w)} ${f(top)} Z `;
-        });
-        return `path('${d.trim()}')`;
+        d += `L${f(W)} ${f(H + 40)} L0 ${f(H + 40)} Z`;
+        return `path('${d}')`;
       }
 
       function land() {
         if (fired) return;
         fired = true;
+        document.documentElement.classList.add('torn');
         const W = innerWidth, H = innerHeight;
 
         const t0 = performance.now();
         (function step(t) {
           const k = Math.min((t - t0) / DUR, 1);
-          // Gentler than a wipe: it creeps down rather than snapping over.
-          const e = 1 - Math.pow(1 - k, 2.1);
+          // Paper gives way in a hurry once it starts, then the last of it
+          // drags. Nothing like the pour's slow creep.
+          const e = k < 0.18 ? k * 1.6 : 0.288 + (1 - Math.pow(1 - (k - 0.18) / 0.82, 1.7)) * 0.712;
           root.style.setProperty('--p', e.toFixed(4));
-          root.style.setProperty('--pour', pour(e, W, H));
+          root.style.setProperty('--tear', tear(e, W, H));
           if (k < 1) requestAnimationFrame(step);
-          else root.style.setProperty('--pour', 'inset(0 0 0 0)');
+          else root.style.setProperty('--tear', 'inset(100% 0 0 0)');
         })(t0);
         // rAF is paused in a hidden tab, which would leave the page parked
         // half-transformed. Whatever happens, it finishes.
         setTimeout(() => {
           root.style.setProperty('--p', 1);
-          root.style.setProperty('--pour', 'inset(0 0 0 0)');
+          root.style.setProperty('--tear', 'inset(100% 0 0 0)');
         }, DUR + 250);
       }
 
