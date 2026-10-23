@@ -642,7 +642,7 @@
     <filter id="gooify" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
       <!-- Blur has to scale with the ink: too wide for the blob size and the
            alpha threshold below erases the shape entirely. -->
-      <feGaussianBlur in="SourceGraphic" stdDeviation="11" result="b" />
+      <feGaussianBlur in="SourceGraphic" stdDeviation="13" result="b" />
       <feColorMatrix in="b" type="matrix" result="goo"
         values="1 0 0 0 0
                 0 1 0 0 0
@@ -696,18 +696,17 @@
       // seconds — it is still catching up long after the mouse has stopped.
       const FOLLOW = 0.055;     // how hard the brush chases the cursor
       // A slick spreads out into a broad film rather than holding its shape.
-      const GROW = 1.15;        // how much a pool spreads over its life
+      const GROW = 1.5;         // how much a pool spreads over its life
       // Ink doesn't flash up and vanish. Watching theirs, a blob is still
       // sitting there 14 seconds later, so a stamp lasts a long time and only
       // fades right at the end. The pool size is what really clears the page:
       // keep drawing and the oldest ink is pushed out.
       const LIFE = 16000;       // ms a stamp lasts
       const POOL = 85;          // stamps on screen at once
-      // Barely any. Cohesion is surface tension, and surface tension is what
-      // makes mercury ball up into tight spheres — the opposite of an oily
-      // slick. The flow below does the real work now.
-      const COHESION = 0.00018; // how hard ink pulls itself together
-      const NEIGH = 230;        // px within which ink feels its neighbours
+      // No cohesion at all any more. Cohesion is surface tension, and
+      // surface tension is precisely what oil does NOT have much of — it is
+      // what makes mercury ball up into spheres. The pressure solve below
+      // keeps the body together without pulling it round.
 
       // ── The flow ────────────────────────────────────────────────────
       // What makes theirs read as oil rather than as marks on a page is that
@@ -724,14 +723,21 @@
       // keeps running and curling after the cursor has stopped. Their
       // constants, carried over as-is where they transfer:
       const CELL = 26;          // px per grid cell; theirs is 128 across
-      const V_DISS = 0.98;      // VELOCITY_DISSIPATION
+      const V_DISS = 0.955;     // VELOCITY_DISSIPATION (theirs: .98 at 128px cells)
       const D_DISS = 0.97;      // DENSITY_DISSIPATION
-      const CURL = 0.58;        // vorticity confinement, scaled to this grid
+      const CURL = 1.15;        // vorticity confinement, scaled to this grid
       const ITER = 12;          // pressure iterations; theirs runs 20
-      // Carry, not launch. At 0.9 the whole slick got swept downstream and
-      // balled up in one place within a second; the trail you drew has to
-      // stay roughly where you drew it and only creep.
-      const PUSH = 0.3;         // how hard the field carries the ink
+      // Carry, not launch. These were first tuned against a field that was
+      // silently receiving zero velocity, so they were all far too strong
+      // once the injection was fixed — at 0.44 the whole slick migrated off
+      // the right edge inside two seconds. The ink should creep and curl
+      // roughly where you drew it.
+      const PUSH = 0.12;        // how hard the field carries the ink
+
+      // Oil shears: a blob pulled through moving fluid draws out into a
+      // ribbon rather than staying round. SHEAR is how far it will stretch.
+      const SHEAR = 1.9;        // most a blob will draw out along the flow
+      const SHEAR_AT = 9;       // px/frame of flow that counts as full stretch
 
       let size = 0, at = null, brush = null, prev = null, raf = null;
       let stamps = [], pool = [], on = false;
@@ -755,8 +761,9 @@
       })();
 
       for (let i = 0; i < POOL; i++) {
-        const el = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        el.setAttribute('r', '0');
+        const el = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+        el.setAttribute('rx', '0');
+        el.setAttribute('ry', '0');
         paths.appendChild(el);
         pool.push(el);
       }
@@ -884,7 +891,9 @@
 
         // Size comes from how far the BRUSH moved this frame, not the cursor,
         // so it keeps swelling for a moment after you stop.
-        const moved = brush && prev ? Math.hypot(brush.x - prev.x, brush.y - prev.y) : 0;
+        const mdx = brush && prev ? brush.x - prev.x : 0;
+        const mdy = brush && prev ? brush.y - prev.y : 0;
+        const moved = Math.hypot(mdx, mdy);
         const target = at ? Math.min(moved / FULL, 1) : 0;
         size += (target - size) * EASE;
 
@@ -892,7 +901,7 @@
         // on the same spot once you stop — a hundred odd circles piled up —
         // and the whole slick ends as one fat disc.
         if (brush && size > 0.02 && moved > 0.35) {
-          stamps.push({ x: brush.x, y: brush.y, r: size * MAXR, t: now });
+          stamps.push({ x: brush.x, y: brush.y, r: size * MAXR, t: now, s: 1, a: 0 });
           if (stamps.length > POOL) stamps.shift();
         }
         if (brush) prev = { x: brush.x, y: brush.y };
@@ -900,10 +909,13 @@
 
         // Their input model, as read from MouseFluid: the faster the cursor
         // goes, the harder its own displacement is multiplied into the field.
-        if (brush && prev && moved > 0.01) {
+        // mdx/mdy, not brush-minus-prev: prev has already been moved up to
+        // the brush by this point in the frame, so reading it here injects
+        // exactly zero and the field never moves.
+        if (brush && moved > 0.01) {
           const delta = Math.min(moved / 15, 1) * 10;
           const radius = Math.min(moved / 5, 1) * 60;
-          inject(brush.x, brush.y, (brush.x - prev.x) * delta, (brush.y - prev.y) * delta, radius);
+          inject(brush.x, brush.y, mdx * delta, mdy * delta, radius);
         }
         step();
 
@@ -916,35 +928,39 @@
           g.y += sample(vy, gx, gy) * PUSH;
         }
 
-        // A little surface tension on top, so the body stays one body.
-        for (let i = 0; i < stamps.length; i++) {
-          const g = stamps[i];
-          let sx = 0, sy = 0, n = 0;
-          for (let j = 0; j < stamps.length; j++) {
-            if (i === j) continue;
-            const o = stamps[j];
-            const dx2 = o.x - g.x, dy2 = o.y - g.y;
-            if (dx2 * dx2 + dy2 * dy2 < NEIGH * NEIGH) { sx += o.x; sy += o.y; n++; }
-          }
-          if (n) {
-            g.x += (sx / n - g.x) * COHESION;
-            g.y += (sy / n - g.y) * COHESION;
-          }
-        }
-
-        // Stamps sit where the ink gathered them and hold their size until
-        // the very end, so pools stay put instead of flashing away.
+        // Stamps sit where the flow left them and hold their size until the
+        // very end, so pools stay put instead of flashing away — and each one
+        // is drawn out along whatever the fluid is doing underneath it.
         for (let i = 0; i < POOL; i++) {
           const g = stamps[i];
           const el = pool[i];
-          if (!g) { if (el.getAttribute('r') !== '0') el.setAttribute('r', '0'); continue; }
+          if (!g) { if (el.getAttribute('rx') !== '0') { el.setAttribute('rx', '0'); el.setAttribute('ry', '0'); } continue; }
           const k = 1 - (now - g.t) / LIFE;
+          const age = 1 - k;
+          const r = g.r * (1 + age * GROW) * Math.min(1, k * 7);
+
+          // Stretch along the local flow, eased so it doesn't flicker.
+          const gx = g.x / CELL + 1, gy = g.y / CELL + 1;
+          const fx = sample(vx, gx, gy), fy = sample(vy, gx, gy);
+          const sp = Math.hypot(fx, fy);
+          const want = 1 + Math.min(sp / SHEAR_AT, 1) * SHEAR;
+          g.s += (want - g.s) * 0.08;
+          if (sp > 0.4) {
+            const a = Math.atan2(fy, fx);
+            // Shortest way round, so a blob never spins to find its angle.
+            let d = a - g.a;
+            while (d > Math.PI) d -= Math.PI * 2;
+            while (d < -Math.PI) d += Math.PI * 2;
+            g.a += d * 0.14;
+          }
+
           el.setAttribute('cx', g.x.toFixed(1));
           el.setAttribute('cy', g.y.toFixed(1));
-          // Ink spreads as it sits. Theirs plainly grows over the seconds
-          // after you stop rather than shrinking away.
-          const age = 1 - k;
-          el.setAttribute('r', (g.r * (1 + age * GROW) * Math.min(1, k * 7)).toFixed(1));
+          // Stretching along the flow thins it across the flow, so the blob
+          // keeps roughly the same area instead of simply growing.
+          el.setAttribute('rx', (r * g.s).toFixed(1));
+          el.setAttribute('ry', (r / Math.sqrt(g.s)).toFixed(1));
+          el.setAttribute('transform', `rotate(${(g.a * 180 / Math.PI).toFixed(1)} ${g.x.toFixed(1)} ${g.y.toFixed(1)})`);
           el.setAttribute('opacity', Math.min(1, k * 9).toFixed(3));
         }
 
