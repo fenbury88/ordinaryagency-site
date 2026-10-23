@@ -686,7 +686,7 @@
 
       // Theirs is far bigger than I had it: a single blob runs to roughly 200px
       // across, a real slice of the viewport, not a puddle.
-      const MAXR = 72;          // px of the brush at full tilt
+      const MAXR = 56;          // px of a drop as it goes in
       const FULL = 10;          // px/frame of brush travel that counts as full
       // Viscous, so it is slow to answer: the size takes its time swelling and
       // longer still to sag back.
@@ -696,13 +696,21 @@
       // seconds — it is still catching up long after the mouse has stopped.
       const FOLLOW = 0.055;     // how hard the brush chases the cursor
       // A slick spreads out into a broad film rather than holding its shape.
-      const GROW = 1.5;         // how much a pool spreads over its life
+      const GROW = 2.4;         // how far a drop spreads over its life
       // Ink doesn't flash up and vanish. Watching theirs, a blob is still
       // sitting there 14 seconds later, so a stamp lasts a long time and only
       // fades right at the end. The pool size is what really clears the page:
       // keep drawing and the oldest ink is pushed out.
       const LIFE = 16000;       // ms a stamp lasts
-      const POOL = 170;         // stamps on screen at once
+      const POOL = 120;         // drops on screen at once
+      // Drops, not a stroke. Laying ink every frame is what made it a snake:
+      // a fixed-length chain with a head at the cursor and a tail trailing
+      // behind. Oil introduced to water has neither — it goes in at
+      // intervals and what you watch afterwards is it spreading.
+      const DROP_EVERY = 30;    // px of travel between drops
+      // Oil going in shoves the water aside. That outward push is what makes
+      // neighbouring drops drift apart rather than travel together.
+      const SPREAD = 6.5;       // strength of the outward shove
       // No cohesion at all any more. Cohesion is surface tension, and
       // surface tension is precisely what oil does NOT have much of — it is
       // what makes mercury ball up into spheres. The pressure solve below
@@ -742,7 +750,7 @@
       // roughly where you drew it.
       const PUSH = 0.12;        // how hard the field carries the ink
 
-      let size = 0, at = null, brush = null, prev = null, raf = null;
+      let size = 0, at = null, brush = null, prev = null, raf = null, since = 0;
       let stamps = [], pool = [], on = false;
       let gw = 0, gh = 0, vx, vy, tx, ty, pr, pr2, dv, cu;
 
@@ -786,7 +794,7 @@
         wake();
       }, { passive: true });
 
-      const dry = () => { stamps = []; size = 0; at = null; brush = null; prev = null; };
+      const dry = () => { stamps = []; size = 0; at = null; brush = null; prev = null; since = 0; };
       addEventListener('visibilitychange', () => { if (document.hidden) dry(); });
       addEventListener('blur', dry);
       document.addEventListener('mouseleave', () => { at = null; });
@@ -826,6 +834,22 @@
             if (fall < 0.004) continue;
             const k = i + j * gw;
             vx[k] += dx * fall; vy[k] += dy * fall;
+          }
+        }
+      }
+
+      // Oil displacing water: a ring of outward velocity at the drop.
+      function spread(x, y, k) {
+        const ci = x / CELL + 1, cj = y / CELL + 1, r = 2.6;
+        const i0 = Math.max(1, (ci - r) | 0), i1 = Math.min(gw - 2, Math.ceil(ci + r));
+        const j0 = Math.max(1, (cj - r) | 0), j1 = Math.min(gh - 2, Math.ceil(cj + r));
+        for (let j = j0; j <= j1; j++) {
+          for (let i = i0; i <= i1; i++) {
+            const dx = i - ci, dy = j - cj, d = Math.hypot(dx, dy);
+            if (d < 0.35 || d > r) continue;
+            const f = (1 - d / r) * SPREAD * k;
+            const m = i + j * gw;
+            vx[m] += (dx / d) * f; vy[m] += (dy / d) * f;
           }
         }
       }
@@ -913,11 +937,14 @@
         const target = at ? Math.min(moved / FULL, 1) : 0;
         size += (target - size) * EASE;
 
-        // Only movement lays ink down. Without this the brush keeps stamping
-        // on the same spot once you stop — a hundred odd circles piled up —
-        // and the whole slick ends as one fat disc.
-        if (brush && size > 0.02 && moved > 0.12) {
+        // Ink goes in as drops, spaced along the path by distance travelled,
+        // not once per frame. Once-per-frame is a stroke; a stroke follows
+        // you. Drops stay where they were introduced and spread from there.
+        since += moved;
+        if (brush && size > 0.02 && since >= DROP_EVERY) {
+          since = 0;
           stamps.push({ x: brush.x, y: brush.y, r: size * MAXR, t: now });
+          spread(brush.x, brush.y, size);
           if (stamps.length > POOL) stamps.shift();
         }
         if (brush) prev = { x: brush.x, y: brush.y };
@@ -956,7 +983,12 @@
           if (!g) { if (el.getAttribute('r') !== '0') el.setAttribute('r', '0'); continue; }
           const k = 1 - (now - g.t) / LIFE;
           const age = 1 - k;
-          const r = g.r * (1 + age * GROW) * Math.min(1, k * 7);
+          // A drop hitting water opens out fast, then keeps creeping. Coming
+          // in at full size is what made a stroke read as a smear: you never
+          // saw the drops arrive, only the line they left.
+          const bloom = Math.min(1, (now - g.t) / 420);
+          const open = 0.3 + 0.7 * (1 - Math.pow(1 - bloom, 3));
+          const r = g.r * open * (1 + age * GROW) * Math.min(1, k * 7);
 
           el.setAttribute('cx', g.x.toFixed(1));
           el.setAttribute('cy', g.y.toFixed(1));
