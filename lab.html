@@ -113,9 +113,22 @@
       transform: scale(calc(0.84 + var(--p) * 0.16));
       transform-origin: left center;
     }
+    @keyframes write { to { max-width: 7.2em; opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) {
+      .word__extra { animation: none; max-width: 7.2em; opacity: 1; }
+    }
     .word__extra {
       font-family: var(--font-logo); font-style: italic; font-weight: 400;
       letter-spacing: -0.015em; padding-right: 0.04em;
+      /* The page opens reading "ordinary" and then becomes the other thing,
+         in front of you, pushing the rest of the word along as it arrives.
+         It is the only claim the site makes, so it may as well happen
+         rather than be asserted. Vertical padding with matching negative
+         margin keeps the overflow clip off the italic's overhang. */
+      display: inline-block; overflow: hidden; white-space: nowrap;
+      padding-bottom: 0.16em; margin-bottom: -0.16em;
+      max-width: 0; opacity: 0;
+      animation: write 1.5s var(--ease) 0.45s forwards;
       color: var(--accent-bright);
       display: inline-block; overflow: hidden; white-space: nowrap;
       /* Unmasks letter by letter as the page elevates. */
@@ -182,7 +195,23 @@
       letter-spacing: 0.42em; text-transform: uppercase;
       color: var(--muted); pointer-events: none;
     }
-    .plate { position: relative; margin: 0; }
+    /* Rotation lives in a property so the scroll loop can add drift without
+       clobbering it. */
+    .plate { position: relative; margin: 0; transform: rotate(var(--rot, 0deg)) translate3d(0, var(--py, 0px), 0); }
+    /* Plates don't fade in, they develop: a wipe up from the bottom edge. */
+    .plate img { clip-path: inset(0 0 100% 0); transition: clip-path 1.2s var(--ease), filter 0.7s var(--ease); }
+    .plate.in img { clip-path: inset(0 0 0 0); }
+    .plate figcaption { opacity: 0; transition: opacity 0.6s var(--ease) 0.5s; }
+    .plate.in figcaption { opacity: 1; }
+    @media (prefers-reduced-motion: reduce) {
+      .plate img { clip-path: none; }
+      .plate figcaption { opacity: 1; }
+    }
+    /* The ink's cloned copy never scrolls into view on its own, so its
+       plates would sit forever un-revealed and the trail would pass over
+       six empty frames. Nothing in the clone waits to be seen. */
+    .swap .plate img { clip-path: none !important; }
+    .swap .plate figcaption { opacity: 1 !important; }
     .plate img {
       width: 100%; display: block;
       filter: grayscale(1) contrast(1.05) brightness(0.84);
@@ -196,14 +225,14 @@
       color: var(--paper); mix-blend-mode: difference;
       font-variant-numeric: tabular-nums; pointer-events: none;
     }
-    .plate--1 { width: 47%; margin-left: 1%;  transform: rotate(-5.2deg); z-index: 3; }
-    .plate--2 { width: 31%; margin-left: 62%; margin-top: -9%;  transform: rotate(4.4deg);  z-index: 5; }
-    .plate--3 { width: 41%; margin-left: 9%;  margin-top: -5%;  transform: rotate(2.6deg);  z-index: 4; }
+    .plate--1 { width: 47%; margin-left: 1%;  --rot: -5.2deg; z-index: 3; }
+    .plate--2 { width: 31%; margin-left: 62%; margin-top: -9%;  --rot: 4.4deg;  z-index: 5; }
+    .plate--3 { width: 41%; margin-left: 9%;  margin-top: -5%;  --rot: 2.6deg;  z-index: 4; }
     /* Runs off the right edge. You are looking at part of it, which is the
        same promise the copy makes. */
-    .plate--4 { width: 60%; margin-left: 54%; margin-top: -11%; transform: rotate(-3.4deg); z-index: 2; }
-    .plate--5 { width: 25%; margin-left: 3%;  margin-top: -13%; transform: rotate(6.1deg);  z-index: 6; }
-    .plate--6 { width: 46%; margin-left: 31%; margin-top: -8%;  transform: rotate(-4.6deg); z-index: 3; }
+    .plate--4 { width: 60%; margin-left: 54%; margin-top: -11%; --rot: -3.4deg; z-index: 2; }
+    .plate--5 { width: 25%; margin-left: 3%;  margin-top: -13%; --rot: 6.1deg;  z-index: 6; }
+    .plate--6 { width: 46%; margin-left: 31%; margin-top: -8%;  --rot: -4.6deg; z-index: 3; }
 
     /* Type at a size where it stops being read and starts being looked at. */
     .shout {
@@ -277,9 +306,8 @@
        it started and the loop has no seam. */
     .mq__track {
       display: flex; flex-wrap: nowrap; white-space: nowrap;
-      animation: mq 24s linear infinite; will-change: transform;
+      will-change: transform;
     }
-    @keyframes mq { to { transform: translate3d(-50%, 0, 0); } }
     @media (prefers-reduced-motion: reduce) { .mq__track { animation: none; } }
 
     /* Full-bleed ticker. The one place the sectors get named, now that the
@@ -290,7 +318,6 @@
       overflow: hidden; padding: clamp(1.1rem, 2.4vw, 2rem) 0;
     }
     .inv .ticker { border-color: rgba(14, 14, 10, 0.16) !important; }
-    .ticker .mq__track { animation-duration: 42s; }
     .ticker .mq__track p {
       font-size: clamp(2.6rem, 10vw, 8.2rem);
       letter-spacing: -0.06em; line-height: 0.82;
@@ -1004,6 +1031,78 @@
       if (scrollY > 4) land();
     })();
 
+
+    // ── Scroll as a material ────────────────────────────────────────
+    // Two things ride the scroll. The plates drift against it at their own
+    // rates, so the block never moves as one sheet. The marquees take their
+    // speed AND their direction from it: shove the page down and the words
+    // run harder, pull it back and they turn round and run the other way.
+    // A CSS animation can't be reversed mid-flight, so the tracks are driven
+    // by hand here instead.
+    (function motion() {
+      const plates = [...document.querySelectorAll('.plate')];
+      const tracks = [...document.querySelectorAll('.mq__track')].map((el) => ({
+        // Deliberately not random: the ink's cloned copy of the page has its
+        // own copy of this track, and the two have to stay in lockstep or
+        // the revealed text sits at a different place in the loop.
+        el, half: 0, at: 0,
+        // Alternating, so stacked lines of type never march in step.
+        dir: el.closest('.ticker') ? -1 : 1,
+        rate: el.closest('.ticker') ? 0.55 : 0.85,
+      }));
+      const measure = () => tracks.forEach((t) => { t.half = t.el.scrollWidth / 2; });
+      measure();
+      addEventListener('resize', measure);
+      // Web fonts land after first paint and change every width here.
+      if (document.fonts) document.fonts.ready.then(measure);
+
+      let last = scrollY, vel = 0;
+      addEventListener('scroll', () => {
+        vel += (scrollY - last); last = scrollY;
+        // Anything faster than this is a flung scrollbar, not a read.
+        vel = Math.max(-90, Math.min(90, vel));
+      }, { passive: true });
+
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      (function frame() {
+        requestAnimationFrame(frame);
+        vel *= 0.90;
+
+        for (const t of tracks) {
+          if (!t.half) continue;
+          t.at -= (t.rate + vel * 0.13) * t.dir;
+          // Wrap inside one half-width: the halves are identical, so the
+          // seam never shows.
+          t.at = ((t.at % t.half) + t.half) % t.half - t.half;
+          t.el.style.transform = `translate3d(${t.at.toFixed(1)}px,0,0)`;
+        }
+
+        if (reduce) return;
+        const mid = innerHeight / 2;
+        for (let i = 0; i < plates.length; i++) {
+          const el = plates[i];
+          const r = el.getBoundingClientRect();
+          if (r.bottom < -200 || r.top > innerHeight + 200) continue;
+          // -1 above the fold, +1 below it.
+          const p = (r.top + r.height / 2 - mid) / (innerHeight || 1);
+          // Alternating depth, so neighbours separate as you go past.
+          const depth = (i % 2 ? -1 : 1) * (26 + (i % 3) * 20);
+          el.style.setProperty('--py', (p * depth).toFixed(1) + 'px');
+        }
+      })();
+
+      // Plates develop rather than appear.
+      const seen = new IntersectionObserver((es) => {
+        es.forEach((e) => {
+          if (!e.isIntersecting) return;
+          e.target.style.transitionDelay = (plates.indexOf(e.target) % 3) * 110 + 'ms';
+          e.target.classList.add('in');
+          seen.unobserve(e.target);
+        });
+      }, { rootMargin: '0px 0px -12% 0px' });
+      plates.forEach((el) => seen.observe(el));
+    })();
   </script>
 </body>
 </html>
