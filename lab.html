@@ -210,7 +210,12 @@
     /* Plates don't fade in, they develop: a wipe up from the bottom edge. */
     .plate img { clip-path: inset(0 0 100% 0); transition: clip-path 1.2s var(--ease), filter 0.7s var(--ease); }
     .plate.in img { clip-path: inset(0 0 0 0); }
-    .plate figcaption { opacity: 0; transition: opacity 0.6s var(--ease) 0.5s; }
+    /* The scratch panel. Sits over the picture until somebody takes it off. */
+    .scratch {
+      position: absolute; inset: 0; z-index: 2;
+      display: block; cursor: crosshair; touch-action: pan-y;
+    }
+    .plate figcaption { opacity: 0; transition: opacity 0.6s var(--ease) 0.5s; z-index: 3; }
     .plate.in figcaption { opacity: 1; }
     @media (prefers-reduced-motion: reduce) {
       .plate img { clip-path: none; }
@@ -1122,6 +1127,119 @@
         });
       }, { rootMargin: '0px 0px -12% 0px' });
       plates.forEach((el) => seen.observe(el));
+    })();
+
+    // ── Scratchies ──────────────────────────────────────────────────
+    // Every site here is under a panel you have to scratch off. It is the
+    // only honest version of "we don't keep it in a shop window": the work
+    // is there, and you get at it by doing something, not by being shown.
+    // Panels re-frost once you leave them alone, so it can be done twice.
+    (function scratchies() {
+      if (!matchMedia('(pointer: fine)').matches) return;
+      const dpr = Math.min(2, devicePixelRatio || 1);
+      const cards = [];
+
+      // Not the ink's cloned copy. Its panels could never stay in step with
+      // these ones, and leaving them off means the trail becomes the other
+      // way to see the work: scratch it, or let the ink run over it.
+      document.querySelectorAll('.plates .plate').forEach((fig) => {
+        if (fig.closest('.swap')) return;
+        const img = fig.querySelector('img');
+        const cv = document.createElement('canvas');
+        cv.className = 'scratch';
+        cv.setAttribute('aria-hidden', 'true');
+        fig.appendChild(cv);
+        const ctx = cv.getContext('2d', { willReadFrequently: false });
+        const card = { fig, img, cv, ctx, w: 0, h: 0, last: null, idle: 0, dirty: false };
+
+        card.frost = () => {
+          const { ctx, w, h } = card;
+          if (!w || !h) return;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.fillStyle = '#8d8d84';
+          ctx.fillRect(0, 0, w, h);
+          // Speckle, so it reads as a coating rather than a grey rectangle.
+          for (let i = 0; i < (w * h) / 220; i++) {
+            const g = 110 + Math.random() * 80;
+            ctx.fillStyle = `rgba(${g},${g},${g - 4},${0.1 + Math.random() * 0.3})`;
+            ctx.fillRect(Math.random() * w, Math.random() * h, 1.6, 1.6);
+          }
+          // A couple of long brushed streaks across it.
+          ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+          ctx.lineWidth = 1;
+          for (let i = 0; i < 9; i++) {
+            const y = Math.random() * h;
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y + (Math.random() - 0.5) * 24);
+            ctx.stroke();
+          }
+        };
+
+        card.size = () => {
+          const r = img.getBoundingClientRect();
+          const w = Math.round(r.width), h = Math.round(r.height);
+          if (!w || !h || (w === card.w && h === card.h)) return;
+          card.w = w; card.h = h;
+          cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+          cv.style.width = w + 'px'; cv.style.height = h + 'px';
+          card.frost();
+        };
+
+        // The scratch itself: erase along the path the cursor takes, with a
+        // ragged edge rather than a clean round nib.
+        const scrape = (x, y) => {
+          const { ctx } = card;
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          if (card.last) {
+            ctx.lineWidth = 26;
+            ctx.beginPath();
+            ctx.moveTo(card.last.x, card.last.y);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            // Flakes coming away either side of the stroke.
+            for (let i = 0; i < 5; i++) {
+              const a = Math.random() * 6.283, d = 12 + Math.random() * 20;
+              ctx.beginPath();
+              ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, 2 + Math.random() * 7, 0, 6.283);
+              ctx.fill();
+            }
+          }
+          card.last = { x, y };
+          card.idle = 0;
+          card.dirty = true;
+        };
+
+        cv.addEventListener('pointermove', (e) => {
+          if (e.pointerType !== 'mouse') return;
+          const r = cv.getBoundingClientRect();
+          scrape(e.clientX - r.left, e.clientY - r.top);
+        }, { passive: true });
+        cv.addEventListener('pointerleave', () => { card.last = null; });
+
+        card.size();
+        cards.push(card);
+      });
+
+      addEventListener('resize', () => cards.forEach((c) => { c.w = 0; c.size(); }));
+
+      // Re-frosting. Low-alpha fill rebuilds the coating a little at a time,
+      // and only once a panel has been left alone for a few seconds.
+      (function creep() {
+        requestAnimationFrame(creep);
+        for (const c of cards) {
+          if (!c.dirty || !c.w) continue;
+          if (++c.idle < 260) continue;
+          c.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          c.ctx.globalCompositeOperation = 'source-over';
+          c.ctx.fillStyle = 'rgba(141,141,132,0.016)';
+          c.ctx.fillRect(0, 0, c.w, c.h);
+          if (c.idle > 1100) { c.frost(); c.dirty = false; c.idle = 0; }
+        }
+      })();
     })();
   </script>
 </body>
