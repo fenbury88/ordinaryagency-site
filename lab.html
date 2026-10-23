@@ -26,7 +26,7 @@
       --font-logo: "Fraunces", Georgia, serif;
       --gutter: clamp(1.25rem, 5vw, 4rem);
       --maxw: 1240px;
-      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+      --ease: cubic-bezier(0.215, 0.61, 0.355, 1);
       /* 0 = ordinary, 1 = extraordinary. Set by JS on scroll. */
       --p: 0;
     }
@@ -108,7 +108,7 @@
       /* Big enough to run off the right edge. The word is the picture, and
          you don't need all of it to read it. */
       font-size: clamp(3rem, 19vw, 19rem);
-      line-height: 0.82; letter-spacing: -0.05em;
+      line-height: 0.78; letter-spacing: -0.062em;
       display: flex; align-items: baseline; white-space: nowrap;
       transform: scale(calc(0.84 + var(--p) * 0.16));
       transform-origin: left center;
@@ -149,7 +149,7 @@
     .label::before { content: ""; width: 24px; height: 1px; background: var(--accent-bright); }
     .big {
       font-family: var(--font-display); font-weight: 600;
-      font-size: clamp(2.4rem, 8vw, 6.4rem); line-height: 0.96; letter-spacing: -0.042em;
+      font-size: clamp(2.4rem, 8vw, 6.4rem); line-height: 0.92; letter-spacing: -0.05em;
       max-width: 15ch;
     }
     .big em { font-style: normal; color: var(--accent-bright); }
@@ -208,6 +208,54 @@
     }
     @media (prefers-reduced-motion: reduce) {
       .cell__in img { animation: none; transform: scale(1.18); }
+    }
+
+    /* Not every cell is a window. Buttermax breaks their grid up with flat
+       colour tiles carrying one enormous scrolling word, and it is the
+       thing that stops the whole block reading as a portfolio page. The
+       type is sized against the cell, not the viewport, so it keeps its
+       proportion at every column count. */
+    .cell { container-type: inline-size; }
+    .cell--say .cell__in {
+      display: flex; align-items: center;
+      background: var(--accent-bright); color: #0E0E0A;
+    }
+    .cell--say.cell--pale .cell__in { background: #FAFAF7; }
+    .mq { width: 100%; overflow: hidden; }
+    .mq__track {
+      display: flex; flex-wrap: nowrap; white-space: nowrap;
+      animation: mq 24s linear infinite;
+      will-change: transform;
+    }
+    .cell--rev .mq__track { animation-direction: reverse; }
+    .mq__track p {
+      font-family: var(--font-display); font-weight: 600;
+      font-size: 2.6rem;
+      font-size: 15cqw;
+      line-height: 0.8; letter-spacing: -0.07em;
+      padding-right: 0.45em;
+    }
+    /* The track holds two identical halves, so -50% lands exactly where
+       it started and the loop has no seam. */
+    @keyframes mq { to { transform: translate3d(-50%, 0, 0); } }
+
+    /* Full-bleed ticker. The one place the sectors get named, now that the
+       tiles deliberately don't. */
+    .ticker {
+      border-top: 1px solid rgba(250, 250, 247, 0.14);
+      border-bottom: 1px solid rgba(250, 250, 247, 0.14);
+      overflow: hidden; padding: clamp(1.1rem, 2.4vw, 2rem) 0;
+    }
+    .inv .ticker { border-color: rgba(14, 14, 10, 0.16) !important; }
+    .ticker .mq__track { animation-duration: 42s; }
+    .ticker .mq__track p {
+      font-size: clamp(2.6rem, 10vw, 8.2rem);
+      letter-spacing: -0.06em; line-height: 0.82;
+      padding-right: 0.4em; color: var(--ink);
+    }
+    .ticker .mq__track p em { font-style: normal; color: var(--accent-bright); }
+    @media (prefers-reduced-motion: reduce) {
+      .mq__track { animation: none; }
     }
 
     .vault__foot { margin-top: clamp(2.5rem, 6vw, 4rem); color: var(--muted); font-size: 0.95rem; }
@@ -433,6 +481,13 @@
             <span class="cell__n">01</span>
           </div>
         </li>
+        <li class="cell cell--say" aria-hidden="true">
+          <div class="cell__sq">
+            <div class="cell__in">
+              <div class="mq"><div class="mq__track"><p>Two at a time</p><p>Two at a time</p><p>Two at a time</p><p>Two at a time</p><p>Two at a time</p><p>Two at a time</p><p>Two at a time</p><p>Two at a time</p></div></div>
+            </div>
+          </div>
+        </li>
         <li class="cell">
           <div class="cell__sq">
             <div class="cell__in">
@@ -457,6 +512,20 @@
             <span class="cell__n">04</span>
           </div>
         </li>
+        <li class="cell cell--say cell--pale cell--rev" aria-hidden="true">
+          <div class="cell__sq">
+            <div class="cell__in">
+              <div class="mq"><div class="mq__track"><p>No logo wall</p><p>No logo wall</p><p>No logo wall</p><p>No logo wall</p><p>No logo wall</p><p>No logo wall</p><p>No logo wall</p><p>No logo wall</p></div></div>
+            </div>
+          </div>
+        </li>
+        <li class="cell cell--say cell--rev" aria-hidden="true">
+          <div class="cell__sq">
+            <div class="cell__in">
+              <div class="mq"><div class="mq__track"><p>Ask on a call</p><p>Ask on a call</p><p>Ask on a call</p><p>Ask on a call</p><p>Ask on a call</p><p>Ask on a call</p><p>Ask on a call</p><p>Ask on a call</p></div></div>
+            </div>
+          </div>
+        </li>
         <li class="cell">
           <div class="cell__sq">
             <div class="cell__in">
@@ -478,6 +547,13 @@
       <p class="vault__foot">
         Eight more we don&rsquo;t show here. <a href="discovery.html">Ask what&rsquo;s relevant to you</a>.
       </p>
+    </div>
+  </section>
+
+  <!-- ── Ticker ─────────────────────────────────────────── -->
+  <section class="ticker" aria-hidden="true">
+    <div class="mq__track">
+      <p>Gold mines <em>&middot;</em> Laboratories <em>&middot;</em> Out&#8209;of&#8209;home <em>&middot;</em> Professional firms <em>&middot;</em> </p><p>Gold mines <em>&middot;</em> Laboratories <em>&middot;</em> Out&#8209;of&#8209;home <em>&middot;</em> Professional firms <em>&middot;</em> </p>
     </div>
   </section>
 
@@ -629,16 +705,37 @@
       const POOL = 85;          // stamps on screen at once
       // Barely any. Cohesion is surface tension, and surface tension is what
       // makes mercury ball up into tight spheres — the opposite of an oily
-      // slick. It also compounds every frame, so even a small number rounds
-      // the whole body off within a couple of seconds. This is just enough to
-      // stop the body drifting apart.
-      const COHESION = 0.0013;  // how hard ink pulls itself together
-      // Wide enough that the ink holds together as one body instead of
-      // breaking into separate puddles the way mine was.
+      // slick. The flow below does the real work now.
+      const COHESION = 0.00018; // how hard ink pulls itself together
       const NEIGH = 230;        // px within which ink feels its neighbours
+
+      // ── The flow ────────────────────────────────────────────────────
+      // What makes theirs read as oil rather than as marks on a page is that
+      // the ink is not drawn at the cursor at all — it is dropped into a
+      // moving fluid and carried. Their engine (assets/js/app.*.js, class
+      // Fluid) is a Navier–Stokes solver on a 128×128 velocity grid, and
+      // MouseFluid injects a VELOCITY VECTOR, not a blob:
+      //
+      //   delta  = range(len, 0, 15, 0, 10)      // fast moves hit 10x harder
+      //   radius = range(len,  0, 5, 0, 60)
+      //   fluid.drawInput(x, y, (x - lastX) * delta, (y - lastY) * delta, …)
+      //
+      // So a flick shoves a lot of momentum into the field, and the slick
+      // keeps running and curling after the cursor has stopped. Their
+      // constants, carried over as-is where they transfer:
+      const CELL = 26;          // px per grid cell; theirs is 128 across
+      const V_DISS = 0.98;      // VELOCITY_DISSIPATION
+      const D_DISS = 0.97;      // DENSITY_DISSIPATION
+      const CURL = 0.58;        // vorticity confinement, scaled to this grid
+      const ITER = 12;          // pressure iterations; theirs runs 20
+      // Carry, not launch. At 0.9 the whole slick got swept downstream and
+      // balled up in one place within a second; the trail you drew has to
+      // stay roughly where you drew it and only creep.
+      const PUSH = 0.3;         // how hard the field carries the ink
 
       let size = 0, at = null, brush = null, prev = null, raf = null;
       let stamps = [], pool = [], on = false;
+      let gw = 0, gh = 0, vx, vy, tx, ty, pr, pr2, dv, cu;
 
       // The opposite-palette copy, revealed through the trail.
       (function clone() {
@@ -667,6 +764,7 @@
       const resize = () => {
         maskbg.setAttribute('width', innerWidth);
         maskbg.setAttribute('height', innerHeight);
+        grid();
       };
       resize();
       addEventListener('resize', resize);
@@ -683,6 +781,96 @@
       addEventListener('visibilitychange', () => { if (document.hidden) dry(); });
       addEventListener('blur', dry);
       document.addEventListener('mouseleave', () => { at = null; });
+
+      // A coarse velocity field. Everything here is the same sequence their
+      // shader passes run in: curl, vorticity, divergence, pressure, gradient
+      // subtract, advect — just on a grid small enough to do on the CPU.
+      function grid() {
+        gw = Math.ceil(innerWidth / CELL) + 2;
+        gh = Math.ceil(innerHeight / CELL) + 2;
+        const n = gw * gh;
+        vx = new Float32Array(n); vy = new Float32Array(n);
+        tx = new Float32Array(n); ty = new Float32Array(n);
+        pr = new Float32Array(n); pr2 = new Float32Array(n);
+        dv = new Float32Array(n); cu = new Float32Array(n);
+      }
+      grid();
+
+      // Bilinear sample, in grid coordinates.
+      function sample(f, x, y) {
+        if (x < 0) x = 0; else if (x > gw - 1.001) x = gw - 1.001;
+        if (y < 0) y = 0; else if (y > gh - 1.001) y = gh - 1.001;
+        const i = x | 0, j = y | 0, fx = x - i, fy = y - j, k = i + j * gw;
+        return f[k] * (1 - fx) * (1 - fy) + f[k + 1] * fx * (1 - fy)
+             + f[k + gw] * (1 - fx) * fy + f[k + gw + 1] * fx * fy;
+      }
+
+      // Their drawInput: a splat of velocity, falling off over the radius.
+      function inject(x, y, dx, dy, radius) {
+        const ci = x / CELL + 1, cj = y / CELL + 1, r = Math.max(1, radius / CELL);
+        const i0 = Math.max(1, (ci - r) | 0), i1 = Math.min(gw - 2, Math.ceil(ci + r));
+        const j0 = Math.max(1, (cj - r) | 0), j1 = Math.min(gh - 2, Math.ceil(cj + r));
+        for (let j = j0; j <= j1; j++) {
+          for (let i = i0; i <= i1; i++) {
+            const ddx = i - ci, ddy = j - cj;
+            const fall = Math.exp(-(ddx * ddx + ddy * ddy) / (r * r));
+            if (fall < 0.004) continue;
+            const k = i + j * gw;
+            vx[k] += dx * fall; vy[k] += dy * fall;
+          }
+        }
+      }
+
+      function step() {
+        const n = gw * gh;
+
+        // Curl, then vorticity confinement. This is the pass that makes a
+        // fluid curl instead of simply spreading, and it is why theirs looks
+        // like oil on water rather than a puff of smoke.
+        for (let j = 1; j < gh - 1; j++) for (let i = 1; i < gw - 1; i++) {
+          const k = i + j * gw;
+          cu[k] = (vy[k + 1] - vy[k - 1] - vx[k + gw] + vx[k - gw]) * 0.5;
+        }
+        for (let j = 1; j < gh - 1; j++) for (let i = 1; i < gw - 1; i++) {
+          const k = i + j * gw;
+          const gx = (Math.abs(cu[k + 1]) - Math.abs(cu[k - 1])) * 0.5;
+          const gy = (Math.abs(cu[k + gw]) - Math.abs(cu[k - gw])) * 0.5;
+          const m = Math.hypot(gx, gy) + 1e-5;
+          vx[k] += CURL * (gy / m) * cu[k];
+          vy[k] -= CURL * (gx / m) * cu[k];
+        }
+
+        // Divergence, pressure, gradient subtract: the incompressibility
+        // solve. Without it the ink balloons outward; with it, it has to go
+        // somewhere, so it slides and rolls.
+        for (let j = 1; j < gh - 1; j++) for (let i = 1; i < gw - 1; i++) {
+          const k = i + j * gw;
+          dv[k] = -0.5 * (vx[k + 1] - vx[k - 1] + vy[k + gw] - vy[k - gw]);
+          pr[k] = 0;
+        }
+        for (let it = 0; it < ITER; it++) {
+          for (let j = 1; j < gh - 1; j++) for (let i = 1; i < gw - 1; i++) {
+            const k = i + j * gw;
+            pr2[k] = (dv[k] + pr[k - 1] + pr[k + 1] + pr[k - gw] + pr[k + gw]) * 0.25;
+          }
+          const t = pr; pr = pr2; pr2 = t;
+        }
+        for (let j = 1; j < gh - 1; j++) for (let i = 1; i < gw - 1; i++) {
+          const k = i + j * gw;
+          vx[k] -= 0.5 * (pr[k + 1] - pr[k - 1]);
+          vy[k] -= 0.5 * (pr[k + gw] - pr[k - gw]);
+        }
+
+        // Self-advection: the field carries itself downstream, which is what
+        // lets a swirl travel across the page instead of sitting still.
+        for (let j = 1; j < gh - 1; j++) for (let i = 1; i < gw - 1; i++) {
+          const k = i + j * gw;
+          const bx = i - vx[k] / CELL, by = j - vy[k] / CELL;
+          tx[k] = sample(vx, bx, by) * V_DISS;
+          ty[k] = sample(vy, bx, by) * V_DISS;
+        }
+        for (let k = 0; k < n; k++) { vx[k] = tx[k]; vy[k] = ty[k]; }
+      }
 
       function draw() {
         const now = performance.now();
@@ -710,10 +898,25 @@
         if (brush) prev = { x: brush.x, y: brush.y };
         stamps = stamps.filter((g) => now - g.t < LIFE);
 
-        // Surface tension. Each bit of ink creeps toward the middle of the ink
-        // around it, so a smeared trail gathers itself into round pools over a
-        // second or two and then sits there — which is exactly what theirs
-        // does once you stop moving.
+        // Their input model, as read from MouseFluid: the faster the cursor
+        // goes, the harder its own displacement is multiplied into the field.
+        if (brush && prev && moved > 0.01) {
+          const delta = Math.min(moved / 15, 1) * 10;
+          const radius = Math.min(moved / 5, 1) * 60;
+          inject(brush.x, brush.y, (brush.x - prev.x) * delta, (brush.y - prev.y) * delta, radius);
+        }
+        step();
+
+        // The ink is cargo. It goes where the flow takes it, which is the
+        // whole difference between a slick and a row of stamps.
+        for (let i = 0; i < stamps.length; i++) {
+          const g = stamps[i];
+          const gx = g.x / CELL + 1, gy = g.y / CELL + 1;
+          g.x += sample(vx, gx, gy) * PUSH;
+          g.y += sample(vy, gx, gy) * PUSH;
+        }
+
+        // A little surface tension on top, so the body stays one body.
         for (let i = 0; i < stamps.length; i++) {
           const g = stamps[i];
           let sx = 0, sy = 0, n = 0;
