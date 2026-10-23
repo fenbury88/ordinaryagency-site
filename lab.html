@@ -686,7 +686,7 @@
 
       // Theirs is far bigger than I had it: a single blob runs to roughly 200px
       // across, a real slice of the viewport, not a puddle.
-      const MAXR = 104;         // px of the brush at full tilt
+      const MAXR = 72;          // px of the brush at full tilt
       const FULL = 10;          // px/frame of brush travel that counts as full
       // Viscous, so it is slow to answer: the size takes its time swelling and
       // longer still to sag back.
@@ -702,7 +702,7 @@
       // fades right at the end. The pool size is what really clears the page:
       // keep drawing and the oldest ink is pushed out.
       const LIFE = 16000;       // ms a stamp lasts
-      const POOL = 85;          // stamps on screen at once
+      const POOL = 170;         // stamps on screen at once
       // No cohesion at all any more. Cohesion is surface tension, and
       // surface tension is precisely what oil does NOT have much of — it is
       // what makes mercury ball up into spheres. The pressure solve below
@@ -742,11 +742,6 @@
       // roughly where you drew it.
       const PUSH = 0.12;        // how hard the field carries the ink
 
-      // Oil shears: a blob pulled through moving fluid draws out into a
-      // ribbon rather than staying round. SHEAR is how far it will stretch.
-      const SHEAR = 2.4;        // most a blob will draw out along the flow
-      const SHEAR_AT = 6;       // px/frame of flow that counts as full stretch
-
       let size = 0, at = null, brush = null, prev = null, raf = null;
       let stamps = [], pool = [], on = false;
       let gw = 0, gh = 0, vx, vy, tx, ty, pr, pr2, dv, cu;
@@ -769,9 +764,8 @@
       })();
 
       for (let i = 0; i < POOL; i++) {
-        const el = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-        el.setAttribute('rx', '0');
-        el.setAttribute('ry', '0');
+        const el = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        el.setAttribute('r', '0');
         paths.appendChild(el);
         pool.push(el);
       }
@@ -922,8 +916,8 @@
         // Only movement lays ink down. Without this the brush keeps stamping
         // on the same spot once you stop — a hundred odd circles piled up —
         // and the whole slick ends as one fat disc.
-        if (brush && size > 0.02 && moved > 0.35) {
-          stamps.push({ x: brush.x, y: brush.y, r: size * MAXR, t: now, s: 1, a: 0 });
+        if (brush && size > 0.02 && moved > 0.12) {
+          stamps.push({ x: brush.x, y: brush.y, r: size * MAXR, t: now });
           if (stamps.length > POOL) stamps.shift();
         }
         if (brush) prev = { x: brush.x, y: brush.y };
@@ -951,38 +945,24 @@
         }
 
         // Stamps sit where the flow left them and hold their size until the
-        // very end, so pools stay put instead of flashing away — and each one
-        // is drawn out along whatever the fluid is doing underneath it.
+        // very end, so pools stay put instead of flashing away. They stay
+        // ROUND. Stretching each one into a capsule and rotating it to the
+        // flow was wrong: oil has no capsules in it, and the rotation made
+        // every individual blob visible as a blob. A filament in real oil is
+        // a chain of fluid carried into a line — so let the chain do it.
         for (let i = 0; i < POOL; i++) {
           const g = stamps[i];
           const el = pool[i];
-          if (!g) { if (el.getAttribute('rx') !== '0') { el.setAttribute('rx', '0'); el.setAttribute('ry', '0'); } continue; }
+          if (!g) { if (el.getAttribute('r') !== '0') el.setAttribute('r', '0'); continue; }
           const k = 1 - (now - g.t) / LIFE;
           const age = 1 - k;
           const r = g.r * (1 + age * GROW) * Math.min(1, k * 7);
-
-          // Stretch along the local flow, eased so it doesn't flicker.
-          const gx = g.x / CELL + 1, gy = g.y / CELL + 1;
-          const fx = sample(vx, gx, gy), fy = sample(vy, gx, gy);
-          const sp = Math.hypot(fx, fy);
-          const want = 1 + Math.min(sp / SHEAR_AT, 1) * SHEAR;
-          g.s += (want - g.s) * (want > g.s ? 0.05 : 0.13);
-          if (sp > 0.8) {
-            const a = Math.atan2(fy, fx);
-            // Shortest way round, so a blob never spins to find its angle.
-            let d = a - g.a;
-            while (d > Math.PI) d -= Math.PI * 2;
-            while (d < -Math.PI) d += Math.PI * 2;
-            g.a += d * 0.06;
-          }
 
           el.setAttribute('cx', g.x.toFixed(1));
           el.setAttribute('cy', g.y.toFixed(1));
           // Stretching along the flow thins it across the flow, so the blob
           // keeps roughly the same area instead of simply growing.
-          el.setAttribute('rx', (r * g.s).toFixed(1));
-          el.setAttribute('ry', (r / Math.pow(g.s, 0.55)).toFixed(1));
-          el.setAttribute('transform', `rotate(${(g.a * 180 / Math.PI).toFixed(1)} ${g.x.toFixed(1)} ${g.y.toFixed(1)})`);
+          el.setAttribute('r', r.toFixed(1));
           el.setAttribute('opacity', Math.min(1, k * 9).toFixed(3));
         }
 
