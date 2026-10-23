@@ -163,55 +163,52 @@
     .vault__note { color: rgba(250, 250, 247, 0.55); max-width: 40ch; }
     .vault__note strong { color: var(--paper); font-weight: 500; }
 
-    .rows { list-style: none; padding: 0; margin-top: clamp(3rem, 7vw, 5rem); }
-    .row { border-top: 1px solid rgba(250, 250, 247, 0.12); }
-    .row:last-child { border-bottom: 1px solid rgba(250, 250, 247, 0.12); }
-    .row__btn {
-      width: 100%; background: none; border: 0; cursor: pointer; color: inherit;
-      font: inherit; text-align: left;
-      display: grid; grid-template-columns: 3.5rem 1fr auto 1.6rem;
-      gap: clamp(1rem, 3vw, 2.5rem); align-items: center;
-      padding: clamp(1.1rem, 2.6vw, 1.9rem) 0;
-      transition: color .4s var(--ease);
+    /* Selected work. Square tiles in a flex wrap, with the hairline drawn
+       by box-shadow rather than border: each cell casts a line down and
+       right, the container casts one up and left, so edges meet at one
+       pixel instead of two. Buttermax does the same thing and it is the
+       reason their grid looks drawn rather than assembled. */
+    .grid {
+      list-style: none; padding: 0;
+      margin-top: clamp(3rem, 7vw, 5rem);
+      display: flex; flex-wrap: wrap;
+      box-shadow: -1px -1px 0 0 rgba(250, 250, 247, 0.14);
     }
-    .row__n { font-family: var(--font-display); font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-    .row__trade {
-      font-family: var(--font-display); font-weight: 500;
-      font-size: clamp(1.3rem, 3.4vw, 2.4rem); letter-spacing: -0.025em; line-height: 1.1;
-      transition: color .35s var(--ease), transform .5s var(--ease);
-    }
-    .row__meta { font-size: 0.85rem; color: var(--muted); white-space: nowrap; }
-    .row__eye {
-      width: 1.6rem; height: 1.6rem; border-radius: 50%;
-      border: 1px solid rgba(250, 250, 247, 0.25);
-      display: grid; place-items: center; font-size: 0.7rem; color: var(--muted);
-      transition: background .35s var(--ease), color .35s var(--ease), border-color .35s var(--ease);
-    }
-    .row:hover .row__trade, .row.is-open .row__trade { color: var(--accent-bright); transform: translateX(10px); }
-    .row:hover .row__eye, .row.is-open .row__eye { background: var(--accent-bright); border-color: var(--accent-bright); color: var(--ink); }
+    .cell { width: 100%; box-shadow: 1px 1px 0 0 rgba(250, 250, 247, 0.14); }
+    @media (min-width: 600px) { .cell { width: 50%; } }
+    @media (min-width: 1000px) { .cell { width: 33.3333%; } }
 
-    /* The peek: a letterbox slice, never the whole page. */
-    .row__peek {
-      display: grid; grid-template-rows: 0fr;
-      transition: grid-template-rows .55s var(--ease);
+    /* padding-top on a zero-height box is the only square that holds up
+       inside a flex row at every width. */
+    .cell__sq { position: relative; width: 100%; height: 0; padding-top: 100%; overflow: hidden; }
+    .cell__in { position: absolute; inset: 0; overflow: hidden; }
+    .cell__in img {
+      width: 100%; height: 100%; object-fit: cover; object-position: center top;
+      filter: grayscale(1) contrast(1.06) brightness(0.82);
+      animation: drift 26s cubic-bezier(0.215, 0.61, 0.355, 1) infinite alternate;
+      transition: filter 0.6s cubic-bezier(0.215, 0.61, 0.355, 1);
     }
-    .row.is-open .row__peek { grid-template-rows: 1fr; }
-    .row__peekinner { overflow: hidden; }
-    .row__frame {
-      display: flex; align-items: center; gap: clamp(1rem, 3vw, 2rem);
-      padding-bottom: clamp(1.25rem, 3vw, 2rem);
+    /* Staggered so the six tiles never move as one block. */
+    .cell:nth-child(2) .cell__in img { animation-duration: 31s; animation-delay: -6s; }
+    .cell:nth-child(3) .cell__in img { animation-duration: 22s; animation-delay: -13s; }
+    .cell:nth-child(4) .cell__in img { animation-duration: 35s; animation-delay: -3s; }
+    .cell:nth-child(5) .cell__in img { animation-duration: 28s; animation-delay: -17s; }
+    .cell:nth-child(6) .cell__in img { animation-duration: 24s; animation-delay: -9s; }
+    @keyframes drift {
+      from { transform: scale(1.18) translate3d(-2.2%, -1.6%, 0); }
+      to   { transform: scale(1.28) translate3d(2.2%,  2.4%, 0); }
     }
-    .row__slice {
-      width: clamp(150px, 34vw, 330px); flex-shrink: 0;
-      aspect-ratio: 16 / 7; overflow: hidden;
-      border-radius: 8px; border: 1px solid rgba(250, 250, 247, 0.16);
-      background: #1b1b16;
-      filter: grayscale(1) contrast(1.05) brightness(0.72);
-      transition: filter .6s var(--ease);
+    .cell:hover .cell__in img { filter: none; animation-play-state: paused; }
+
+    .cell__n {
+      position: absolute; left: 1.4rem; bottom: 1.2rem; z-index: 2;
+      font-family: var(--font-display); font-size: 0.78rem;
+      letter-spacing: 0.08em; color: rgba(250, 250, 247, 0.55);
+      font-variant-numeric: tabular-nums;
     }
-    .row.is-open .row__slice { filter: grayscale(0.25) brightness(0.92); }
-    .row__slice img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
-    .row__said { color: rgba(250, 250, 247, 0.62); font-size: 0.98rem; max-width: 34ch; }
+    @media (prefers-reduced-motion: reduce) {
+      .cell__in img { animation: none; transform: scale(1.18); }
+    }
 
     .vault__foot { margin-top: clamp(2.5rem, 6vw, 4rem); color: var(--muted); font-size: 0.95rem; }
     .vault__foot a { color: var(--accent-bright); border-bottom: 1px solid currentColor; }
@@ -312,15 +309,17 @@
     }
     /* The handful of colours written as literal rgba rather than tokens. */
     .inv .vault__note, .inv .lede, .inv .me__body p, .inv .sub,
-    .inv .row__meta, .inv .tally__k, .inv .foot, .inv .portrait,
+    .inv .tally__k, .inv .foot, .inv .portrait,
     .inv .vault__foot, .inv .portrait__cap, .inv .sig__role,
     .inv.foot { color: rgba(14,14,10,.66) !important; }
-    .inv .big, .inv .word, .inv .row__trade, .inv .me__body .lead,
+    .inv .big, .inv .word, .inv .me__body .lead,
     .inv .sig__name, .inv .tally__v, .inv .vault__note strong,
     .inv .me__body strong { color: #0E0E0A !important; }
     .inv, .inv .stage, .inv .elevated { background: #FAFAF7 !important; }
-    .inv, .inv .row, .inv .tally__row, .inv .sig { border-color: rgba(14,14,10,.16) !important; }
-    .inv .row__eye { border-color: rgba(14,14,10,.3) !important; color: rgba(14,14,10,.6) !important; }
+    .inv, .inv .tally__row, .inv .sig { border-color: rgba(14,14,10,.16) !important; }
+    .inv .grid { box-shadow: -1px -1px 0 0 rgba(14,14,10,.16) !important; }
+    .inv .cell { box-shadow: 1px 1px 0 0 rgba(14,14,10,.16) !important; }
+    .inv .cell__n { color: rgba(14,14,10,.55) !important; }
     .inv .btn { background: #0E0E0A; color: #FAFAF7; }
     .inv .portrait { background: repeating-linear-gradient(135deg, rgba(14,14,10,.06) 0 10px, transparent 10px 20px), #EFEFE9 !important; }
     .inv .plain { display: none !important; }
@@ -339,11 +338,6 @@
     @media (max-width: 820px) {
       .vault__head, .gate__grid, .me__grid { grid-template-columns: 1fr; }
       .portrait { aspect-ratio: 3 / 2; }
-      .row__btn { grid-template-columns: 2.2rem 1fr 1.6rem; }
-      .row__meta { display: none; }
-      .row__frame { flex-direction: column; align-items: flex-start; gap: 1rem; }
-      .row__slice { width: 100%; aspect-ratio: 16 / 6; }
-      .row:hover .row__trade { transform: none; }
       .bar__right a:not(:last-child) { display: none; }
     }
 
@@ -364,7 +358,6 @@
       .elevated { position: relative; inset: auto; clip-path: none; }
       .cue { display: none; }
       :root { --p: 1; }
-      .row__peek { grid-template-rows: 1fr; }
     }
   </style>
 </head>
@@ -405,7 +398,7 @@
         <div class="elevated__inner">
           <p class="kicker">Perth, Western Australia</p>
           <h1 class="word"><span class="word__extra">Extra</span><span>ordinary</span></h1>
-          <p class="sub">Most agencies make you a brochure. We make the business behind it impossible to ignore.</p>
+          <p class="sub">A small studio in Perth. Gold mines, laboratories, and the firms that supply them &mdash; two projects at a time.</p>
         </div>
       </div>
 
@@ -418,93 +411,72 @@
     <div class="container">
       <div class="vault__head">
         <div>
-          <p class="label">The work</p>
+          <p class="label">Selected work</p>
           <h2 class="big">We don&rsquo;t keep it in a <em>shop window</em>.</h2>
         </div>
         <p class="vault__note">
-          Fourteen live sites, mostly trades, across Perth and WA. We don&rsquo;t publish the lot
-          with logos and lorem-ipsum testimonials. <strong>Open the one that matches your trade</strong>
-          and we&rsquo;ll show you a glimpse. The rest we walk you through properly, on a call.
+          Fourteen builds. Gold mining, life sciences, professional services, out-of-home.
+          <strong>No logo wall, no testimonials, no case studies written to be skimmed.</strong>
+          We&rsquo;ll walk you through the relevant ones on a call.
         </p>
       </div>
 
-      <ul class="rows" id="rows">
-        <li class="row">
-          <button class="row__btn" type="button" aria-expanded="false">
-            <span class="row__n">01</span>
-            <span class="row__trade">Cranes &amp; heavy parts</span>
-            <span class="row__meta">Welshpool · 2024</span>
-            <span class="row__eye" aria-hidden="true">+</span>
-          </button>
-          <div class="row__peek"><div class="row__peekinner"><div class="row__frame">
-            <div class="row__slice"><img src="assets/work/iceageind.webp" alt="" loading="lazy" /></div>
-            <p class="row__said">Rebuilt around the parts catalogue, because that&rsquo;s what people actually phone about.</p>
-          </div></div></div>
+      <!-- Square tiles, hairlines drawn with box-shadow so adjacent edges
+           never double up. Deliberately unlabelled: the crop is the point,
+           not the client's industry. -->
+      <ul class="grid">
+        <li class="cell">
+          <div class="cell__sq">
+            <div class="cell__in">
+              <img src="assets/work/haystreetbillboard.webp" alt="Out-of-home campaign site, editorial layout" loading="lazy" decoding="async" />
+            </div>
+            <span class="cell__n">01</span>
+          </div>
         </li>
-        <li class="row">
-          <button class="row__btn" type="button" aria-expanded="false">
-            <span class="row__n">02</span>
-            <span class="row__trade">Pest control</span>
-            <span class="row__meta">Perth metro · 2024</span>
-            <span class="row__eye" aria-hidden="true">+</span>
-          </button>
-          <div class="row__peek"><div class="row__peekinner"><div class="row__frame">
-            <div class="row__slice"><img src="assets/work/wapestconsultants.webp" alt="" loading="lazy" /></div>
-            <p class="row__said">Two sites, same trade, different towns. Neither competes with the other on search.</p>
-          </div></div></div>
+        <li class="cell">
+          <div class="cell__sq">
+            <div class="cell__in">
+              <img src="assets/work/bmlventures.webp" alt="Gold mining operator, Western Australian goldfields" loading="lazy" decoding="async" />
+            </div>
+            <span class="cell__n">02</span>
+          </div>
         </li>
-        <li class="row">
-          <button class="row__btn" type="button" aria-expanded="false">
-            <span class="row__n">03</span>
-            <span class="row__trade">Glazing</span>
-            <span class="row__meta">Swan Valley · 2023</span>
-            <span class="row__eye" aria-hidden="true">+</span>
-          </button>
-          <div class="row__peek"><div class="row__peekinner"><div class="row__frame">
-            <div class="row__slice"><img src="assets/work/glazingontheswan.webp" alt="" loading="lazy" /></div>
-            <p class="row__said">Emergency work needed a phone number above the fold and nothing in its way.</p>
-          </div></div></div>
+        <li class="cell">
+          <div class="cell__sq">
+            <div class="cell__in">
+              <img src="assets/work/austbiosearch.webp" alt="Life sciences distributor, product catalogue and ordering" loading="lazy" decoding="async" />
+            </div>
+            <span class="cell__n">03</span>
+          </div>
         </li>
-        <li class="row">
-          <button class="row__btn" type="button" aria-expanded="false">
-            <span class="row__n">04</span>
-            <span class="row__trade">Bathrooms</span>
-            <span class="row__meta">Perth · 2023</span>
-            <span class="row__eye" aria-hidden="true">+</span>
-          </button>
-          <div class="row__peek"><div class="row__peekinner"><div class="row__frame">
-            <div class="row__slice"><img src="assets/work/allstylebathrooms.webp" alt="" loading="lazy" /></div>
-            <p class="row__said">A renovation is a considered purchase. The gallery does the convincing.</p>
-          </div></div></div>
+        <li class="cell">
+          <div class="cell__sq">
+            <div class="cell__in">
+              <img src="assets/work/wolfpackbasketball.webp" alt="Sports association platform, live fixtures and results" loading="lazy" decoding="async" />
+            </div>
+            <span class="cell__n">04</span>
+          </div>
         </li>
-        <li class="row">
-          <button class="row__btn" type="button" aria-expanded="false">
-            <span class="row__n">05</span>
-            <span class="row__trade">Air conditioning</span>
-            <span class="row__meta">Perth · 2023</span>
-            <span class="row__eye" aria-hidden="true">+</span>
-          </button>
-          <div class="row__peek"><div class="row__peekinner"><div class="row__frame">
-            <div class="row__slice"><img src="assets/work/zencooling.webp" alt="" loading="lazy" /></div>
-            <p class="row__said">Built for the week in February when everyone&rsquo;s aircon dies at once.</p>
-          </div></div></div>
+        <li class="cell">
+          <div class="cell__sq">
+            <div class="cell__in">
+              <img src="assets/work/jlcassociates.webp" alt="Professional services firm, multi-location" loading="lazy" decoding="async" />
+            </div>
+            <span class="cell__n">05</span>
+          </div>
         </li>
-        <li class="row">
-          <button class="row__btn" type="button" aria-expanded="false">
-            <span class="row__n">06</span>
-            <span class="row__trade">Play equipment</span>
-            <span class="row__meta">E-commerce · 2023</span>
-            <span class="row__eye" aria-hidden="true">+</span>
-          </button>
-          <div class="row__peek"><div class="row__peekinner"><div class="row__frame">
-            <div class="row__slice"><img src="assets/work/instantfun.webp" alt="" loading="lazy" /></div>
-            <p class="row__said">Hire and buy in one shop, without two checkouts confusing everybody.</p>
-          </div></div></div>
+        <li class="cell">
+          <div class="cell__sq">
+            <div class="cell__in">
+              <img src="assets/work/stirlinghwybillboard.webp" alt="Out-of-home campaign site, second format" loading="lazy" decoding="async" />
+            </div>
+            <span class="cell__n">06</span>
+          </div>
         </li>
       </ul>
 
       <p class="vault__foot">
-        Eight more we don&rsquo;t show here. <a href="discovery.html">Ask about your trade</a>.
+        Eight more we don&rsquo;t show here. <a href="discovery.html">Ask what&rsquo;s relevant to you</a>.
       </p>
     </div>
   </section>
@@ -521,10 +493,10 @@
         <div class="me__body">
           <p class="lead">There isn&rsquo;t a &ldquo;we&rdquo;. There&rsquo;s me, and a build team I&rsquo;ve worked with for years.</p>
           <p>
-            I&rsquo;m Mike. Over a decade of this now, most of it for the businesses nobody writes
-            case studies about. Air conditioning. Pest control. Glazing. Cranes. The ordinary ones,
-            run by people who are very good at the thing they do and have no interest in
-            becoming marketers on the side.
+            I&rsquo;m Mike. Over a decade of this, most of it for companies that don&rsquo;t advertise
+            themselves &mdash; mining operators, laboratories, professional firms. Businesses that
+            are very good at something difficult and have no interest in becoming
+            marketers on the side.
           </p>
           <p>
             <strong>You deal with me.</strong> Not a salesperson who vanishes once the deposit clears,
@@ -539,7 +511,7 @@
           </p>
           <div class="sig">
             <span class="sig__name">Mike Fenbury</span>
-            <span class="sig__role">Founder · answers his own phone · 0403 566 928</span>
+            <span class="sig__role">Founder · <a href="mailto:mike@ordinaryagency.com.au">mike@ordinaryagency.com.au</a></span>
           </div>
         </div>
       </div>
@@ -557,13 +529,12 @@
           take at once is small, and the ones we take are the ones we&rsquo;d be proud to point at.
           If that sounds precious, it is. It&rsquo;s also why the work looks like it does.
         </p>
-        <a class="btn" href="discovery.html">Start Website Discovery <span aria-hidden="true">&rarr;</span></a>
+        <a class="btn" href="discovery.html">Enquire <span aria-hidden="true">&rarr;</span></a>
       </div>
       <div class="tally">
-        <div class="tally__row"><span class="tally__k">Live sites built</span><span class="tally__v">14</span></div>
+        <div class="tally__row"><span class="tally__k">Projects delivered</span><span class="tally__v">14</span></div>
         <div class="tally__row"><span class="tally__k">Years at it</span><span class="tally__v">10<em>+</em></span></div>
-        <div class="tally__row"><span class="tally__k">Google rating</span><span class="tally__v">5.0</span></div>
-        <div class="tally__row"><span class="tally__k">Projects at once</span><span class="tally__v"><em>2</em></span></div>
+                <div class="tally__row"><span class="tally__k">Projects at once</span><span class="tally__v"><em>2</em></span></div>
         <div class="tally__row"><span class="tally__k">Account managers</span><span class="tally__v"><em>0</em></span></div>
       </div>
     </div>
@@ -572,7 +543,6 @@
   <footer class="container foot inv">
     <span>Ordinary Agency · Claremont, Perth</span>
     <span><a href="mailto:mike@ordinaryagency.com.au">mike@ordinaryagency.com.au</a></span>
-    <span><a href="tel:+61403566928">0403 566 928</a></span>
   </footer>
 
   <div class="swap" id="swap" aria-hidden="true"><div class="swap__inner" id="swap-inner"></div></div>
@@ -888,23 +858,6 @@
       if (scrollY > 4) land();
     })();
 
-    // The vault: one row open at a time, so it stays a glimpse.
-    document.querySelectorAll('.row__btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const row = btn.closest('.row');
-        const open = row.classList.contains('is-open');
-        document.querySelectorAll('.row.is-open').forEach((r) => {
-          r.classList.remove('is-open');
-          r.querySelector('.row__btn').setAttribute('aria-expanded', 'false');
-          r.querySelector('.row__eye').textContent = '+';
-        });
-        if (!open) {
-          row.classList.add('is-open');
-          btn.setAttribute('aria-expanded', 'true');
-          row.querySelector('.row__eye').textContent = '−';
-        }
-      });
-    });
   </script>
 </body>
 </html>
