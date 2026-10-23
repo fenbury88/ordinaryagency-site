@@ -141,103 +141,102 @@
 
     /* ---------- Sections ---------- */
     .section { padding-block: clamp(5rem, 13vw, 11rem); }
-    .label {
-      font-size: 0.78rem; letter-spacing: 0.18em; text-transform: uppercase;
-      color: var(--accent-bright); margin-bottom: 1.4rem;
-      display: flex; align-items: center; gap: 0.6rem;
-    }
-    .label::before { content: ""; width: 24px; height: 1px; background: var(--accent-bright); }
-    .big {
-      font-family: var(--font-display); font-weight: 600;
-      font-size: clamp(2.4rem, 8vw, 6.4rem); line-height: 0.92; letter-spacing: -0.05em;
-      max-width: 15ch;
-    }
-    .big em { font-style: normal; color: var(--accent-bright); }
-    .lede { margin-top: 1.8rem; max-width: 46ch; color: rgba(250, 250, 247, 0.6); font-size: 1.08rem; }
 
     /* ---------- The vault ---------- */
     /* The work is named by trade only. A sliver of the real site peeks out on
        hover; you never get the whole thing without asking. */
     .vault { border-top: 1px solid rgba(250, 250, 247, 0.12); }
-    .vault__head { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 5rem); align-items: end; }
-    .vault__note { color: rgba(250, 250, 247, 0.55); max-width: 40ch; }
-    .vault__note strong { color: var(--paper); font-weight: 500; }
 
-    /* Selected work. Square tiles in a flex wrap, with the hairline drawn
-       by box-shadow rather than border: each cell casts a line down and
-       right, the container casts one up and left, so edges meet at one
-       pixel instead of two. Buttermax does the same thing and it is the
-       reason their grid looks drawn rather than assembled. */
-    .grid {
-      list-style: none; padding: 0;
-      margin-top: clamp(3rem, 7vw, 5rem);
-      display: flex; flex-wrap: wrap;
-      box-shadow: -1px -1px 0 0 rgba(250, 250, 247, 0.14);
+    /* The work, as plates on a surface rather than cells in a table. Nothing
+       here lines up with anything else on purpose: varied widths, overlaps
+       pulled in with negative margins, a degree or two of rotation each. A
+       grid says catalogue. This should say someone put these down. */
+    .vault { padding: clamp(5rem, 16vw, 14rem) 0 clamp(4rem, 10vw, 9rem); overflow-x: clip; }
+    body { overflow-x: clip; }
+    .plates { position: relative; }
+    .plate { position: relative; margin: 0; }
+    .plate img {
+      width: 100%; display: block;
+      filter: grayscale(1) contrast(1.05) brightness(0.84);
+      transition: filter 0.7s var(--ease);
     }
-    .cell { width: 100%; box-shadow: 1px 1px 0 0 rgba(250, 250, 247, 0.14); }
-    @media (min-width: 600px) { .cell { width: 50%; } }
-    @media (min-width: 1000px) { .cell { width: 33.3333%; } }
-
-    /* padding-top on a zero-height box is the only square that holds up
-       inside a flex row at every width. */
-    .cell__sq { position: relative; width: 100%; height: 0; padding-top: 100%; overflow: hidden; }
-    .cell__in { position: absolute; inset: 0; overflow: hidden; }
-    .cell__in img {
-      width: 100%; height: 100%; object-fit: cover; object-position: center top;
-      filter: grayscale(1) contrast(1.06) brightness(0.82);
-      animation: drift 26s cubic-bezier(0.215, 0.61, 0.355, 1) infinite alternate;
-      transition: filter 0.6s cubic-bezier(0.215, 0.61, 0.355, 1);
-    }
-    /* Staggered so the six tiles never move as one block. */
-    .cell:nth-child(2) .cell__in img { animation-duration: 31s; animation-delay: -6s; }
-    .cell:nth-child(3) .cell__in img { animation-duration: 22s; animation-delay: -13s; }
-    .cell:nth-child(4) .cell__in img { animation-duration: 35s; animation-delay: -3s; }
-    .cell:nth-child(5) .cell__in img { animation-duration: 28s; animation-delay: -17s; }
-    .cell:nth-child(6) .cell__in img { animation-duration: 24s; animation-delay: -9s; }
-    @keyframes drift {
-      from { transform: scale(1.18) translate3d(-2.2%, -1.6%, 0); }
-      to   { transform: scale(1.28) translate3d(2.2%,  2.4%, 0); }
-    }
-    .cell:hover .cell__in img { filter: none; animation-play-state: paused; }
-
-    .cell__n {
-      position: absolute; left: 1.4rem; bottom: 1.2rem; z-index: 2;
-      font-family: var(--font-display); font-size: 0.78rem;
-      letter-spacing: 0.08em; color: rgba(250, 250, 247, 0.55);
+    .plate:hover img { filter: none; }
+    .plate figcaption {
+      position: absolute; top: -1.9rem; left: 0;
+      font-family: var(--font-display); font-size: 0.74rem;
+      letter-spacing: 0.22em; color: var(--muted);
       font-variant-numeric: tabular-nums;
     }
-    @media (prefers-reduced-motion: reduce) {
-      .cell__in img { animation: none; transform: scale(1.18); }
+    .plate--1 { width: 47%; margin-left: 3%;  transform: rotate(-2.4deg); z-index: 3; }
+    .plate--2 { width: 33%; margin-left: 60%; margin-top: -7%;  transform: rotate(1.9deg);  z-index: 5; }
+    .plate--3 { width: 39%; margin-left: 11%; margin-top: -3%;  transform: rotate(1.1deg);  z-index: 4; }
+    /* Runs off the right edge. You are looking at part of it, which is the
+       same promise the copy makes. */
+    .plate--4 { width: 58%; margin-left: 52%; margin-top: -9%;  transform: rotate(-1.5deg); z-index: 2; }
+    .plate--5 { width: 27%; margin-left: 5%;  margin-top: -11%; transform: rotate(2.8deg);  z-index: 6; }
+    .plate--6 { width: 45%; margin-left: 34%; margin-top: -6%;  transform: rotate(-2.1deg); z-index: 3; }
+
+    /* Type at a size where it stops being read and starts being looked at. */
+    .shout {
+      font-family: var(--font-display); font-weight: 600;
+      font-size: clamp(3rem, 15vw, 13rem);
+      line-height: 0.8; letter-spacing: -0.065em;
+      white-space: nowrap; position: relative; z-index: 7;
+      color: var(--accent-bright);
+      pointer-events: none;
+    }
+    .shout--a { margin: -3% 0 -4% -6%; transform: rotate(-1.2deg); }
+    .shout--b {
+      margin: -5% 0 0 28%; transform: rotate(0.9deg);
+      color: transparent; -webkit-text-stroke: 1.5px var(--paper);
     }
 
-    /* Not every cell is a window. Buttermax breaks their grid up with flat
-       colour tiles carrying one enormous scrolling word, and it is the
-       thing that stops the whole block reading as a portfolio page. The
-       type is sized against the cell, not the viewport, so it keeps its
-       proportion at every column count. */
-    .cell { container-type: inline-size; }
-    .cell--say .cell__in {
-      display: flex; align-items: center;
-      background: var(--accent-bright); color: #0E0E0A;
+    /* Mike. Off to one side, small, and well under the weight of the work.
+       A portrait sitting dead centre under a heading is an about page. */
+    .me { padding: clamp(5rem, 14vw, 12rem) var(--gutter); display: flex; gap: clamp(2rem, 6vw, 6rem); align-items: flex-end; flex-wrap: wrap; }
+    .me__plate { width: clamp(180px, 26vw, 340px); margin: 0; transform: rotate(-1.8deg); flex: none; }
+    .me__said { flex: 1 1 22ch; max-width: 38ch; color: rgba(250, 250, 247, 0.62); font-size: 0.98rem; }
+    .me__lead { font-family: var(--font-display); font-size: clamp(1.6rem, 4vw, 2.8rem); letter-spacing: -0.04em; color: var(--paper); margin-bottom: 1.2rem; }
+    .me__said p + p { margin-top: 1rem; }
+    .me__sig { font-family: var(--font-display); letter-spacing: 0.04em; color: var(--muted); font-size: 0.8rem; }
+
+    /* The statement. Three lines, none of them aligned to each other, each
+       big enough to run past an edge. No button underneath it — a call to
+       action is the single most brochure-like object on a page. */
+    .declare { padding: clamp(5rem, 16vw, 14rem) 0; overflow: hidden; }
+    .declare__l {
+      font-family: var(--font-display); font-weight: 600;
+      font-size: clamp(3.4rem, 19vw, 17rem);
+      line-height: 0.78; letter-spacing: -0.07em; white-space: nowrap;
     }
-    .cell--say.cell--pale .cell__in { background: #FAFAF7; }
-    .mq { width: 100%; overflow: hidden; }
+    .declare__l em { font-style: normal; color: var(--accent-bright); }
+    .declare__l--1 { margin-left: 4%; }
+    .declare__l--2 { margin-left: 22%; }
+    .declare__l--3 { margin-left: -3%; }
+    .declare__note {
+      margin: clamp(2rem, 5vw, 4rem) 0 0 auto; width: min(34ch, 86%);
+      padding-right: var(--gutter);
+      color: rgba(250, 250, 247, 0.5); font-size: 0.95rem;
+    }
+
+    /* The address, as the last piece of type rather than small print. */
+    .foot { padding: clamp(4rem, 10vw, 9rem) var(--gutter) clamp(2rem, 5vw, 4rem); }
+    .foot__mail {
+      display: block; font-family: var(--font-display); font-weight: 600;
+      font-size: clamp(2rem, 11vw, 9rem); line-height: 0.82;
+      letter-spacing: -0.06em; color: var(--paper);
+    }
+    .foot__mail:hover { color: var(--accent-bright); }
+    .foot__where { display: block; margin-top: clamp(1.5rem, 4vw, 3rem); color: var(--muted); font-size: 0.8rem; letter-spacing: 0.16em; text-transform: uppercase; }
+
+    /* The marquee track. Two identical halves, so -50% lands exactly where
+       it started and the loop has no seam. */
     .mq__track {
       display: flex; flex-wrap: nowrap; white-space: nowrap;
-      animation: mq 24s linear infinite;
-      will-change: transform;
+      animation: mq 24s linear infinite; will-change: transform;
     }
-    .cell--rev .mq__track { animation-direction: reverse; }
-    .mq__track p {
-      font-family: var(--font-display); font-weight: 600;
-      font-size: 2.6rem;
-      font-size: 15cqw;
-      line-height: 0.8; letter-spacing: -0.07em;
-      padding-right: 0.45em;
-    }
-    /* The track holds two identical halves, so -50% lands exactly where
-       it started and the loop has no seam. */
     @keyframes mq { to { transform: translate3d(-50%, 0, 0); } }
+    @media (prefers-reduced-motion: reduce) { .mq__track { animation: none; } }
 
     /* Full-bleed ticker. The one place the sectors get named, now that the
        tiles deliberately don't. */
@@ -251,44 +250,15 @@
     .ticker .mq__track p {
       font-size: clamp(2.6rem, 10vw, 8.2rem);
       letter-spacing: -0.06em; line-height: 0.82;
-      padding-right: 0.4em; color: var(--ink);
+      padding-right: 0.4em;
     }
     .ticker .mq__track p em { font-style: normal; color: var(--accent-bright); }
     @media (prefers-reduced-motion: reduce) {
       .mq__track { animation: none; }
     }
 
-    .vault__foot { margin-top: clamp(2.5rem, 6vw, 4rem); color: var(--muted); font-size: 0.95rem; }
-    .vault__foot a { color: var(--accent-bright); border-bottom: 1px solid currentColor; }
-
-    /* ---------- Selectivity ---------- */
-    .gate { border-top: 1px solid rgba(250, 250, 247, 0.12); }
-    .gate__grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 5rem); align-items: start; }
-    .tally { display: grid; gap: 0.1rem; }
-    .tally__row {
-      display: flex; align-items: baseline; justify-content: space-between;
-      gap: 2rem; padding-block: 1rem;
-      border-bottom: 1px solid rgba(250, 250, 247, 0.12);
-    }
-    .tally__k { color: rgba(250, 250, 247, 0.6); font-size: 0.95rem; }
-    .tally__v { font-family: var(--font-display); font-size: clamp(1.5rem, 3vw, 2.2rem); letter-spacing: -0.03em; }
-    .tally__v em { font-style: normal; color: var(--accent-bright); }
-
-    .btn {
-      display: inline-flex; align-items: center; gap: 0.7rem;
-      margin-top: 2.4rem; padding: 1rem 1.8rem; border-radius: 100px;
-      background: var(--accent-bright); color: var(--ink);
-      font-weight: 600; font-size: 0.98rem;
-      transition: transform .35s var(--ease), background .35s var(--ease);
-    }
-    .btn:hover { transform: translateY(-2px); background: #76d6a6; }
-
     /* ---------- Who you'd be working with ---------- */
     .me { border-top: 1px solid rgba(250, 250, 247, 0.12); }
-    .me__grid {
-      display: grid; grid-template-columns: 0.85fr 1.15fr;
-      gap: clamp(2rem, 6vw, 5.5rem); align-items: start;
-    }
     .portrait {
       aspect-ratio: 4 / 5; border-radius: 10px;
       border: 1px solid rgba(250, 250, 247, 0.16);
@@ -299,22 +269,6 @@
       color: var(--muted); font-size: 0.8rem; letter-spacing: 0.14em; text-transform: uppercase;
       padding: 1rem;
     }
-    .portrait__cap { margin-top: 0.9rem; color: var(--muted); font-size: 0.85rem; }
-    .me__body p { color: rgba(250, 250, 247, 0.66); font-size: clamp(1rem, 1.35vw, 1.12rem); }
-    .me__body p + p { margin-top: 1.2rem; }
-    .me__body .lead {
-      font-family: var(--font-display); font-weight: 500; color: var(--paper);
-      font-size: clamp(1.25rem, 2.3vw, 1.75rem); line-height: 1.3; letter-spacing: -0.02em;
-      margin-bottom: 1.6rem;
-    }
-    .me__body strong { color: var(--paper); font-weight: 500; }
-    .sig {
-      margin-top: 2.4rem; padding-top: 1.6rem;
-      border-top: 1px solid rgba(250, 250, 247, 0.12);
-      display: flex; align-items: baseline; gap: 0.9rem; flex-wrap: wrap;
-    }
-    .sig__name { font-family: var(--font-logo); font-size: 1.4rem; font-weight: 600; letter-spacing: -0.02em; }
-    .sig__role { color: var(--muted); font-size: 0.9rem; }
 
     /* Paint. Splats, drips and the landing ripple are all drawn on this one
        canvas by the script below. Painting needs a real mouse; the ripple
@@ -355,24 +309,15 @@
       background: #FAFAF7;
       color: #0E0E0A;
     }
-    /* The handful of colours written as literal rgba rather than tokens. */
-    .inv .vault__note, .inv .lede, .inv .me__body p, .inv .sub,
-    .inv .tally__k, .inv .foot, .inv .portrait,
-    .inv .vault__foot, .inv .portrait__cap, .inv .sig__role,
+    .inv .sub
+    .inv .foot
+    .inv .portrait
     .inv.foot { color: rgba(14,14,10,.66) !important; }
-    .inv .big, .inv .word, .inv .me__body .lead,
-    .inv .sig__name, .inv .tally__v, .inv .vault__note strong,
-    .inv .me__body strong { color: #0E0E0A !important; }
+    .inv .word { color: #0E0E0A !important; }
     .inv, .inv .stage, .inv .elevated { background: #FAFAF7 !important; }
-    .inv, .inv .tally__row, .inv .sig { border-color: rgba(14,14,10,.16) !important; }
-    .inv .grid { box-shadow: -1px -1px 0 0 rgba(14,14,10,.16) !important; }
-    .inv .cell { box-shadow: 1px 1px 0 0 rgba(14,14,10,.16) !important; }
-    .inv .cell__n { color: rgba(14,14,10,.55) !important; }
-    .inv .btn { background: #0E0E0A; color: #FAFAF7; }
+    .inv { border-color: rgba(14,14,10,.16) !important; }
     .inv .portrait { background: repeating-linear-gradient(135deg, rgba(14,14,10,.06) 0 10px, transparent 10px 20px), #EFEFE9 !important; }
     .inv .plain { display: none !important; }
-    .inv .label::before, .inv .label { color: #2C7A57; }
-    .inv .label::before { background: #2C7A57; }
     .goo-def { position: absolute; width: 0; height: 0; pointer-events: none; }
     @media (prefers-reduced-motion: reduce) { .ink { display: none; } }
     @media (prefers-reduced-motion: reduce) { .trail { display: none; } }
@@ -406,8 +351,7 @@
       .elevated { position: relative; inset: auto; clip-path: none; }
       .cue { display: none; }
       :root { --p: 1; }
-    }
-  </style>
+    }</style>
 </head>
 <body>
 
@@ -455,98 +399,34 @@
   </section>
 
   <!-- ── The vault ──────────────────────────────────────── -->
-  <section class="section vault" id="work">
-    <div class="container">
-      <div class="vault__head">
-        <div>
-          <p class="label">Selected work</p>
-          <h2 class="big">We don&rsquo;t keep it in a <em>shop window</em>.</h2>
-        </div>
-        <p class="vault__note">
-          Fourteen builds. Gold mining, life sciences, professional services, out-of-home.
-          <strong>No logo wall, no testimonials, no case studies written to be skimmed.</strong>
-          We&rsquo;ll walk you through the relevant ones on a call.
-        </p>
-      </div>
-
-      <!-- Square tiles, hairlines drawn with box-shadow so adjacent edges
-           never double up. Deliberately unlabelled: the crop is the point,
-           not the client's industry. -->
-      <ul class="grid">
-        <li class="cell">
-          <div class="cell__sq">
-            <div class="cell__in">
-              <img src="assets/work/haystreetbillboard.webp" alt="Out-of-home campaign site, editorial layout" loading="lazy" decoding="async" />
-            </div>
-            <span class="cell__n">01</span>
-          </div>
-        </li>
-        <li class="cell cell--say" aria-hidden="true">
-          <div class="cell__sq">
-            <div class="cell__in">
-              <div class="mq"><div class="mq__track"><p>Two at a time</p><p>Two at a time</p><p>Two at a time</p><p>Two at a time</p><p>Two at a time</p><p>Two at a time</p><p>Two at a time</p><p>Two at a time</p></div></div>
-            </div>
-          </div>
-        </li>
-        <li class="cell">
-          <div class="cell__sq">
-            <div class="cell__in">
-              <img src="assets/work/bmlventures.webp" alt="Gold mining operator, Western Australian goldfields" loading="lazy" decoding="async" />
-            </div>
-            <span class="cell__n">02</span>
-          </div>
-        </li>
-        <li class="cell">
-          <div class="cell__sq">
-            <div class="cell__in">
-              <img src="assets/work/austbiosearch.webp" alt="Life sciences distributor, product catalogue and ordering" loading="lazy" decoding="async" />
-            </div>
-            <span class="cell__n">03</span>
-          </div>
-        </li>
-        <li class="cell">
-          <div class="cell__sq">
-            <div class="cell__in">
-              <img src="assets/work/wolfpackbasketball.webp" alt="Sports association platform, live fixtures and results" loading="lazy" decoding="async" />
-            </div>
-            <span class="cell__n">04</span>
-          </div>
-        </li>
-        <li class="cell cell--say cell--pale cell--rev" aria-hidden="true">
-          <div class="cell__sq">
-            <div class="cell__in">
-              <div class="mq"><div class="mq__track"><p>No logo wall</p><p>No logo wall</p><p>No logo wall</p><p>No logo wall</p><p>No logo wall</p><p>No logo wall</p><p>No logo wall</p><p>No logo wall</p></div></div>
-            </div>
-          </div>
-        </li>
-        <li class="cell cell--say cell--rev" aria-hidden="true">
-          <div class="cell__sq">
-            <div class="cell__in">
-              <div class="mq"><div class="mq__track"><p>Ask on a call</p><p>Ask on a call</p><p>Ask on a call</p><p>Ask on a call</p><p>Ask on a call</p><p>Ask on a call</p><p>Ask on a call</p><p>Ask on a call</p></div></div>
-            </div>
-          </div>
-        </li>
-        <li class="cell">
-          <div class="cell__sq">
-            <div class="cell__in">
-              <img src="assets/work/jlcassociates.webp" alt="Professional services firm, multi-location" loading="lazy" decoding="async" />
-            </div>
-            <span class="cell__n">05</span>
-          </div>
-        </li>
-        <li class="cell">
-          <div class="cell__sq">
-            <div class="cell__in">
-              <img src="assets/work/stirlinghwybillboard.webp" alt="Out-of-home campaign site, second format" loading="lazy" decoding="async" />
-            </div>
-            <span class="cell__n">06</span>
-          </div>
-        </li>
-      </ul>
-
-      <p class="vault__foot">
-        Eight more we don&rsquo;t show here. <a href="discovery.html">Ask what&rsquo;s relevant to you</a>.
-      </p>
+  <section class="vault" id="work">
+    <div class="plates">
+        <figure class="plate plate--1">
+          <img src="assets/work/haystreetbillboard.webp" alt="Out-of-home campaign site" loading="lazy" decoding="async" />
+          <figcaption>01</figcaption>
+        </figure>
+        <figure class="plate plate--2">
+          <img src="assets/work/bmlventures.webp" alt="Gold mining operator" loading="lazy" decoding="async" />
+          <figcaption>02</figcaption>
+        </figure>
+        <figure class="plate plate--3">
+          <img src="assets/work/austbiosearch.webp" alt="Life sciences distributor" loading="lazy" decoding="async" />
+          <figcaption>03</figcaption>
+        </figure>
+      <p class="shout shout--a" aria-hidden="true">Two at a time</p>
+        <figure class="plate plate--4">
+          <img src="assets/work/wolfpackbasketball.webp" alt="Sports association platform" loading="lazy" decoding="async" />
+          <figcaption>04</figcaption>
+        </figure>
+        <figure class="plate plate--5">
+          <img src="assets/work/jlcassociates.webp" alt="Professional services firm" loading="lazy" decoding="async" />
+          <figcaption>05</figcaption>
+        </figure>
+        <figure class="plate plate--6">
+          <img src="assets/work/stirlinghwybillboard.webp" alt="Out-of-home campaign site" loading="lazy" decoding="async" />
+          <figcaption>06</figcaption>
+        </figure>
+      <p class="shout shout--b" aria-hidden="true">No logo wall</p>
     </div>
   </section>
 
@@ -557,68 +437,35 @@
     </div>
   </section>
 
-  <!-- ── Who you'd be working with ──────────────────────── -->
-  <section class="section me inv" id="mike">
-    <div class="container">
-      <p class="label">Who you&rsquo;d be working with</p>
-      <div class="me__grid">
-        <figure>
-          <div class="portrait">Portrait goes here</div>
-          <figcaption class="portrait__cap">Mike. Claremont, Perth.</figcaption>
-        </figure>
-        <div class="me__body">
-          <p class="lead">There isn&rsquo;t a &ldquo;we&rdquo;. There&rsquo;s me, and a build team I&rsquo;ve worked with for years.</p>
-          <p>
-            I&rsquo;m Mike. Over a decade of this, most of it for companies that don&rsquo;t advertise
-            themselves &mdash; mining operators, laboratories, professional firms. Businesses that
-            are very good at something difficult and have no interest in becoming
-            marketers on the side.
-          </p>
-          <p>
-            <strong>You deal with me.</strong> Not a salesperson who vanishes once the deposit clears,
-            and not an account manager relaying your message to someone you&rsquo;ll never meet.
-            The design and development team sits in Vietnam, they&rsquo;ve been with me for years,
-            and they&rsquo;re the reason the work costs what it costs.
-          </p>
-          <p>
-            I&rsquo;ll also tell you when something isn&rsquo;t worth doing. Half the jobs that come
-            through here don&rsquo;t need what the last agency sold them. That conversation is free,
-            and it&rsquo;s usually the most useful one we have.
-          </p>
-          <div class="sig">
-            <span class="sig__name">Mike Fenbury</span>
-            <span class="sig__role">Founder · <a href="mailto:mike@ordinaryagency.com.au">mike@ordinaryagency.com.au</a></span>
-          </div>
-        </div>
-      </div>
+  <!-- ── Mike ───────────────────────────────────────────── -->
+  <section class="me" id="mike">
+    <figure class="me__plate"><div class="portrait">Portrait goes here</div></figure>
+    <div class="me__said">
+      <p class="me__lead">There isn&rsquo;t a &ldquo;we&rdquo;.</p>
+      <p>
+        I&rsquo;m Mike. A decade of this, mostly for companies that don&rsquo;t
+        advertise themselves &mdash; mining operators, laboratories,
+        professional firms. You deal with me, and I&rsquo;ll tell you when
+        something isn&rsquo;t worth building.
+      </p>
+      <p class="me__sig">Mike Fenbury &mdash; Claremont, Perth</p>
     </div>
   </section>
-
-  <!-- ── Selectivity ────────────────────────────────────── -->
-  <section class="section gate">
-    <div class="container gate__grid">
-      <div>
-        <p class="label">Taking work</p>
-        <h2 class="big">We say <em>no</em> more than we say yes.</h2>
-        <p class="lede">
-          One person runs every project here, and that person is Mike. So the number we can
-          take at once is small, and the ones we take are the ones we&rsquo;d be proud to point at.
-          If that sounds precious, it is. It&rsquo;s also why the work looks like it does.
-        </p>
-        <a class="btn" href="discovery.html">Enquire <span aria-hidden="true">&rarr;</span></a>
-      </div>
-      <div class="tally">
-        <div class="tally__row"><span class="tally__k">Projects delivered</span><span class="tally__v">14</span></div>
-        <div class="tally__row"><span class="tally__k">Years at it</span><span class="tally__v">10<em>+</em></span></div>
-                <div class="tally__row"><span class="tally__k">Projects at once</span><span class="tally__v"><em>2</em></span></div>
-        <div class="tally__row"><span class="tally__k">Account managers</span><span class="tally__v"><em>0</em></span></div>
-      </div>
-    </div>
+  <!-- ── The statement ──────────────────────────────────── -->
+  <section class="declare">
+    <p class="declare__l declare__l--1">We say</p>
+    <p class="declare__l declare__l--2"><em>no</em> more</p>
+    <p class="declare__l declare__l--3">than yes</p>
+    <p class="declare__note">
+      One person runs every project here. So the number we take at once is
+      small, and the ones we take are the ones we&rsquo;d be proud to point
+      at. If that sounds precious, it is.
+    </p>
   </section>
 
-  <footer class="container foot inv">
-    <span>Ordinary Agency · Claremont, Perth</span>
-    <span><a href="mailto:mike@ordinaryagency.com.au">mike@ordinaryagency.com.au</a></span>
+  <footer class="foot">
+    <a class="foot__mail" href="mailto:mike@ordinaryagency.com.au">mike@<br />ordinaryagency<br />.com.au</a>
+    <span class="foot__where">Ordinary &mdash; Claremont, Perth</span>
   </footer>
 
   <div class="swap" id="swap" aria-hidden="true"><div class="swap__inner" id="swap-inner"></div></div>
