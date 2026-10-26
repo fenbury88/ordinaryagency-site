@@ -189,138 +189,45 @@
     }
     @media (prefers-reduced-motion: reduce) { .grain { animation: none; } }
 
-    /* The work, as plates on a surface rather than cells in a table. Nothing
-       here lines up with anything else on purpose: varied widths, overlaps
-       pulled in with negative margins, a degree or two of rotation each. A
-       grid says catalogue. This should say someone put these down. */
-    .vault { padding: clamp(5rem, 16vw, 14rem) 0 clamp(4rem, 10vw, 9rem); overflow-x: clip; }
-    body { overflow-x: clip; }
-    .plates { position: relative; }
-    /* Running up the left edge. Type does not have to sit on a line. */
-    .edge {
-      position: absolute; left: -0.6rem; top: 0; z-index: 8;
-      writing-mode: vertical-rl; transform: rotate(180deg);
-      font-family: var(--font-display); font-size: 0.72rem;
-      letter-spacing: 0.42em; text-transform: uppercase;
-      color: var(--muted); pointer-events: none;
+    /* The work. There are no pictures of it here any more — screenshots of
+       other people's websites, greyed and tilted, read as a portfolio
+       template no matter how they are arranged, and the page already argues
+       against a logo wall two lines further down. So the section keeps the
+       scratch and drops the evidence: a panel over a statement, and you get
+       the statement by taking the panel off. */
+    .vault { padding: clamp(5rem, 16vw, 13rem) var(--gutter); }
+    .reveal { position: relative; max-width: var(--maxw); margin-inline: auto; }
+    .reveal__under { padding: clamp(2rem, 6vw, 5rem) clamp(1rem, 4vw, 3.5rem); }
+    .reveal__l {
+      font-family: var(--font-display); font-weight: 600;
+      font-size: clamp(2.6rem, 14vw, 12rem);
+      line-height: 0.8; letter-spacing: -0.065em; white-space: nowrap;
+      transform: skewY(var(--sk, 0deg)); transform-origin: left center;
     }
-    /* Rotation lives in a property so the scroll loop can add drift without
-       clobbering it. */
-    .plate { position: relative; margin: 0; transform: rotate(var(--rot, 0deg)) translate3d(0, var(--py, 0px), 0); }
-    /* Plates don't fade in, they develop: a wipe up from the bottom edge. */
-    .plate img { clip-path: inset(0 0 100% 0); transition: clip-path 1.2s var(--ease), filter 0.7s var(--ease); }
-    .plate.in img { clip-path: inset(0 0 0 0); }
-    /* The scratch panel. Sits over the picture until somebody takes it off. */
+    .reveal__l em { font-style: normal; color: var(--accent-bright); }
+    .reveal__l--b { margin-left: 13%; font-family: var(--font-logo); font-style: italic; font-weight: 400; letter-spacing: -0.03em; }
+    .reveal__l--c { margin-left: -1%; }
+    .reveal__note {
+      margin: clamp(1.8rem, 4vw, 3rem) 0 0 auto; width: min(38ch, 92%);
+      color: rgba(250, 250, 247, 0.52); font-size: 0.95rem;
+    }
+
+    /* The panel, over the lot. */
     .scratch {
       position: absolute; inset: 0; z-index: 2;
       display: block; cursor: crosshair; touch-action: pan-y;
     }
-    .plate figcaption { opacity: 0; transition: opacity 0.6s var(--ease) 0.5s; z-index: 3; }
-    .plate.in figcaption { opacity: 1; }
-    @media (prefers-reduced-motion: reduce) {
-      .plate img { clip-path: none; }
-      .plate figcaption { opacity: 1; }
+    .reveal__hint {
+      position: absolute; z-index: 3; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-display); font-size: 0.74rem;
+      letter-spacing: 0.44em; text-transform: uppercase;
+      color: rgba(14, 14, 10, 0.5); pointer-events: none;
+      transition: opacity 0.5s var(--ease);
     }
-    /* The ink's cloned copy never scrolls into view on its own, so its
-       plates would sit forever un-revealed and the trail would pass over
-       six empty frames. Nothing in the clone waits to be seen. */
-    .swap .plate img { clip-path: none !important; }
-    .swap .plate figcaption { opacity: 1 !important; }
-    .plate img {
-      width: 100%; display: block;
-      filter: grayscale(1) contrast(1.05) brightness(0.84);
-      transition: filter 0.7s var(--ease);
-    }
-    .plate:hover img { filter: none; }
-    /* The goldfields one keeps its ochre. One picture in colour among five
-       that aren't is the loudest thing you can do without adding anything. */
-    .plate--2 img { filter: contrast(1.04) saturate(1.1); }
-    .plate figcaption {
-      position: absolute; bottom: -0.16em; left: -0.08em;
-      font-family: var(--font-logo); font-style: italic;
-      font-size: clamp(2.6rem, 7vw, 6rem); line-height: 0.8;
-      color: var(--paper); mix-blend-mode: difference;
-      font-variant-numeric: tabular-nums; pointer-events: none;
-    }
-    .plate--1 { width: 47%; margin-left: 1%;  --rot: -5.2deg; z-index: 3; }
-    .plate--2 { width: 31%; margin-left: 62%; margin-top: -9%;  --rot: 4.4deg;  z-index: 5; }
-    .plate--3 { width: 41%; margin-left: 9%;  margin-top: -5%;  --rot: 2.6deg;  z-index: 4; }
-    /* Runs off the right edge. You are looking at part of it, which is the
-       same promise the copy makes. */
-    .plate--4 { width: 60%; margin-left: 54%; margin-top: -11%; --rot: -3.4deg; z-index: 8; }
-    .plate--5 { width: 25%; margin-left: 3%;  margin-top: -13%; --rot: 6.1deg;  z-index: 6; }
-    .plate--6 { width: 46%; margin-left: 31%; margin-top: -8%;  --rot: -4.6deg; z-index: 9; }
-
-    /* Type at a size where it stops being read and starts being looked at. */
-    .shout {
-      font-family: var(--font-display); font-weight: 600;
-      font-size: clamp(3rem, 15vw, 13rem);
-      line-height: 0.8; letter-spacing: -0.065em;
-      white-space: nowrap; position: relative; z-index: 7;
-      transform: rotate(var(--rot, 0deg)) skewY(var(--sk, 0deg));
-      color: var(--accent-bright);
-      pointer-events: none;
-    }
-    .shout--a {
-      margin: -4% 0 -5% -8%; --rot: -3.1deg;
-      font-family: var(--font-logo); font-style: italic; font-weight: 400;
-      letter-spacing: -0.03em;
-    }
-    .shout--b {
-      margin: -6% 0 0 24%; --rot: 2.4deg;
-      color: transparent; -webkit-text-stroke: 1.5px var(--paper);
-    }
-
-    /* Mike. Off to one side, small, and well under the weight of the work.
-       A portrait sitting dead centre under a heading is an about page. */
-    .me { padding: clamp(5rem, 14vw, 12rem) var(--gutter); display: flex; gap: clamp(2rem, 6vw, 6rem); align-items: flex-end; flex-wrap: wrap; }
-    .me__plate { width: clamp(180px, 26vw, 340px); margin: 0; transform: rotate(-1.8deg); flex: none; }
-    .me__said { flex: 1 1 22ch; max-width: 38ch; color: rgba(250, 250, 247, 0.62); font-size: 0.98rem; }
-    .me__lead { font-family: var(--font-display); font-size: clamp(1.6rem, 4vw, 2.8rem); letter-spacing: -0.04em; color: var(--paper); margin-bottom: 1.2rem; }
-    .me__said p + p { margin-top: 1rem; }
-    .me__sig { font-family: var(--font-display); letter-spacing: 0.04em; color: var(--muted); font-size: 0.8rem; }
-
-    /* The statement. Three lines, none of them aligned to each other, each
-       big enough to run past an edge. No button underneath it — a call to
-       action is the single most brochure-like object on a page. */
-    /* A full-bleed field of colour. Everything else on the page is ink and
-       paper; this one block is not, and that is the whole job. */
-    .declare {
-      padding: clamp(5rem, 16vw, 14rem) 0; overflow: hidden;
-      background: var(--accent-bright); color: #0E0E0A;
-    }
-    .declare__note { color: rgba(14, 14, 10, 0.62) !important; }
-    .declare__l {
-      font-family: var(--font-display); font-weight: 600;
-      font-size: clamp(3.4rem, 19vw, 17rem);
-      line-height: 0.78; letter-spacing: -0.07em; white-space: nowrap;
-      transform: skewY(var(--sk, 0deg)); transform-origin: left center;
-    }
-    .declare__l em {
-      font-family: var(--font-logo); font-style: italic; font-weight: 400;
-      letter-spacing: -0.02em;
-      /* Paper, not accent: the block it sits on is already the accent. */
-      color: #FAFAF7;
-    }
-    .declare__l--1 { margin-left: 4%; }
-    .declare__l--2 { margin-left: 22%; }
-    .declare__l--3 { margin-left: -3%; }
-    .declare__note {
-      margin: clamp(2rem, 5vw, 4rem) 0 0 auto; width: min(34ch, 86%);
-      padding-right: var(--gutter);
-      color: rgba(250, 250, 247, 0.5); font-size: 0.95rem;
-    }
-
-    /* The address, as the last piece of type rather than small print. */
-    .foot { padding: clamp(4rem, 10vw, 9rem) var(--gutter) clamp(2rem, 5vw, 4rem); }
-    .foot__mail {
-      display: block; font-family: var(--font-display); font-weight: 600;
-      font-size: clamp(2rem, 11vw, 9rem); line-height: 0.82;
-      letter-spacing: -0.06em; color: var(--paper);
-      transform: skewY(var(--sk, 0deg)); transform-origin: left top;
-    }
-    .foot__mail:hover { color: var(--accent-bright); }
-    .foot__where { display: block; margin-top: clamp(1.5rem, 4vw, 3rem); color: var(--muted); font-size: 0.8rem; letter-spacing: 0.16em; text-transform: uppercase; }
+    .reveal.touched .reveal__hint { opacity: 0; }
+    /* Nothing to take off in the ink's copy, and nothing to prompt. */
+    .swap .scratch, .swap .reveal__hint { display: none !important; }
 
     /* The marquee track. Two identical halves, so -50% lands exactly where
        it started and the loop has no seam. */
@@ -420,7 +327,6 @@
     }
 
     @media (max-width: 820px) {
-      .vault__head, .gate__grid, .me__grid { grid-template-columns: 1fr; }
       .portrait { aspect-ratio: 3 / 2; }
       .bar__right a:not(:last-child) { display: none; }
     }
@@ -491,34 +397,18 @@
 
   <!-- ── The vault ──────────────────────────────────────── -->
   <section class="vault" id="work">
-    <div class="plates">
-      <p class="edge" aria-hidden="true">Fourteen built &middot; none of them shown whole</p>
-        <figure class="plate plate--1">
-          <img src="assets/work/haystreetbillboard.webp" alt="Out-of-home campaign site" loading="lazy" decoding="async" />
-          <figcaption>01</figcaption>
-        </figure>
-        <figure class="plate plate--2">
-          <img src="assets/work/bmlventures.webp" alt="Gold mining operator" loading="lazy" decoding="async" />
-          <figcaption>02</figcaption>
-        </figure>
-        <figure class="plate plate--3">
-          <img src="assets/work/austbiosearch.webp" alt="Life sciences distributor" loading="lazy" decoding="async" />
-          <figcaption>03</figcaption>
-        </figure>
-      <p class="shout shout--a" aria-hidden="true">Two at a time</p>
-        <figure class="plate plate--4">
-          <img src="assets/work/wolfpackbasketball.webp" alt="Sports association platform" loading="lazy" decoding="async" />
-          <figcaption>04</figcaption>
-        </figure>
-        <figure class="plate plate--5">
-          <img src="assets/work/jlcassociates.webp" alt="Professional services firm" loading="lazy" decoding="async" />
-          <figcaption>05</figcaption>
-        </figure>
-        <figure class="plate plate--6">
-          <img src="assets/work/stirlinghwybillboard.webp" alt="Out-of-home campaign site" loading="lazy" decoding="async" />
-          <figcaption>06</figcaption>
-        </figure>
-      <p class="shout shout--b" aria-hidden="true">No logo wall</p>
+    <div class="reveal">
+      <div class="reveal__under">
+        <p class="reveal__l">Fourteen</p>
+        <p class="reveal__l reveal__l--b">builds<em>.</em></p>
+        <p class="reveal__l reveal__l--c">None here<em>.</em></p>
+        <p class="reveal__note">
+          Gold mines, laboratories, out&#8209;of&#8209;home, professional firms.
+          No logo wall and no case studies written to be skimmed. We&rsquo;ll
+          walk you through the relevant ones on a call.
+        </p>
+      </div>
+      <p class="reveal__hint" aria-hidden="true">Scratch</p>
     </div>
   </section>
 
@@ -1034,14 +924,12 @@
 
 
     // ── Scroll as a material ────────────────────────────────────────
-    // Two things ride the scroll. The plates drift against it at their own
-    // rates, so the block never moves as one sheet. The marquees take their
-    // speed AND their direction from it: shove the page down and the words
-    // run harder, pull it back and they turn round and run the other way.
-    // A CSS animation can't be reversed mid-flight, so the tracks are driven
-    // by hand here instead.
+    // The marquees take their speed AND their direction from the scroll:
+    // shove the page down and the words run harder, pull it back and they
+    // turn round and run the other way. A CSS animation can't be reversed
+    // mid-flight, so the tracks are driven by hand here. The same velocity
+    // leans the big lines of type.
     (function motion() {
-      const plates = [...document.querySelectorAll('.plate')];
       // Type that leans with the scroll. The same velocity that drives the
       // marquees bends the big lines, so the whole page answers the wheel
       // rather than just sliding under it.
@@ -1088,157 +976,98 @@
         const sk = Math.max(-5, Math.min(5, vel * 0.11));
         for (const el of bigs) el.style.setProperty('--sk', sk.toFixed(2) + 'deg');
 
-        const mid = innerHeight / 2;
-        for (let i = 0; i < plates.length; i++) {
-          const el = plates[i];
-          const r = el.getBoundingClientRect();
-          if (r.bottom < -200 || r.top > innerHeight + 200) continue;
-          // -1 above the fold, +1 below it.
-          const p = (r.top + r.height / 2 - mid) / (innerHeight || 1);
-          // Alternating depth, so neighbours separate as you go past.
-          const depth = (i % 2 ? -1 : 1) * (26 + (i % 3) * 20);
-          el.style.setProperty('--py', (p * depth).toFixed(1) + 'px');
-        }
       })();
 
-      // Plates develop rather than appear.
-      const seen = new IntersectionObserver((es) => {
-        es.forEach((e) => {
-          if (!e.isIntersecting) return;
-          const wait = (plates.indexOf(e.target) % 3) * 110;
-          e.target.style.transitionDelay = wait + 'ms';
-          e.target.classList.add('in');
-          seen.unobserve(e.target);
-
-          // The number counts up to itself. A detail nobody is meant to
-          // notice on the first pass.
-          const cap = e.target.querySelector('figcaption');
-          if (cap) {
-            const to = parseInt(cap.textContent, 10);
-            if (to > 0) {
-              const t0 = performance.now() + wait + 380;
-              (function run(now) {
-                const k = Math.min(1, Math.max(0, (now - t0) / 620));
-                cap.textContent = String(Math.round(to * (1 - Math.pow(1 - k, 3)))).padStart(2, '0');
-                if (k < 1) requestAnimationFrame(run);
-              })(performance.now());
-            }
-          }
-        });
-      }, { rootMargin: '0px 0px -12% 0px' });
-      plates.forEach((el) => seen.observe(el));
     })();
 
-    // ── Scratchies ──────────────────────────────────────────────────
-    // Every site here is under a panel you have to scratch off. It is the
-    // only honest version of "we don't keep it in a shop window": the work
-    // is there, and you get at it by doing something, not by being shown.
-    // Panels re-frost once you leave them alone, so it can be done twice.
-    (function scratchies() {
+    // ── The scratch field ───────────────────────────────────────────
+    // One panel over the statement. The work is not shown; the sentence
+    // saying so is the thing you uncover, which is a better joke than six
+    // screenshots and considerably less cheap.
+    (function scratchie() {
+      const wrap = document.querySelector('.reveal');
+      if (!wrap || wrap.closest('.swap')) return;
       if (!matchMedia('(pointer: fine)').matches) return;
+
       const dpr = Math.min(2, devicePixelRatio || 1);
-      const cards = [];
+      const cv = document.createElement('canvas');
+      cv.className = 'scratch';
+      cv.setAttribute('aria-hidden', 'true');
+      wrap.insertBefore(cv, wrap.querySelector('.reveal__hint'));
+      const ctx = cv.getContext('2d');
+      let w = 0, h = 0, last = null, idle = 0, dirty = false;
 
-      // Not the ink's cloned copy. Its panels could never stay in step with
-      // these ones, and leaving them off means the trail becomes the other
-      // way to see the work: scratch it, or let the ink run over it.
-      document.querySelectorAll('.plates .plate').forEach((fig) => {
-        if (fig.closest('.swap')) return;
-        const img = fig.querySelector('img');
-        const cv = document.createElement('canvas');
-        cv.className = 'scratch';
-        cv.setAttribute('aria-hidden', 'true');
-        fig.appendChild(cv);
-        const ctx = cv.getContext('2d', { willReadFrequently: false });
-        const card = { fig, img, cv, ctx, w: 0, h: 0, last: null, idle: 0, dirty: false };
+      function frost() {
+        if (!w || !h) return;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = '#8d8d84';
+        ctx.fillRect(0, 0, w, h);
+        // Speckle, so it reads as a coating rather than a grey rectangle.
+        for (let i = 0; i < (w * h) / 260; i++) {
+          const g = 110 + Math.random() * 80;
+          ctx.fillStyle = `rgba(${g},${g},${g - 4},${0.1 + Math.random() * 0.3})`;
+          ctx.fillRect(Math.random() * w, Math.random() * h, 1.6, 1.6);
+        }
+        ctx.strokeStyle = 'rgba(255,255,255,0.09)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 14; i++) {
+          const y = Math.random() * h;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y + (Math.random() - 0.5) * 30);
+          ctx.stroke();
+        }
+      }
 
-        card.frost = () => {
-          const { ctx, w, h } = card;
-          if (!w || !h) return;
-          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-          ctx.globalCompositeOperation = 'source-over';
-          ctx.fillStyle = '#8d8d84';
-          ctx.fillRect(0, 0, w, h);
-          // Speckle, so it reads as a coating rather than a grey rectangle.
-          for (let i = 0; i < (w * h) / 220; i++) {
-            const g = 110 + Math.random() * 80;
-            ctx.fillStyle = `rgba(${g},${g},${g - 4},${0.1 + Math.random() * 0.3})`;
-            ctx.fillRect(Math.random() * w, Math.random() * h, 1.6, 1.6);
-          }
-          // A couple of long brushed streaks across it.
-          ctx.strokeStyle = 'rgba(255,255,255,0.10)';
-          ctx.lineWidth = 1;
-          for (let i = 0; i < 9; i++) {
-            const y = Math.random() * h;
+      function size() {
+        const r = wrap.getBoundingClientRect();
+        const nw = Math.round(r.width), nh = Math.round(r.height);
+        if (!nw || !nh || (nw === w && nh === h)) return;
+        w = nw; h = nh;
+        cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+        cv.style.width = w + 'px'; cv.style.height = h + 'px';
+        frost();
+      }
+
+      cv.addEventListener('pointermove', (e) => {
+        if (e.pointerType !== 'mouse') return;
+        const r = cv.getBoundingClientRect();
+        const x = e.clientX - r.left, y = e.clientY - r.top;
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.lineCap = ctx.lineJoin = 'round';
+        if (last) {
+          ctx.lineWidth = 44;
+          ctx.beginPath();
+          ctx.moveTo(last.x, last.y);
+          ctx.lineTo(x, y);
+          ctx.stroke();
+          // Flakes coming away either side, so the edge isn't a clean nib.
+          for (let i = 0; i < 6; i++) {
+            const a = Math.random() * 6.283, d = 20 + Math.random() * 32;
             ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(w, y + (Math.random() - 0.5) * 24);
-            ctx.stroke();
+            ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, 3 + Math.random() * 11, 0, 6.283);
+            ctx.fill();
           }
-        };
+          wrap.classList.add('touched');
+        }
+        last = { x, y }; idle = 0; dirty = true;
+      }, { passive: true });
+      cv.addEventListener('pointerleave', () => { last = null; });
 
-        card.size = () => {
-          const r = img.getBoundingClientRect();
-          const w = Math.round(r.width), h = Math.round(r.height);
-          if (!w || !h || (w === card.w && h === card.h)) return;
-          card.w = w; card.h = h;
-          cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
-          cv.style.width = w + 'px'; cv.style.height = h + 'px';
-          card.frost();
-        };
+      size();
+      addEventListener('resize', () => { w = 0; size(); });
+      if (document.fonts) document.fonts.ready.then(() => { w = 0; size(); });
 
-        // The scratch itself: erase along the path the cursor takes, with a
-        // ragged edge rather than a clean round nib.
-        const scrape = (x, y) => {
-          const { ctx } = card;
-          ctx.globalCompositeOperation = 'destination-out';
-          ctx.lineCap = 'round';
-          ctx.lineJoin = 'round';
-          if (card.last) {
-            ctx.lineWidth = 26;
-            ctx.beginPath();
-            ctx.moveTo(card.last.x, card.last.y);
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            // Flakes coming away either side of the stroke.
-            for (let i = 0; i < 5; i++) {
-              const a = Math.random() * 6.283, d = 12 + Math.random() * 20;
-              ctx.beginPath();
-              ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, 2 + Math.random() * 7, 0, 6.283);
-              ctx.fill();
-            }
-          }
-          card.last = { x, y };
-          card.idle = 0;
-          card.dirty = true;
-        };
-
-        cv.addEventListener('pointermove', (e) => {
-          if (e.pointerType !== 'mouse') return;
-          const r = cv.getBoundingClientRect();
-          scrape(e.clientX - r.left, e.clientY - r.top);
-        }, { passive: true });
-        cv.addEventListener('pointerleave', () => { card.last = null; });
-
-        card.size();
-        cards.push(card);
-      });
-
-      addEventListener('resize', () => cards.forEach((c) => { c.w = 0; c.size(); }));
-
-      // Re-frosting. Low-alpha fill rebuilds the coating a little at a time,
-      // and only once a panel has been left alone for a few seconds.
+      // Re-frosts once left alone, so it can be done more than once.
       (function creep() {
         requestAnimationFrame(creep);
-        for (const c of cards) {
-          if (!c.dirty || !c.w) continue;
-          if (++c.idle < 260) continue;
-          c.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-          c.ctx.globalCompositeOperation = 'source-over';
-          c.ctx.fillStyle = 'rgba(141,141,132,0.016)';
-          c.ctx.fillRect(0, 0, c.w, c.h);
-          if (c.idle > 1100) { c.frost(); c.dirty = false; c.idle = 0; }
-        }
+        if (!dirty || !w || ++idle < 300) return;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = 'rgba(141,141,132,0.014)';
+        ctx.fillRect(0, 0, w, h);
+        if (idle > 1300) { frost(); dirty = false; idle = 0; wrap.classList.remove('touched'); }
       })();
     })();
   </script>
