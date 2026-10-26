@@ -229,6 +229,57 @@
     /* Nothing to take off in the ink's copy, and nothing to prompt. */
     .swap .scratch, .swap .reveal__hint { display: none !important; }
 
+    /* Mike. Off to one side, small, and well under the weight of the work.
+       A portrait sitting dead centre under a heading is an about page. */
+    .me { padding: clamp(5rem, 14vw, 12rem) var(--gutter); display: flex; gap: clamp(2rem, 6vw, 6rem); align-items: flex-end; flex-wrap: wrap; }
+    .me__plate { width: clamp(180px, 26vw, 340px); margin: 0; transform: rotate(-1.8deg); flex: none; }
+    .me__said { flex: 1 1 22ch; max-width: 38ch; color: rgba(250, 250, 247, 0.62); font-size: 0.98rem; }
+    .me__lead { font-family: var(--font-display); font-size: clamp(1.6rem, 4vw, 2.8rem); letter-spacing: -0.04em; color: var(--paper); margin-bottom: 1.2rem; }
+    .me__said p + p { margin-top: 1rem; }
+    .me__sig { font-family: var(--font-display); letter-spacing: 0.04em; color: var(--muted); font-size: 0.8rem; }
+
+    /* The statement. Three lines, none of them aligned to each other, each
+       big enough to run past an edge. No button underneath it — a call to
+       action is the single most brochure-like object on a page. */
+    /* A full-bleed field of colour. Everything else on the page is ink and
+       paper; this one block is not, and that is the whole job. */
+    .declare {
+      padding: clamp(5rem, 16vw, 14rem) 0; overflow: hidden;
+      background: var(--accent-bright); color: #0E0E0A;
+    }
+    .declare__note { color: rgba(14, 14, 10, 0.62) !important; }
+    .declare__l {
+      font-family: var(--font-display); font-weight: 600;
+      font-size: clamp(3.4rem, 19vw, 17rem);
+      line-height: 0.78; letter-spacing: -0.07em; white-space: nowrap;
+      transform: skewY(var(--sk, 0deg)); transform-origin: left center;
+    }
+    .declare__l em {
+      font-family: var(--font-logo); font-style: italic; font-weight: 400;
+      letter-spacing: -0.02em;
+      /* Paper, not accent: the block it sits on is already the accent. */
+      color: #FAFAF7;
+    }
+    .declare__l--1 { margin-left: 4%; }
+    .declare__l--2 { margin-left: 22%; }
+    .declare__l--3 { margin-left: -3%; }
+    .declare__note {
+      margin: clamp(2rem, 5vw, 4rem) 0 0 auto; width: min(34ch, 86%);
+      padding-right: var(--gutter);
+      color: rgba(250, 250, 247, 0.5); font-size: 0.95rem;
+    }
+
+    /* The address, as the last piece of type rather than small print. */
+    .foot { padding: clamp(4rem, 10vw, 9rem) var(--gutter) clamp(2rem, 5vw, 4rem); }
+    .foot__mail {
+      display: block; font-family: var(--font-display); font-weight: 600;
+      font-size: clamp(2rem, 11vw, 9rem); line-height: 0.82;
+      letter-spacing: -0.06em; color: var(--paper);
+      transform: skewY(var(--sk, 0deg)); transform-origin: left top;
+    }
+    .foot__mail:hover { color: var(--accent-bright); }
+    .foot__where { display: block; margin-top: clamp(1.5rem, 4vw, 3rem); color: var(--muted); font-size: 0.8rem; letter-spacing: 0.16em; text-transform: uppercase; }
+
     /* The marquee track. Two identical halves, so -50% lands exactly where
        it started and the loop has no seam. */
     .mq__track {
