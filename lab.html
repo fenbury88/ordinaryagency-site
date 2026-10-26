@@ -24,7 +24,7 @@
       --font-display: "Space Grotesk", -apple-system, sans-serif;
       --font-sans: "Inter", -apple-system, sans-serif;
       --font-logo: "Fraunces", Georgia, serif;
-      --gutter: clamp(1.25rem, 5vw, 4rem);
+      --gutter: clamp(2rem, 5vw, 6.4rem);
       --maxw: 1240px;
       --ease: cubic-bezier(0.215, 0.61, 0.355, 1);
       /* 0 = ordinary, 1 = extraordinary. Set by JS on scroll. */
@@ -33,6 +33,13 @@
 
     *, *::before, *::after { box-sizing: border-box; }
     * { margin: 0; }
+    /* Buttermax's root, lifted exactly. 0.5208vw is 10px at 1920 and 12px at
+       2304, so 1rem is 10px on any ordinary screen and the entire design
+       grows as a single object on a large one. Everything below is in rem
+       against that, which is why none of it needs to be re-sized per
+       breakpoint the way it did before. */
+    html { font-size: max(10px, min(12px, 1.3020833333vw)); }
+    @media (min-width: 1025px) { html { font-size: max(10px, min(12px, 0.5208333333vw)); } }
     html { -webkit-text-size-adjust: 100%; }
     body {
       font-family: var(--font-sans);
@@ -51,11 +58,11 @@
     .bar {
       position: fixed; inset: 0 0 auto 0; z-index: 50;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 1.1rem var(--gutter);
+      padding: 1.76rem var(--gutter);
       mix-blend-mode: difference; color: #fff;
     }
-    .bar__mark { font-family: var(--font-logo); font-size: 1.15rem; font-weight: 600; letter-spacing: -0.02em; }
-    .bar__right { display: flex; gap: 1.5rem; font-size: 0.82rem; letter-spacing: 0.1em; text-transform: uppercase; }
+    .bar__mark { font-family: var(--font-logo); font-size: 1.84rem; font-weight: 600; letter-spacing: -0.02em; }
+    .bar__right { display: flex; gap: 2.4rem; font-size: 1.312rem; letter-spacing: 0.1em; text-transform: uppercase; }
 
     /* ---------- The transformation ---------- */
     /* Two layers in one sticky frame. The plain one is what everyone else's
@@ -82,13 +89,13 @@
       clip-path: var(--tear, inset(0 0 0 0));
       transform: translateY(calc(var(--p) * 7vh)) rotate(calc(var(--p) * 1.1deg));
     }
-    .plain__inner { max-width: 34rem; margin-inline: auto; width: 100%; }
-    .plain h1 { font-size: 2rem; font-weight: 700; line-height: 1.15; margin-bottom: 0.6rem; }
-    .plain p { font-size: 1rem; margin-bottom: 0.9rem; }
-    .plain ul { margin: 0 0 0.9rem 1.2rem; font-size: 1rem; }
+    .plain__inner { max-width: 54.4rem; margin-inline: auto; width: 100%; }
+    .plain h1 { font-size: 3.2rem; font-weight: 700; line-height: 1.15; margin-bottom: 0.96rem; }
+    .plain p { font-size: 1.6rem; margin-bottom: 1.44rem; }
+    .plain ul { margin: 0 0 1.44rem 1.92rem; font-size: 1.6rem; }
     .plain a { color: #00e; text-decoration: underline; }
-    .plain hr { border: none; border-top: 1px solid #bbb; margin: 1.2rem 0; }
-    .plain .tiny { font-size: 0.8rem; color: #555; }
+    .plain hr { border: none; border-top: 1px solid #bbb; margin: 1.92rem 0; }
+    .plain .tiny { font-size: 1.28rem; color: #555; }
 
     .elevated {
       position: absolute; inset: 0;
@@ -102,8 +109,8 @@
     .elevated__inner { max-width: var(--maxw); margin-inline: auto; width: 100%; }
 
     .kicker {
-      font-size: 0.8rem; letter-spacing: 0.18em; text-transform: uppercase;
-      color: var(--accent-bright); margin-bottom: clamp(1rem, 3vw, 2rem);
+      font-size: 1.28rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--accent-bright); margin-bottom: clamp(1.6rem, 3vw, 3.2rem);
       opacity: calc(var(--p) * 1.6 - 0.5);
     }
 
@@ -111,7 +118,7 @@
       font-family: var(--font-display); font-weight: 600;
       /* Big enough to run off the right edge. The word is the picture, and
          you don't need all of it to read it. */
-      font-size: clamp(3rem, 19vw, 19rem);
+      font-size: clamp(4.8rem, 19vw, 30.4rem);
       line-height: 0.78; letter-spacing: -0.062em;
       display: flex; align-items: baseline; white-space: nowrap;
       transform: scale(calc(0.84 + var(--p) * 0.16));
@@ -145,198 +152,101 @@
     }
 
     .sub {
-      margin-top: clamp(1.5rem, 4vw, 2.5rem);
-      max-width: 40ch; font-size: clamp(1.15rem, 2vw, 1.7rem);
+      margin-top: clamp(2.4rem, 4vw, 4rem);
+      max-width: 40ch; font-size: clamp(1.84rem, 2vw, 2.72rem);
       line-height: 1.35; letter-spacing: -0.012em;
       color: rgba(250, 250, 247, 0.78);
       opacity: calc(var(--p) * 2 - 1);
     }
 
     .cue {
-      position: absolute; left: 50%; bottom: 2.2rem; transform: translateX(-50%);
-      font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase;
+      position: absolute; left: 50%; bottom: 3.52rem; transform: translateX(-50%);
+      font-size: 1.152rem; letter-spacing: 0.22em; text-transform: uppercase;
       color: var(--muted); opacity: calc(1 - var(--p) * 3);
-      display: flex; align-items: center; gap: 0.6rem;
+      display: flex; align-items: center; gap: 0.96rem;
     }
     .cue::after {
       content: ""; width: 1px; height: 26px;
       background: linear-gradient(var(--muted), transparent);
     }
 
-    /* ---------- Sections ---------- */
-
-    /* ---------- The vault ---------- */
-    /* The work is named by trade only. A sliver of the real site peeks out on
-       hover; you never get the whole thing without asking. */
-    .vault { border-top: 1px solid rgba(250, 250, 247, 0.12); }
-
-    /* Film grain, fixed over the lot. A flat screen reads as a screen;
-       a little noise on top reads as a surface something was printed on.
-       Generated rather than loaded, so it costs one data URI. */
-    .grain {
-      position: fixed; inset: -50%; z-index: 70; pointer-events: none;
-      opacity: 0.4; mix-blend-mode: overlay;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
-      animation: grain 1.1s steps(3) infinite;
+    /* ---------- The grid ----------
+       Buttermax's structure, as read out of their stylesheet: a flex wrap of
+       squares at 100% / 50% / 33.33%, made square with padding-top rather
+       than aspect-ratio, and the hairline between them drawn by box-shadow —
+       one pixel down and right on every cell, one up and left on the
+       container — so adjacent edges meet on a single line instead of
+       doubling. Theirs holds project videos. There are no projects to show
+       here, so these hold the argument instead: a sentence per square. */
+    .grid {
+      display: flex; flex-wrap: wrap;
+      box-shadow: -1px -1px 0 0 rgba(250, 250, 247, 0.14);
     }
-    /* Shifting it about stops the eye locking on to the pattern. */
-    @keyframes grain {
-      0%   { transform: translate3d(0, 0, 0); }
-      33%  { transform: translate3d(-3%, 2%, 0); }
-      66%  { transform: translate3d(2%, -3%, 0); }
-      100% { transform: translate3d(0, 0, 0); }
-    }
-    @media (prefers-reduced-motion: reduce) { .grain { animation: none; } }
+    .cell { width: 100%; box-shadow: 1px 1px 0 0 rgba(250, 250, 247, 0.14); }
+    @media (min-width: 768px)  { .cell { width: 50%; } }
+    @media (min-width: 1025px) { .cell { width: 33.3333%; } }
 
-    /* The work. There are no pictures of it here any more — screenshots of
-       other people's websites, greyed and tilted, read as a portfolio
-       template no matter how they are arranged, and the page already argues
-       against a logo wall two lines further down. So the section keeps the
-       scratch and drops the evidence: a panel over a statement, and you get
-       the statement by taking the panel off. */
-    .vault { padding: clamp(5rem, 16vw, 13rem) var(--gutter); }
-    .reveal { position: relative; max-width: var(--maxw); margin-inline: auto; }
-    .reveal__under { padding: clamp(2rem, 6vw, 5rem) clamp(1rem, 4vw, 3.5rem); }
-    .reveal__l {
+    .cell__sq { position: relative; width: 100%; height: 0; padding-top: 100%; overflow: hidden; }
+    .cell__in {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      padding: 3.52rem;
+    }
+
+    /* A sentence, set large enough to be the picture. */
+    .cell__say {
+      font-family: var(--font-display); font-weight: 500;
+      font-size: clamp(1.84rem, 2.1vw, 2.64rem);
+      line-height: 1.16; letter-spacing: -0.025em;
+      color: var(--paper);
+    }
+    .cell__say em { font-style: normal; color: var(--accent-bright); }
+    .cell__n {
+      margin-top: auto; padding-bottom: 2.24rem;
+      font-family: var(--font-display); font-size: 1.152rem;
+      letter-spacing: 0.26em; color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Flat colour, the way their project tiles take the client's brand. */
+    .cell--fill .cell__in { background: var(--accent-bright); }
+    .cell--fill .cell__say, .cell--fill .cell__n { color: #0E0E0A; }
+    .cell--pale .cell__in { background: #FAFAF7; }
+    .cell--pale .cell__say, .cell--pale .cell__n { color: #0E0E0A; }
+    .cell--fill .mq__track p, .cell--pale .mq__track p { color: #0E0E0A; }
+
+    /* Their marquee tile: one word, enormous, running across the square.
+       7.68rem at line-height .8 and -.07em, which is their exact spec. */
+    .cell--run .cell__in { justify-content: center; padding: 0; }
+    .mq { width: 100%; overflow: hidden; }
+    .mq__track { display: flex; flex-wrap: nowrap; white-space: nowrap; will-change: transform; }
+    .mq__track p {
       font-family: var(--font-display); font-weight: 600;
-      font-size: clamp(2.6rem, 14vw, 12rem);
-      line-height: 0.8; letter-spacing: -0.065em; white-space: nowrap;
-      transform: skewY(var(--sk, 0deg)); transform-origin: left center;
+      font-size: clamp(3.84rem, 6vw, 7.68rem);
+      line-height: 0.8; letter-spacing: -0.07em;
+      padding-right: 0.42em;
     }
-    .reveal__l em { font-style: normal; color: var(--accent-bright); }
-    .reveal__l--b { margin-left: 13%; font-family: var(--font-logo); font-style: italic; font-weight: 400; letter-spacing: -0.03em; }
-    .reveal__l--c { margin-left: -1%; }
-    .reveal__note {
-      margin: clamp(1.8rem, 4vw, 3rem) 0 0 auto; width: min(38ch, 92%);
-      color: rgba(250, 250, 247, 0.52); font-size: 0.95rem;
-    }
-    .reveal__note strong { color: var(--paper); font-weight: 500; }
 
-    /* The panel, over the lot. */
-    .scratch {
-      position: absolute; inset: 0; z-index: 2;
-      display: block; cursor: crosshair; touch-action: pan-y;
-    }
-    .reveal__hint {
-      position: absolute; z-index: 3; left: 50%; top: 50%;
-      transform: translate(-50%, -50%);
-      font-family: var(--font-display); font-size: 0.74rem;
-      letter-spacing: 0.44em; text-transform: uppercase;
-      color: rgba(14, 14, 10, 0.5); pointer-events: none;
-      transition: opacity 0.5s var(--ease);
-    }
-    .reveal.touched .reveal__hint { opacity: 0; }
-    /* Nothing to take off in the ink's copy, and nothing to prompt. */
-    .swap .scratch, .swap .reveal__hint { display: none !important; }
-
-    /* Mike, in the middle, and only there when you light him. The figure is
-       a halftone field: every dot carries its brightness from the portrait
-       underneath, but it is only drawn where the light falls, and the light
-       is the cursor. Sit still and it drifts on its own so the thing never
-       dies. Same bargain as the tear and the scratch panel — you get it by
-       doing something, not by being shown. */
-    .me { padding: clamp(4rem, 12vw, 10rem) var(--gutter) clamp(3rem, 8vw, 7rem); }
-    .figure {
-      position: relative; margin: 0 auto;
-      width: clamp(260px, 44vw, 560px); aspect-ratio: 3 / 4;
-    }
-    .figure__c { display: block; width: 100%; height: 100%; cursor: none; }
-    .figure__cap {
-      position: absolute; left: 50%; bottom: -2.4rem; transform: translateX(-50%);
-      font-family: var(--font-display); font-size: 0.68rem;
-      letter-spacing: 0.4em; text-transform: uppercase;
-      color: var(--muted); white-space: nowrap;
-      transition: opacity 0.6s var(--ease); pointer-events: none;
-    }
-    .figure.lit .figure__cap { opacity: 0; }
-    .me__said {
-      margin: clamp(2.5rem, 6vw, 5rem) 0 0 auto;
-      max-width: 40ch; color: rgba(250, 250, 247, 0.62); font-size: 0.98rem;
-    }
-    .me__lead {
-      font-family: var(--font-display); font-size: clamp(1.6rem, 4vw, 2.8rem);
-      letter-spacing: -0.04em; color: var(--paper); margin-bottom: 1.2rem;
-    }
-    .me__said p + p { margin-top: 1rem; }
-    .me__sig { font-family: var(--font-display); letter-spacing: 0.04em; color: var(--muted); font-size: 0.8rem; margin-top: 1.4rem; }
-    /* The ink's clone can't run a canvas, so it gets nothing to show. */
-    .swap .figure { visibility: hidden; }
-
-    /* The statement. Three lines, none of them aligned to each other, each
-       big enough to run past an edge. No button underneath it — a call to
-       action is the single most brochure-like object on a page. */
-    /* A full-bleed field of colour. Everything else on the page is ink and
-       paper; this one block is not, and that is the whole job. */
-    .declare {
-      padding: clamp(5rem, 16vw, 14rem) 0; overflow: hidden;
-      background: var(--accent-bright); color: #0E0E0A;
-    }
-    .declare__note { color: rgba(14, 14, 10, 0.62) !important; }
-    .declare__l {
+    /* The contact square. The only thing on the page asking for anything. */
+    .cell--ask .cell__in { background: var(--accent-bright); justify-content: space-between; }
+    .cell--ask .cell__say { color: #0E0E0A; }
+    .cell__mail {
       font-family: var(--font-display); font-weight: 600;
-      font-size: clamp(3.4rem, 19vw, 17rem);
-      line-height: 0.78; letter-spacing: -0.07em; white-space: nowrap;
-      transform: skewY(var(--sk, 0deg)); transform-origin: left center;
-    }
-    .declare__l em {
-      font-family: var(--font-logo); font-style: italic; font-weight: 400;
-      letter-spacing: -0.02em;
-      /* Paper, not accent: the block it sits on is already the accent. */
-      color: #FAFAF7;
-    }
-    .declare__l--1 { margin-left: 4%; }
-    .declare__l--2 { margin-left: 22%; }
-    .declare__l--3 { margin-left: -3%; }
-    .declare__note {
-      margin: clamp(2rem, 5vw, 4rem) 0 0 auto; width: min(34ch, 86%);
-      padding-right: var(--gutter);
-      color: rgba(250, 250, 247, 0.5); font-size: 0.95rem;
+      font-size: clamp(1.76rem, 1.9vw, 2.4rem);
+      letter-spacing: -0.03em; color: #0E0E0A;
+      border-bottom: 1px solid currentColor; align-self: flex-start;
     }
 
-    /* The address, as the last piece of type rather than small print. */
-    .foot { padding: clamp(4rem, 10vw, 9rem) var(--gutter) clamp(2rem, 5vw, 4rem); }
-    .foot__ask {
-      max-width: 34ch; margin-bottom: clamp(1.8rem, 4vw, 3rem);
-      color: rgba(250, 250, 247, 0.6); font-size: 1.02rem;
+    /* ---------- Foot ---------- */
+    .foot {
+      display: flex; justify-content: space-between; align-items: baseline;
+      flex-wrap: wrap; gap: 1.6rem;
+      padding: 4.16rem var(--gutter);
+      font-size: 1.248rem; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--muted);
     }
-    .foot__mail {
-      display: block; font-family: var(--font-display); font-weight: 600;
-      font-size: clamp(2rem, 11vw, 9rem); line-height: 0.82;
-      letter-spacing: -0.06em; color: var(--paper);
-      transform: skewY(var(--sk, 0deg)); transform-origin: left top;
-    }
-    .foot__mail:hover { color: var(--accent-bright); }
-    .foot__where { display: block; margin-top: clamp(1.5rem, 4vw, 3rem); color: var(--muted); font-size: 0.8rem; letter-spacing: 0.16em; text-transform: uppercase; }
-
-    /* The marquee track. Two identical halves, so -50% lands exactly where
-       it started and the loop has no seam. */
-    .mq__track {
-      display: flex; flex-wrap: nowrap; white-space: nowrap;
-      will-change: transform;
-    }
-    @media (prefers-reduced-motion: reduce) { .mq__track { animation: none; } }
-
-    /* Full-bleed ticker. The one place the sectors get named, now that the
-       tiles deliberately don't. */
-    .ticker {
-      border-top: 1px solid rgba(250, 250, 247, 0.14);
-      border-bottom: 1px solid rgba(250, 250, 247, 0.14);
-      overflow: hidden; padding: clamp(1.1rem, 2.4vw, 2rem) 0;
-    }
-    .inv .ticker { border-color: rgba(14, 14, 10, 0.16) !important; }
-    .ticker .mq__track p {
-      font-size: clamp(2.6rem, 10vw, 8.2rem);
-      letter-spacing: -0.06em; line-height: 0.82;
-      padding-right: 0.4em;
-    }
-    .ticker .mq__track p em { font-style: normal; color: var(--accent-bright); }
-    @media (prefers-reduced-motion: reduce) {
-      .mq__track { animation: none; }
-    }
-
-    /* ---------- Who you'd be working with ---------- */
-    .me { border-top: 1px solid rgba(250, 250, 247, 0.12); }
-
+    .foot a { color: inherit; }
+    .foot a:hover { color: var(--accent-bright); }
     /* Paint. Splats, drips and the landing ripple are all drawn on this one
        canvas by the script below. Painting needs a real mouse; the ripple
        works on touch too. */
@@ -389,8 +299,8 @@
 
     .foot {
       border-top: 1px solid rgba(250, 250, 247, 0.12);
-      padding-block: 2.5rem; color: var(--muted); font-size: 0.85rem;
-      display: flex; flex-wrap: wrap; gap: 1rem 2rem; justify-content: space-between;
+      padding-block: 4rem; color: var(--muted); font-size: 1.36rem;
+      display: flex; flex-wrap: wrap; gap: 1.6rem 3.2rem; justify-content: space-between;
     }
 
     @media (max-width: 820px) {
@@ -401,7 +311,7 @@
     @media (prefers-reduced-motion: reduce) {
       * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
       .track { height: auto; }
-      .stage { position: relative; height: auto; padding-block: clamp(5rem, 14vw, 9rem); }
+      .stage { position: relative; height: auto; padding-block: clamp(8rem, 14vw, 14.4rem); }
       .plain { display: none; }
       .elevated { position: relative; inset: auto; clip-path: none; }
       .cue { display: none; }
@@ -409,7 +319,7 @@
     }
     @media (scripting: none) {
       .track { height: auto; }
-      .stage { position: relative; height: auto; padding-block: clamp(5rem, 14vw, 9rem); }
+      .stage { position: relative; height: auto; padding-block: clamp(8rem, 14vw, 14.4rem); }
       .plain { display: none; }
       .elevated { position: relative; inset: auto; clip-path: none; }
       .cue { display: none; }
@@ -461,70 +371,66 @@
     </div>
   </section>
 
-  <!-- ── The vault ──────────────────────────────────────── -->
-  <section class="vault" id="work">
-    <div class="reveal">
-      <div class="reveal__under">
-        <p class="reveal__l">Fourteen</p>
-        <p class="reveal__l reveal__l--b">builds<em>.</em></p>
-        <p class="reveal__l reveal__l--c">None here<em>.</em></p>
-        <p class="reveal__note">
-          Fourteen live sites in a decade. They&rsquo;re not published here with
-          logos and testimonials, because most of these clients would rather
-          they weren&rsquo;t. <strong>Tell me what you do and I&rsquo;ll send the
-          three worth your time.</strong>
-        </p>
-      </div>
-      <p class="reveal__hint" aria-hidden="true">Scratch</p>
-    </div>
-  </section>
-
-  <!-- ── Ticker ─────────────────────────────────────────── -->
-  <section class="ticker" aria-hidden="true">
-    <div class="mq__track">
-      <p>Gold mines <em>&middot;</em> Laboratories <em>&middot;</em> Out&#8209;of&#8209;home <em>&middot;</em> Professional firms <em>&middot;</em> </p><p>Gold mines <em>&middot;</em> Laboratories <em>&middot;</em> Out&#8209;of&#8209;home <em>&middot;</em> Professional firms <em>&middot;</em> </p>
-    </div>
-  </section>
-
-  <!-- ── Mike ───────────────────────────────────────────── -->
-  <section class="me" id="mike">
-    <figure class="figure">
-      <!-- Swap data-portrait for a real photograph and the halftone samples
-           that instead of the drawn stand-in. Nothing else changes. -->
-      <canvas class="figure__c" data-portrait="" aria-label="Mike"></canvas>
-      <figcaption class="figure__cap" aria-hidden="true">Move the light</figcaption>
-    </figure>
-    <div class="me__said">
-      <p class="me__lead">There isn&rsquo;t a &ldquo;we&rdquo;.</p>
-      <p>
-        I&rsquo;m Mike. A decade of designing and building sites, mostly for
-        companies that don&rsquo;t advertise themselves &mdash; mining operators,
-        laboratories, professional firms. You deal with me from the first call
-        to the last deploy, and I&rsquo;ll tell you when something isn&rsquo;t
-        worth building.
-      </p>
-      <p class="me__sig">Mike Fenbury &mdash; Claremont, Perth</p>
-    </div>
-  </section>
-  <!-- ── The statement ──────────────────────────────────── -->
-  <section class="declare">
-    <p class="declare__l declare__l--1">We say</p>
-    <p class="declare__l declare__l--2"><em>no</em> more</p>
-    <p class="declare__l declare__l--3">than yes</p>
-    <p class="declare__note">
-      One person runs every project here. So the number we take at once is
-      small, and the ones we take are the ones we&rsquo;d be proud to point
-      at. If that sounds precious, it is.
-    </p>
+  <!-- ── The grid ───────────────────────────────────────── -->
+  <section id="work">
+    <ul class="grid">
+      <li class="cell">
+        <div class="cell__sq"><div class="cell__in">
+          <p class="cell__say">Websites for companies that don&rsquo;t advertise themselves.</p>
+          <span class="cell__n">01</span>
+        </div></div>
+      </li>
+      <li class="cell cell--run cell--fill" aria-hidden="true">
+        <div class="cell__sq"><div class="cell__in">
+          <div class="mq"><div class="mq__track"><p>Gold mines &middot; Laboratories &middot; Out&#8209;of&#8209;home &middot; Professional firms &middot; </p><p>Gold mines &middot; Laboratories &middot; Out&#8209;of&#8209;home &middot; Professional firms &middot; </p><p>Gold mines &middot; Laboratories &middot; Out&#8209;of&#8209;home &middot; Professional firms &middot; </p><p>Gold mines &middot; Laboratories &middot; Out&#8209;of&#8209;home &middot; Professional firms &middot; </p><p>Gold mines &middot; Laboratories &middot; Out&#8209;of&#8209;home &middot; Professional firms &middot; </p><p>Gold mines &middot; Laboratories &middot; Out&#8209;of&#8209;home &middot; Professional firms &middot; </p><p>Gold mines &middot; Laboratories &middot; Out&#8209;of&#8209;home &middot; Professional firms &middot; </p><p>Gold mines &middot; Laboratories &middot; Out&#8209;of&#8209;home &middot; Professional firms &middot; </p></div></div>
+        </div></div>
+      </li>
+      <li class="cell">
+        <div class="cell__sq"><div class="cell__in">
+          <p class="cell__say">Fourteen live sites in a decade.</p>
+          <span class="cell__n">02</span>
+        </div></div>
+      </li>
+      <li class="cell">
+        <div class="cell__sq"><div class="cell__in">
+          <p class="cell__say">Not published here. Most of these clients would rather they weren&rsquo;t.</p>
+          <span class="cell__n">03</span>
+        </div></div>
+      </li>
+      <li class="cell cell--run cell--pale" aria-hidden="true">
+        <div class="cell__sq"><div class="cell__in">
+          <div class="mq"><div class="mq__track"><p>Two at a time &middot; </p><p>Two at a time &middot; </p><p>Two at a time &middot; </p><p>Two at a time &middot; </p><p>Two at a time &middot; </p><p>Two at a time &middot; </p><p>Two at a time &middot; </p><p>Two at a time &middot; </p></div></div>
+        </div></div>
+      </li>
+      <li class="cell">
+        <div class="cell__sq"><div class="cell__in">
+          <p class="cell__say">There isn&rsquo;t a &ldquo;we&rdquo;. There&rsquo;s me, and a build team I&rsquo;ve worked with for years.</p>
+          <span class="cell__n">04</span>
+        </div></div>
+      </li>
+      <li class="cell">
+        <div class="cell__sq"><div class="cell__in">
+          <p class="cell__say">I&rsquo;ll tell you when something isn&rsquo;t worth building. That conversation is free.</p>
+          <span class="cell__n">05</span>
+        </div></div>
+      </li>
+      <li class="cell cell--run cell--fill" aria-hidden="true">
+        <div class="cell__sq"><div class="cell__in">
+          <div class="mq"><div class="mq__track"><p>We say <em>no</em> more than yes &middot; </p><p>We say <em>no</em> more than yes &middot; </p><p>We say <em>no</em> more than yes &middot; </p><p>We say <em>no</em> more than yes &middot; </p><p>We say <em>no</em> more than yes &middot; </p><p>We say <em>no</em> more than yes &middot; </p><p>We say <em>no</em> more than yes &middot; </p><p>We say <em>no</em> more than yes &middot; </p></div></div>
+        </div></div>
+      </li>
+      <li class="cell cell--ask">
+        <div class="cell__sq"><div class="cell__in">
+          <p class="cell__say">Tell me what you do and I&rsquo;ll send the three worth your time.</p>
+          <a class="cell__mail" href="mailto:mike@ordinaryagency.com.au">mike@ordinaryagency.com.au</a>
+        </div></div>
+      </li>
+    </ul>
   </section>
 
   <footer class="foot">
-    <p class="foot__ask">
-      Start with an email. I read them myself, and I&rsquo;ll tell you within a
-      day whether it&rsquo;s worth a conversation.
-    </p>
-    <a class="foot__mail" href="mailto:mike@ordinaryagency.com.au">mike@<br />ordinaryagency<br />.com.au</a>
-    <span class="foot__where">Ordinary &mdash; Claremont, Perth</span>
+    <span>Ordinary &mdash; Claremont, Perth</span>
+    <span><a href="mailto:mike@ordinaryagency.com.au">mike@ordinaryagency.com.au</a></span>
   </footer>
 
   <div class="swap" id="swap" aria-hidden="true"><div class="swap__inner" id="swap-inner"></div></div>
@@ -549,7 +455,7 @@
     <filter id="gooify" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
       <!-- Blur has to scale with the ink: too wide for the blob size and the
            alpha threshold below erases the shape entirely. -->
-      <feGaussianBlur in="SourceGraphic" stdDeviation="11" result="b" />
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b" />
       <feColorMatrix in="b" type="matrix" result="goo"
         values="1 0 0 0 0
                 0 1 0 0 0
@@ -593,7 +499,7 @@
 
       // Theirs is far bigger than I had it: a single blob runs to roughly 200px
       // across, a real slice of the viewport, not a puddle.
-      const MAXR = 56;          // px of a drop as it goes in
+      const MAXR = 26;          // px of a drop as it goes in
       const FULL = 10;          // px/frame of brush travel that counts as full
       // Viscous, so it is slow to answer: the size takes its time swelling and
       // longer still to sag back.
@@ -603,21 +509,21 @@
       // seconds — it is still catching up long after the mouse has stopped.
       const FOLLOW = 0.055;     // how hard the brush chases the cursor
       // A slick spreads out into a broad film rather than holding its shape.
-      const GROW = 2.4;         // how far a drop spreads over its life
+      const GROW = 1.3;         // how far a drop spreads over its life
       // Ink doesn't flash up and vanish. Watching theirs, a blob is still
       // sitting there 14 seconds later, so a stamp lasts a long time and only
       // fades right at the end. The pool size is what really clears the page:
       // keep drawing and the oldest ink is pushed out.
-      const LIFE = 16000;       // ms a stamp lasts
-      const POOL = 120;         // drops on screen at once
+      const LIFE = 7000;        // ms a stamp lasts
+      const POOL = 46;          // drops on screen at once
       // Drops, not a stroke. Laying ink every frame is what made it a snake:
       // a fixed-length chain with a head at the cursor and a tail trailing
       // behind. Oil introduced to water has neither — it goes in at
       // intervals and what you watch afterwards is it spreading.
-      const DROP_EVERY = 30;    // px of travel between drops
+      const DROP_EVERY = 38;    // px of travel between drops
       // Oil going in shoves the water aside. That outward push is what makes
       // neighbouring drops drift apart rather than travel together.
-      const SPREAD = 6.5;       // strength of the outward shove
+      const SPREAD = 2.2;       // strength of the outward shove
       // No cohesion at all any more. Cohesion is surface tension, and
       // surface tension is precisely what oil does NOT have much of — it is
       // what makes mercury ball up into spheres. The pressure solve below
@@ -655,7 +561,7 @@
       // once the injection was fixed — at 0.44 the whole slick migrated off
       // the right edge inside two seconds. The ink should creep and curl
       // roughly where you drew it.
-      const PUSH = 0.12;        // how hard the field carries the ink
+      const PUSH = 0.07;        // how hard the field carries the ink
 
       let size = 0, at = null, brush = null, prev = null, raf = null, since = 0;
       let stamps = [], pool = [], on = false;
@@ -863,8 +769,8 @@
         // the brush by this point in the frame, so reading it here injects
         // exactly zero and the field never moves.
         if (brush && moved > 0.01) {
-          const delta = Math.min(moved / 15, 1) * 10;
-          const radius = Math.min(moved / 5, 1) * 60;
+          const delta = Math.min(moved / 15, 1) * 4;
+          const radius = Math.min(moved / 5, 1) * 28;
           inject(brush.x, brush.y, mdx * delta, mdy * delta, radius);
         }
         step();
@@ -1007,18 +913,15 @@
     // mid-flight, so the tracks are driven by hand here. The same velocity
     // leans the big lines of type.
     (function motion() {
-      // Type that leans with the scroll. The same velocity that drives the
-      // marquees bends the big lines, so the whole page answers the wheel
-      // rather than just sliding under it.
-      const bigs = [...document.querySelectorAll('.declare__l, .shout, .foot__mail')];
-      const tracks = [...document.querySelectorAll('.mq__track')].map((el) => ({
+      const tracks = [...document.querySelectorAll('.mq__track')].map((el, i) => ({
         // Deliberately not random: the ink's cloned copy of the page has its
         // own copy of this track, and the two have to stay in lockstep or
         // the revealed text sits at a different place in the loop.
         el, half: 0, at: 0,
         // Alternating, so stacked lines of type never march in step.
-        dir: el.closest('.ticker') ? -1 : 1,
-        rate: el.closest('.ticker') ? 0.55 : 0.85,
+        // Alternate direction down the page so stacked tiles don't march.
+        dir: i % 2 ? -1 : 1,
+        rate: 0.55,
       }));
       const measure = () => tracks.forEach((t) => { t.half = t.el.scrollWidth / 2; });
       measure();
@@ -1048,263 +951,10 @@
           t.el.style.transform = `translate3d(${t.at.toFixed(1)}px,0,0)`;
         }
 
-        if (reduce) return;
-
-        const sk = Math.max(-5, Math.min(5, vel * 0.11));
-        for (const el of bigs) el.style.setProperty('--sk', sk.toFixed(2) + 'deg');
-
       })();
 
     })();
 
-    // ── The scratch field ───────────────────────────────────────────
-    // One panel over the statement. The work is not shown; the sentence
-    // saying so is the thing you uncover, which is a better joke than six
-    // screenshots and considerably less cheap.
-    (function scratchie() {
-      const wrap = document.querySelector('.reveal');
-      if (!wrap || wrap.closest('.swap')) return;
-      if (!matchMedia('(pointer: fine)').matches) return;
-
-      const dpr = Math.min(2, devicePixelRatio || 1);
-      const cv = document.createElement('canvas');
-      cv.className = 'scratch';
-      cv.setAttribute('aria-hidden', 'true');
-      wrap.insertBefore(cv, wrap.querySelector('.reveal__hint'));
-      const ctx = cv.getContext('2d');
-      let w = 0, h = 0, last = null, idle = 0, dirty = false;
-
-      function frost() {
-        if (!w || !h) return;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.fillStyle = '#8d8d84';
-        ctx.fillRect(0, 0, w, h);
-        // Speckle, so it reads as a coating rather than a grey rectangle.
-        for (let i = 0; i < (w * h) / 260; i++) {
-          const g = 110 + Math.random() * 80;
-          ctx.fillStyle = `rgba(${g},${g},${g - 4},${0.1 + Math.random() * 0.3})`;
-          ctx.fillRect(Math.random() * w, Math.random() * h, 1.6, 1.6);
-        }
-        ctx.strokeStyle = 'rgba(255,255,255,0.09)';
-        ctx.lineWidth = 1;
-        for (let i = 0; i < 14; i++) {
-          const y = Math.random() * h;
-          ctx.beginPath();
-          ctx.moveTo(0, y);
-          ctx.lineTo(w, y + (Math.random() - 0.5) * 30);
-          ctx.stroke();
-        }
-      }
-
-      function size() {
-        const r = wrap.getBoundingClientRect();
-        const nw = Math.round(r.width), nh = Math.round(r.height);
-        if (!nw || !nh || (nw === w && nh === h)) return;
-        w = nw; h = nh;
-        cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
-        cv.style.width = w + 'px'; cv.style.height = h + 'px';
-        frost();
-      }
-
-      cv.addEventListener('pointermove', (e) => {
-        if (e.pointerType !== 'mouse') return;
-        const r = cv.getBoundingClientRect();
-        const x = e.clientX - r.left, y = e.clientY - r.top;
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.lineCap = ctx.lineJoin = 'round';
-        if (last) {
-          ctx.lineWidth = 44;
-          ctx.beginPath();
-          ctx.moveTo(last.x, last.y);
-          ctx.lineTo(x, y);
-          ctx.stroke();
-          // Flakes coming away either side, so the edge isn't a clean nib.
-          for (let i = 0; i < 6; i++) {
-            const a = Math.random() * 6.283, d = 20 + Math.random() * 32;
-            ctx.beginPath();
-            ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, 3 + Math.random() * 11, 0, 6.283);
-            ctx.fill();
-          }
-          wrap.classList.add('touched');
-        }
-        last = { x, y }; idle = 0; dirty = true;
-      }, { passive: true });
-      cv.addEventListener('pointerleave', () => { last = null; });
-
-      size();
-      addEventListener('resize', () => { w = 0; size(); });
-      if (document.fonts) document.fonts.ready.then(() => { w = 0; size(); });
-
-      // Re-frosts once left alone, so it can be done more than once.
-      (function creep() {
-        requestAnimationFrame(creep);
-        if (!dirty || !w || ++idle < 300) return;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.fillStyle = 'rgba(141,141,132,0.014)';
-        ctx.fillRect(0, 0, w, h);
-        if (idle > 1300) { frost(); dirty = false; idle = 0; wrap.classList.remove('touched'); }
-      })();
-    })();
-
-    // ── The figure ──────────────────────────────────────────────────
-    // A halftone field standing in for a portrait. Every dot knows how dark
-    // the picture is underneath it; what it does NOT know is whether anyone
-    // is looking. The light is the cursor, and a dot is only drawn where the
-    // light reaches it — so the person in the middle of the page exists in
-    // the places you point at and nowhere else.
-    (function figure() {
-      const cv = document.querySelector('.figure__c');
-      if (!cv) return;
-      const wrap = cv.closest('.figure');
-      const ctx = cv.getContext('2d');
-      const dpr = Math.min(2, devicePixelRatio || 1);
-      const GAP = 7;            // px between dots
-      const REACH = 300;        // px the light carries
-      // Enough that you can tell somebody is standing there in the dark.
-      // At zero the section reads as empty space with a caption pointing at
-      // nothing, which is a worse joke than it sounds.
-      const AMBIENT = 0.075;
-      const PUSHOFF = 16;       // px a dot shifts away from the light
-
-      let W = 0, H = 0, dots = [], raf = null;
-      // Light position, its lag behind the cursor, and how much of it is on.
-      const L = { x: 0, y: 0, tx: 0, ty: 0, on: 0 };
-
-      // The stand-in: a bust, drawn rather than photographed, tilted a few
-      // degrees so it doesn't read as a corporate avatar.
-      function standIn(c, w, h) {
-        c.save();
-        c.translate(w / 2, h / 2);
-        c.rotate(-0.035);
-        c.translate(-w / 2, -h / 2);
-        c.fillStyle = '#fff';
-        c.beginPath();
-        c.ellipse(w * 0.5, h * 0.27, w * 0.148, h * 0.19, 0, 0, 6.283);
-        c.fill();
-        c.fillRect(w * 0.432, h * 0.41, w * 0.136, h * 0.11);
-        c.beginPath();
-        c.moveTo(w * 0.5, h * 0.455);
-        c.bezierCurveTo(w * 0.25, h * 0.5, w * 0.125, h * 0.67, w * 0.105, h);
-        c.lineTo(w * 0.895, h);
-        c.bezierCurveTo(w * 0.875, h * 0.67, w * 0.75, h * 0.5, w * 0.5, h * 0.455);
-        c.closePath();
-        c.fill();
-        c.restore();
-      }
-
-      // Sample whatever the source is into a grid of brightnesses.
-      function build(src) {
-        const r = cv.getBoundingClientRect();
-        W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height));
-        cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
-
-        const off = document.createElement('canvas');
-        off.width = W; off.height = H;
-        const oc = off.getContext('2d', { willReadFrequently: true });
-        if (src) {
-          // Cover, so a photo of any shape fills the frame.
-          const s = Math.max(W / src.width, H / src.height);
-          const dw = src.width * s, dh = src.height * s;
-          oc.drawImage(src, (W - dw) / 2, (H - dh) / 2, dw, dh);
-        } else {
-          standIn(oc, W, H);
-        }
-        const px = oc.getImageData(0, 0, W, H).data;
-
-        dots = [];
-        for (let y = GAP / 2; y < H; y += GAP) {
-          for (let x = GAP / 2; x < W; x += GAP) {
-            const i = ((y | 0) * W + (x | 0)) * 4;
-            // Luminance for a photo, alpha for the drawn stand-in.
-            const v = px[i + 3] < 8 ? 0
-              : (0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2]) / 255;
-            if (v < 0.06) continue;
-            dots.push({ x, y, v });
-          }
-        }
-        if (!L.x) { L.x = L.tx = W / 2; L.y = L.ty = H * 0.3; }
-      }
-
-      function frame() {
-        raf = requestAnimationFrame(frame);
-        // The light lags. Chasing exactly feels like a pointer; lagging
-        // feels like something being carried.
-        L.x += (L.tx - L.x) * 0.085;
-        L.y += (L.ty - L.y) * 0.085;
-
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.clearRect(0, 0, W, H);
-        ctx.fillStyle = '#FAFAF7';
-
-        const reach2 = REACH * REACH;
-        for (let i = 0; i < dots.length; i++) {
-          const d = dots[i];
-          const dx = d.x - L.x, dy = d.y - L.y;
-          const q = dx * dx + dy * dy;
-          let fall = 0, dist = 0;
-          if (q < reach2) {
-            dist = Math.sqrt(q);
-            // Soft but definite edge to the pool of light.
-            fall = (1 - dist / REACH) ** 1.7;
-          }
-          const a = (AMBIENT + fall) * d.v;
-          if (a < 0.012) continue;
-          // Dots lean away from the light, the way grains sit around a lamp.
-          const push = fall ? (PUSHOFF * fall) / (dist + 12) : 0;
-          // Capped well under the gap. Let a dot grow past that and the
-          // bright parts weld into a solid blob — you lose the halftone
-          // exactly where the light is strongest, which is backwards.
-          const r = 0.45 + Math.min(a, 1) * (GAP * 0.34);
-          ctx.globalAlpha = Math.min(1, a * 1.55);
-          ctx.beginPath();
-          ctx.arc(d.x + dx * push, d.y + dy * push, r, 0, 6.283);
-          ctx.fill();
-        }
-        ctx.globalAlpha = 1;
-      }
-
-      cv.addEventListener('pointermove', (e) => {
-        const r = cv.getBoundingClientRect();
-        L.tx = e.clientX - r.left; L.ty = e.clientY - r.top;
-        wrap.classList.add('lit');
-      }, { passive: true });
-
-      // Off the figure, the light wanders by itself. It should never be dead.
-      let drift = Math.random() * 6.283;
-      cv.addEventListener('pointerleave', () => { wrap.classList.remove('lit'); });
-      setInterval(() => {
-        if (wrap.classList.contains('lit') || !W) return;
-        drift += 0.45 + Math.random() * 0.5;
-        L.tx = W * (0.5 + Math.cos(drift) * 0.26);
-        L.ty = H * (0.38 + Math.sin(drift * 0.7) * 0.22);
-      }, 1500);
-
-      function start(src) {
-        build(src);
-        if (!raf) frame();
-      }
-
-      const photo = cv.dataset.portrait;
-      if (photo) {
-        const im = new Image();
-        im.onload = () => start(im);
-        im.onerror = () => start(null);
-        im.src = photo;
-      } else {
-        start(null);
-      }
-
-      addEventListener('resize', () => build(photo ? null : null));
-      // Only paint while it is on screen.
-      new IntersectionObserver((es) => {
-        es.forEach((e) => {
-          if (e.isIntersecting) { if (!raf) frame(); }
-          else if (raf) { cancelAnimationFrame(raf); raf = null; }
-        });
-      }).observe(cv);
-    })();
   </script>
 </body>
 </html>
