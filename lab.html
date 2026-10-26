@@ -229,14 +229,38 @@
     /* Nothing to take off in the ink's copy, and nothing to prompt. */
     .swap .scratch, .swap .reveal__hint { display: none !important; }
 
-    /* Mike. Off to one side, small, and well under the weight of the work.
-       A portrait sitting dead centre under a heading is an about page. */
-    .me { padding: clamp(5rem, 14vw, 12rem) var(--gutter); display: flex; gap: clamp(2rem, 6vw, 6rem); align-items: flex-end; flex-wrap: wrap; }
-    .me__plate { width: clamp(180px, 26vw, 340px); margin: 0; transform: rotate(-1.8deg); flex: none; }
-    .me__said { flex: 1 1 22ch; max-width: 38ch; color: rgba(250, 250, 247, 0.62); font-size: 0.98rem; }
-    .me__lead { font-family: var(--font-display); font-size: clamp(1.6rem, 4vw, 2.8rem); letter-spacing: -0.04em; color: var(--paper); margin-bottom: 1.2rem; }
+    /* Mike, in the middle, and only there when you light him. The figure is
+       a halftone field: every dot carries its brightness from the portrait
+       underneath, but it is only drawn where the light falls, and the light
+       is the cursor. Sit still and it drifts on its own so the thing never
+       dies. Same bargain as the tear and the scratch panel — you get it by
+       doing something, not by being shown. */
+    .me { padding: clamp(4rem, 12vw, 10rem) var(--gutter) clamp(3rem, 8vw, 7rem); }
+    .figure {
+      position: relative; margin: 0 auto;
+      width: clamp(260px, 44vw, 560px); aspect-ratio: 3 / 4;
+    }
+    .figure__c { display: block; width: 100%; height: 100%; cursor: none; }
+    .figure__cap {
+      position: absolute; left: 50%; bottom: -2.4rem; transform: translateX(-50%);
+      font-family: var(--font-display); font-size: 0.68rem;
+      letter-spacing: 0.4em; text-transform: uppercase;
+      color: var(--muted); white-space: nowrap;
+      transition: opacity 0.6s var(--ease); pointer-events: none;
+    }
+    .figure.lit .figure__cap { opacity: 0; }
+    .me__said {
+      margin: clamp(2.5rem, 6vw, 5rem) 0 0 auto;
+      max-width: 40ch; color: rgba(250, 250, 247, 0.62); font-size: 0.98rem;
+    }
+    .me__lead {
+      font-family: var(--font-display); font-size: clamp(1.6rem, 4vw, 2.8rem);
+      letter-spacing: -0.04em; color: var(--paper); margin-bottom: 1.2rem;
+    }
     .me__said p + p { margin-top: 1rem; }
-    .me__sig { font-family: var(--font-display); letter-spacing: 0.04em; color: var(--muted); font-size: 0.8rem; }
+    .me__sig { font-family: var(--font-display); letter-spacing: 0.04em; color: var(--muted); font-size: 0.8rem; margin-top: 1.4rem; }
+    /* The ink's clone can't run a canvas, so it gets nothing to show. */
+    .swap .figure { visibility: hidden; }
 
     /* The statement. Three lines, none of them aligned to each other, each
        big enough to run past an edge. No button underneath it — a call to
@@ -472,7 +496,12 @@
 
   <!-- ── Mike ───────────────────────────────────────────── -->
   <section class="me" id="mike">
-    <figure class="me__plate"><div class="portrait">Portrait goes here</div></figure>
+    <figure class="figure">
+      <!-- Swap data-portrait for a real photograph and the halftone samples
+           that instead of the drawn stand-in. Nothing else changes. -->
+      <canvas class="figure__c" data-portrait="" aria-label="Mike"></canvas>
+      <figcaption class="figure__cap" aria-hidden="true">Move the light</figcaption>
+    </figure>
     <div class="me__said">
       <p class="me__lead">There isn&rsquo;t a &ldquo;we&rdquo;.</p>
       <p>
@@ -1120,6 +1149,164 @@
         ctx.fillRect(0, 0, w, h);
         if (idle > 1300) { frost(); dirty = false; idle = 0; wrap.classList.remove('touched'); }
       })();
+    })();
+
+    // ── The figure ──────────────────────────────────────────────────
+    // A halftone field standing in for a portrait. Every dot knows how dark
+    // the picture is underneath it; what it does NOT know is whether anyone
+    // is looking. The light is the cursor, and a dot is only drawn where the
+    // light reaches it — so the person in the middle of the page exists in
+    // the places you point at and nowhere else.
+    (function figure() {
+      const cv = document.querySelector('.figure__c');
+      if (!cv) return;
+      const wrap = cv.closest('.figure');
+      const ctx = cv.getContext('2d');
+      const dpr = Math.min(2, devicePixelRatio || 1);
+      const GAP = 7;            // px between dots
+      const REACH = 300;        // px the light carries
+      // Enough that you can tell somebody is standing there in the dark.
+      // At zero the section reads as empty space with a caption pointing at
+      // nothing, which is a worse joke than it sounds.
+      const AMBIENT = 0.075;
+      const PUSHOFF = 16;       // px a dot shifts away from the light
+
+      let W = 0, H = 0, dots = [], raf = null;
+      // Light position, its lag behind the cursor, and how much of it is on.
+      const L = { x: 0, y: 0, tx: 0, ty: 0, on: 0 };
+
+      // The stand-in: a bust, drawn rather than photographed, tilted a few
+      // degrees so it doesn't read as a corporate avatar.
+      function standIn(c, w, h) {
+        c.save();
+        c.translate(w / 2, h / 2);
+        c.rotate(-0.035);
+        c.translate(-w / 2, -h / 2);
+        c.fillStyle = '#fff';
+        c.beginPath();
+        c.ellipse(w * 0.5, h * 0.27, w * 0.148, h * 0.19, 0, 0, 6.283);
+        c.fill();
+        c.fillRect(w * 0.432, h * 0.41, w * 0.136, h * 0.11);
+        c.beginPath();
+        c.moveTo(w * 0.5, h * 0.455);
+        c.bezierCurveTo(w * 0.25, h * 0.5, w * 0.125, h * 0.67, w * 0.105, h);
+        c.lineTo(w * 0.895, h);
+        c.bezierCurveTo(w * 0.875, h * 0.67, w * 0.75, h * 0.5, w * 0.5, h * 0.455);
+        c.closePath();
+        c.fill();
+        c.restore();
+      }
+
+      // Sample whatever the source is into a grid of brightnesses.
+      function build(src) {
+        const r = cv.getBoundingClientRect();
+        W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height));
+        cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+
+        const off = document.createElement('canvas');
+        off.width = W; off.height = H;
+        const oc = off.getContext('2d', { willReadFrequently: true });
+        if (src) {
+          // Cover, so a photo of any shape fills the frame.
+          const s = Math.max(W / src.width, H / src.height);
+          const dw = src.width * s, dh = src.height * s;
+          oc.drawImage(src, (W - dw) / 2, (H - dh) / 2, dw, dh);
+        } else {
+          standIn(oc, W, H);
+        }
+        const px = oc.getImageData(0, 0, W, H).data;
+
+        dots = [];
+        for (let y = GAP / 2; y < H; y += GAP) {
+          for (let x = GAP / 2; x < W; x += GAP) {
+            const i = ((y | 0) * W + (x | 0)) * 4;
+            // Luminance for a photo, alpha for the drawn stand-in.
+            const v = px[i + 3] < 8 ? 0
+              : (0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2]) / 255;
+            if (v < 0.06) continue;
+            dots.push({ x, y, v });
+          }
+        }
+        if (!L.x) { L.x = L.tx = W / 2; L.y = L.ty = H * 0.3; }
+      }
+
+      function frame() {
+        raf = requestAnimationFrame(frame);
+        // The light lags. Chasing exactly feels like a pointer; lagging
+        // feels like something being carried.
+        L.x += (L.tx - L.x) * 0.085;
+        L.y += (L.ty - L.y) * 0.085;
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = '#FAFAF7';
+
+        const reach2 = REACH * REACH;
+        for (let i = 0; i < dots.length; i++) {
+          const d = dots[i];
+          const dx = d.x - L.x, dy = d.y - L.y;
+          const q = dx * dx + dy * dy;
+          let fall = 0, dist = 0;
+          if (q < reach2) {
+            dist = Math.sqrt(q);
+            // Soft but definite edge to the pool of light.
+            fall = (1 - dist / REACH) ** 1.7;
+          }
+          const a = (AMBIENT + fall) * d.v;
+          if (a < 0.012) continue;
+          // Dots lean away from the light, the way grains sit around a lamp.
+          const push = fall ? (PUSHOFF * fall) / (dist + 12) : 0;
+          // Capped well under the gap. Let a dot grow past that and the
+          // bright parts weld into a solid blob — you lose the halftone
+          // exactly where the light is strongest, which is backwards.
+          const r = 0.45 + Math.min(a, 1) * (GAP * 0.34);
+          ctx.globalAlpha = Math.min(1, a * 1.55);
+          ctx.beginPath();
+          ctx.arc(d.x + dx * push, d.y + dy * push, r, 0, 6.283);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      cv.addEventListener('pointermove', (e) => {
+        const r = cv.getBoundingClientRect();
+        L.tx = e.clientX - r.left; L.ty = e.clientY - r.top;
+        wrap.classList.add('lit');
+      }, { passive: true });
+
+      // Off the figure, the light wanders by itself. It should never be dead.
+      let drift = Math.random() * 6.283;
+      cv.addEventListener('pointerleave', () => { wrap.classList.remove('lit'); });
+      setInterval(() => {
+        if (wrap.classList.contains('lit') || !W) return;
+        drift += 0.45 + Math.random() * 0.5;
+        L.tx = W * (0.5 + Math.cos(drift) * 0.26);
+        L.ty = H * (0.38 + Math.sin(drift * 0.7) * 0.22);
+      }, 1500);
+
+      function start(src) {
+        build(src);
+        if (!raf) frame();
+      }
+
+      const photo = cv.dataset.portrait;
+      if (photo) {
+        const im = new Image();
+        im.onload = () => start(im);
+        im.onerror = () => start(null);
+        im.src = photo;
+      } else {
+        start(null);
+      }
+
+      addEventListener('resize', () => build(photo ? null : null));
+      // Only paint while it is on screen.
+      new IntersectionObserver((es) => {
+        es.forEach((e) => {
+          if (e.isIntersecting) { if (!raf) frame(); }
+          else if (raf) { cancelAnimationFrame(raf); raf = null; }
+        });
+      }).observe(cv);
     })();
   </script>
 </body>
