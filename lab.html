@@ -259,33 +259,38 @@
     .label::before { content: ""; width: 3.2rem; height: 1px; background: currentColor; }
     .big {
       font-family: var(--font-display); font-weight: 600;
-      font-size: clamp(3.2rem, 7vw, 7.6rem);
-      line-height: 0.96; letter-spacing: var(--track-display);
+      font-size: clamp(3.6rem, 8.2vw, 9.4rem);
+      line-height: 0.93; letter-spacing: var(--track-display);
     }
     .lede { margin-top: 2.8rem; max-width: 52ch; color: color-mix(in srgb, var(--paper) 62%, transparent); font-size: 1.7rem; }
 
     /* ---------- The work ----------
-       S25's move, and the thing that makes their work section land: it is a
-       table, not a gallery. A screenshot of somebody else's website reads as
-       filler; the same job written as client, sector and what was built
-       reads as a record. Fifteen rows of it reads as a decade. */
+       S25's table, but a table you can open. A screenshot sitting in a grid
+       reads as filler; the same screenshot behind a client's name, shown
+       because you asked for it, reads as evidence. The row is the record and
+       the panel is the proof. */
     .rows { list-style: none; padding: 0; margin-top: clamp(4rem, 8vw, 7rem); }
-    .row {
-      display: grid; align-items: baseline; gap: 1.6rem;
-      grid-template-columns: 4rem minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1.1fr);
-      padding: 2.4rem 0;
-      border-top: 1px solid var(--hair);
-      transition: background 0.4s var(--ease), padding 0.4s var(--ease);
-    }
+    .row { border-top: 1px solid var(--hair); }
     .row:last-child { border-bottom: 1px solid var(--hair); }
-    .row:hover { background: color-mix(in srgb, var(--paper) 4%, transparent); }
+    .row__btn {
+      width: 100%; background: none; border: 0; cursor: pointer; color: inherit;
+      font: inherit; text-align: left;
+      display: grid; align-items: center; gap: 1.6rem;
+      grid-template-columns: 4.4rem minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1.1fr) 3.4rem;
+      padding: 2.8rem 0;
+      transition: padding 0.5s var(--ease);
+    }
+    .row:hover .row__btn, .row.is-open .row__btn { padding-inline: 1.6rem; }
     .row__n { font-size: 1.2rem; color: var(--muted); font-variant-numeric: tabular-nums; }
     .row__name {
       font-family: var(--font-display); font-weight: 500;
-      font-size: clamp(1.8rem, 2.4vw, 2.6rem); letter-spacing: -0.03em;
-      display: flex; flex-direction: column; gap: 0.5rem;
+      font-size: clamp(2.2rem, 3.4vw, 4rem); line-height: 1;
+      letter-spacing: -0.035em;
+      transition: color 0.4s var(--ease), transform 0.5s var(--ease);
     }
-    .row__note { font-family: var(--font-sans); font-size: 1.3rem; font-weight: 400; color: var(--muted); letter-spacing: 0; }
+    .row:hover .row__name, .row.is-open .row__name {
+      color: var(--accent-bright); transform: translateX(1.2rem);
+    }
     .row__sector { font-size: 1.4rem; color: color-mix(in srgb, var(--paper) 58%, transparent); }
     .row__tags { display: flex; flex-wrap: wrap; gap: 0.6rem; }
     .tag {
@@ -293,12 +298,57 @@
       padding: 0.5rem 1.1rem; border-radius: 2rem;
       border: 1px solid var(--hair); color: var(--muted); white-space: nowrap;
     }
+    .row__eye {
+      justify-self: end; width: 3.2rem; height: 3.2rem; border-radius: 50%;
+      border: 1px solid var(--hair); position: relative;
+      transition: background 0.4s var(--ease), border-color 0.4s var(--ease), transform 0.5s var(--ease);
+    }
+    .row__eye::before, .row__eye::after {
+      content: ""; position: absolute; inset: 50% 28%; height: 1px;
+      background: currentColor; transform: translateY(-50%);
+    }
+    .row__eye::after { transform: translateY(-50%) rotate(90deg); transition: opacity 0.4s var(--ease); }
+    .row.is-open .row__eye { background: var(--accent-bright); border-color: var(--accent-bright); color: var(--on-accent); transform: rotate(180deg); }
+    .row.is-open .row__eye::after { opacity: 0; }
+
+    /* Height can't be transitioned from auto, but a 0fr→1fr grid row can. */
+    .row__open { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.6s var(--ease); }
+    .row.is-open .row__open { grid-template-rows: 1fr; }
+    .row__openin { overflow: hidden; }
+    .open__shot {
+      margin: 0 0 2rem; border-radius: 0.6rem; overflow: hidden;
+      aspect-ratio: 16 / 7; background: color-mix(in srgb, var(--paper) 6%, transparent);
+    }
+    .open__shot img {
+      width: 100%; height: 100%; object-fit: cover; object-position: center top;
+      filter: grayscale(1) contrast(1.05) brightness(0.9);
+      transition: filter 0.6s var(--ease);
+    }
+    .row.is-open .open__shot img { filter: none; }
+    .open__note { max-width: 56ch; margin-bottom: 2.8rem; font-size: 1.5rem; color: color-mix(in srgb, var(--paper) 62%, transparent); }
     .rows__foot { margin-top: 3rem; font-size: 1.4rem; color: var(--muted); }
     .rows__foot a { color: var(--accent-bright); border-bottom: 1px solid currentColor; }
     @media (max-width: 860px) {
-      .row { grid-template-columns: 3rem 1fr; gap: 0.8rem 1.4rem; }
-      .row__sector, .row__tags { grid-column: 2; }
+      .row__btn { grid-template-columns: 3.4rem 1fr 3.2rem; gap: 0.8rem 1.4rem; }
+      .row__sector { grid-column: 2; }
+      .row__tags { grid-column: 2; }
+      .row__eye { grid-row: 1; grid-column: 3; }
     }
+
+    /* ---------- The count ----------
+       Their $500M+ moment. Four numbers big enough to read from across the
+       room, which is the only way a fact carries on a page like this. */
+    .count { background: var(--accent-bright); color: var(--on-accent); border: 0; }
+    .count__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(2rem, 4vw, 4rem); }
+    .count__grid div { display: flex; flex-direction: column; gap: 1rem; }
+    .count__grid b {
+      font-family: var(--font-display); font-weight: 600;
+      font-size: clamp(5rem, 11vw, 13rem); line-height: 0.82;
+      letter-spacing: var(--track-display);
+    }
+    .count__grid b em { font-style: normal; opacity: 0.45; }
+    .count__grid span { font-size: 1.3rem; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.72; }
+    @media (max-width: 860px) { .count__grid { grid-template-columns: 1fr 1fr; gap: 4rem 2rem; } }
 
     /* ---------- Said about us ---------- */
     .says { border-top: 1px solid var(--hair); }
@@ -478,94 +528,199 @@
 
       <ul class="rows">
         <li class="row">
-          <span class="row__n">01</span>
-          <span class="row__name">BML Ventures<span class="row__note">Gold mining operator, WA Goldfields</span></span>
-          <span class="row__sector">Resources</span>
-          <span class="row__tags"><span class="tag">Website</span></span>
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">01</span>
+            <span class="row__name">BML Ventures</span>
+            <span class="row__sector">Resources</span>
+            <span class="row__tags"><span class="tag">Website</span></span>
+            <span class="row__eye" aria-hidden="true"></span>
+          </button>
+          <div class="row__open"><div class="row__openin">
+            <div class="open__shot"><img src="assets/work/bmlventures.webp" alt="" loading="lazy" decoding="async" /></div>
+            <p class="open__note">Gold mining operator, WA Goldfields</p>
+          </div></div>
         </li>
         <li class="row">
-          <span class="row__n">02</span>
-          <span class="row__name">Australian Biosearch<span class="row__note">Biomedical distributor</span></span>
-          <span class="row__sector">Life sciences</span>
-          <span class="row__tags"><span class="tag">Website</span><span class="tag">Catalogue</span><span class="tag">Ordering</span></span>
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">02</span>
+            <span class="row__name">Australian Biosearch</span>
+            <span class="row__sector">Life sciences</span>
+            <span class="row__tags"><span class="tag">Website</span><span class="tag">Catalogue</span><span class="tag">Ordering</span></span>
+            <span class="row__eye" aria-hidden="true"></span>
+          </button>
+          <div class="row__open"><div class="row__openin">
+            <div class="open__shot"><img src="assets/work/austbiosearch.webp" alt="" loading="lazy" decoding="async" /></div>
+            <p class="open__note">Biomedical distributor, catalogue and ordering</p>
+          </div></div>
         </li>
         <li class="row">
-          <span class="row__n">03</span>
-          <span class="row__name">Hay Street Billboard<span class="row__note">Campaign site</span></span>
-          <span class="row__sector">Out-of-home</span>
-          <span class="row__tags"><span class="tag">Website</span></span>
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">03</span>
+            <span class="row__name">Hay Street Billboard</span>
+            <span class="row__sector">Out-of-home</span>
+            <span class="row__tags"><span class="tag">Website</span></span>
+            <span class="row__eye" aria-hidden="true"></span>
+          </button>
+          <div class="row__open"><div class="row__openin">
+            <div class="open__shot"><img src="assets/work/haystreetbillboard.webp" alt="" loading="lazy" decoding="async" /></div>
+            <p class="open__note">Campaign site for an award-winning agency</p>
+          </div></div>
         </li>
         <li class="row">
-          <span class="row__n">04</span>
-          <span class="row__name">Stirling Hwy Billboard<span class="row__note">Campaign site</span></span>
-          <span class="row__sector">Out-of-home</span>
-          <span class="row__tags"><span class="tag">Website</span></span>
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">04</span>
+            <span class="row__name">Stirling Hwy Billboard</span>
+            <span class="row__sector">Out-of-home</span>
+            <span class="row__tags"><span class="tag">Website</span></span>
+            <span class="row__eye" aria-hidden="true"></span>
+          </button>
+          <div class="row__open"><div class="row__openin">
+            <div class="open__shot"><img src="assets/work/stirlinghwybillboard.webp" alt="" loading="lazy" decoding="async" /></div>
+            <p class="open__note">Second format, same campaign</p>
+          </div></div>
         </li>
         <li class="row">
-          <span class="row__n">05</span>
-          <span class="row__name">JLC Associates<span class="row__note">Accountants, multi-location</span></span>
-          <span class="row__sector">Professional services</span>
-          <span class="row__tags"><span class="tag">Website</span></span>
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">05</span>
+            <span class="row__name">JLC Associates</span>
+            <span class="row__sector">Professional services</span>
+            <span class="row__tags"><span class="tag">Website</span></span>
+            <span class="row__eye" aria-hidden="true"></span>
+          </button>
+          <div class="row__open"><div class="row__openin">
+            <div class="open__shot"><img src="assets/work/jlcassociates.webp" alt="" loading="lazy" decoding="async" /></div>
+            <p class="open__note">Accountants, multi-location</p>
+          </div></div>
         </li>
         <li class="row">
-          <span class="row__n">06</span>
-          <span class="row__name">Wolfpack Basketball<span class="row__note">Association platform</span></span>
-          <span class="row__sector">Sport</span>
-          <span class="row__tags"><span class="tag">Website</span><span class="tag">Fixtures</span><span class="tag">Results</span></span>
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">06</span>
+            <span class="row__name">Wolfpack Basketball</span>
+            <span class="row__sector">Sport</span>
+            <span class="row__tags"><span class="tag">Website</span><span class="tag">Fixtures</span><span class="tag">Results</span></span>
+            <span class="row__eye" aria-hidden="true"></span>
+          </button>
+          <div class="row__open"><div class="row__openin">
+            <div class="open__shot"><img src="assets/work/wolfpackbasketball.webp" alt="" loading="lazy" decoding="async" /></div>
+            <p class="open__note">Association platform with live fixtures and results</p>
+          </div></div>
         </li>
         <li class="row">
-          <span class="row__n">07</span>
-          <span class="row__name">Barefoot Disciple</span>
-          <span class="row__sector">Personal finance</span>
-          <span class="row__tags"><span class="tag">Website</span></span>
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">07</span>
+            <span class="row__name">Barefoot Disciple</span>
+            <span class="row__sector">Personal finance</span>
+            <span class="row__tags"><span class="tag">Website</span></span>
+            <span class="row__eye" aria-hidden="true"></span>
+          </button>
+          <div class="row__open"><div class="row__openin">
+            <div class="open__shot"><img src="assets/work/barefootdisciple.webp" alt="" loading="lazy" decoding="async" /></div>
+            
+          </div></div>
         </li>
         <li class="row">
-          <span class="row__n">08</span>
-          <span class="row__name">Instant Fun<span class="row__note">Hire and purchase in one shop</span></span>
-          <span class="row__sector">Retail</span>
-          <span class="row__tags"><span class="tag">E-commerce</span></span>
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">08</span>
+            <span class="row__name">Instant Fun</span>
+            <span class="row__sector">Retail</span>
+            <span class="row__tags"><span class="tag">E-commerce</span></span>
+            <span class="row__eye" aria-hidden="true"></span>
+          </button>
+          <div class="row__open"><div class="row__openin">
+            <div class="open__shot"><img src="assets/work/instantfun.webp" alt="" loading="lazy" decoding="async" /></div>
+            <p class="open__note">Hire and purchase in one shop, without two checkouts</p>
+          </div></div>
         </li>
         <li class="row">
-          <span class="row__n">09</span>
-          <span class="row__name">ICEAGE Parts & Cranes<span class="row__note">Rebuilt around the parts catalogue</span></span>
-          <span class="row__sector">Heavy equipment</span>
-          <span class="row__tags"><span class="tag">Website</span></span>
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">09</span>
+            <span class="row__name">ICEAGE Parts &amp; Cranes</span>
+            <span class="row__sector">Heavy equipment</span>
+            <span class="row__tags"><span class="tag">Website</span></span>
+            <span class="row__eye" aria-hidden="true"></span>
+          </button>
+          <div class="row__open"><div class="row__openin">
+            <div class="open__shot"><img src="assets/work/iceageind.webp" alt="" loading="lazy" decoding="async" /></div>
+            <p class="open__note">Rebuilt around the parts catalogue</p>
+          </div></div>
         </li>
         <li class="row">
-          <span class="row__n">10</span>
-          <span class="row__name">Zen Cooling</span>
-          <span class="row__sector">Climate systems</span>
-          <span class="row__tags"><span class="tag">Website</span></span>
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">10</span>
+            <span class="row__name">Zen Cooling</span>
+            <span class="row__sector">Climate systems</span>
+            <span class="row__tags"><span class="tag">Website</span></span>
+            <span class="row__eye" aria-hidden="true"></span>
+          </button>
+          <div class="row__open"><div class="row__openin">
+            <div class="open__shot"><img src="assets/work/zencooling.webp" alt="" loading="lazy" decoding="async" /></div>
+            <p class="open__note">Built for the week in February when everyone&rsquo;s aircon dies</p>
+          </div></div>
         </li>
         <li class="row">
-          <span class="row__n">11</span>
-          <span class="row__name">Glazing on the Swan</span>
-          <span class="row__sector">Architectural glass</span>
-          <span class="row__tags"><span class="tag">Website</span></span>
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">11</span>
+            <span class="row__name">Glazing on the Swan</span>
+            <span class="row__sector">Architectural glass</span>
+            <span class="row__tags"><span class="tag">Website</span></span>
+            <span class="row__eye" aria-hidden="true"></span>
+          </button>
+          <div class="row__open"><div class="row__openin">
+            <div class="open__shot"><img src="assets/work/glazingontheswan.webp" alt="" loading="lazy" decoding="async" /></div>
+            <p class="open__note">Emergency work, nothing in the way of the number</p>
+          </div></div>
         </li>
         <li class="row">
-          <span class="row__n">12</span>
-          <span class="row__name">All Style Bathrooms</span>
-          <span class="row__sector">Construction</span>
-          <span class="row__tags"><span class="tag">Website</span></span>
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">12</span>
+            <span class="row__name">All Style Bathrooms</span>
+            <span class="row__sector">Construction</span>
+            <span class="row__tags"><span class="tag">Website</span></span>
+            <span class="row__eye" aria-hidden="true"></span>
+          </button>
+          <div class="row__open"><div class="row__openin">
+            <div class="open__shot"><img src="assets/work/allstylebathrooms.webp" alt="" loading="lazy" decoding="async" /></div>
+            <p class="open__note">A renovation is a considered purchase, so the gallery does the convincing</p>
+          </div></div>
         </li>
         <li class="row">
-          <span class="row__n">13</span>
-          <span class="row__name">Dream Sliding Door Repairs</span>
-          <span class="row__sector">Trade services</span>
-          <span class="row__tags"><span class="tag">Website</span></span>
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">13</span>
+            <span class="row__name">Dream Sliding Door Repairs</span>
+            <span class="row__sector">Trade services</span>
+            <span class="row__tags"><span class="tag">Website</span></span>
+            <span class="row__eye" aria-hidden="true"></span>
+          </button>
+          <div class="row__open"><div class="row__openin">
+            <div class="open__shot"><img src="assets/work/dreamsliding.webp" alt="" loading="lazy" decoding="async" /></div>
+            
+          </div></div>
         </li>
         <li class="row">
-          <span class="row__n">14</span>
-          <span class="row__name">WA Pest Consultants</span>
-          <span class="row__sector">Field services</span>
-          <span class="row__tags"><span class="tag">Website</span></span>
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">14</span>
+            <span class="row__name">WA Pest Consultants</span>
+            <span class="row__sector">Field services</span>
+            <span class="row__tags"><span class="tag">Website</span></span>
+            <span class="row__eye" aria-hidden="true"></span>
+          </button>
+          <div class="row__open"><div class="row__openin">
+            <div class="open__shot"><img src="assets/work/wapestconsultants.webp" alt="" loading="lazy" decoding="async" /></div>
+            <p class="open__note">Two sites, same trade, different towns</p>
+          </div></div>
         </li>
         <li class="row">
-          <span class="row__n">15</span>
-          <span class="row__name">United Pest Control</span>
-          <span class="row__sector">Field services</span>
-          <span class="row__tags"><span class="tag">Website</span></span>
+          <button class="row__btn" type="button" aria-expanded="false">
+            <span class="row__n">15</span>
+            <span class="row__name">United Pest Control</span>
+            <span class="row__sector">Field services</span>
+            <span class="row__tags"><span class="tag">Website</span></span>
+            <span class="row__eye" aria-hidden="true"></span>
+          </button>
+          <div class="row__open"><div class="row__openin">
+            <div class="open__shot"><img src="assets/work/unitedpestcontrol.webp" alt="" loading="lazy" decoding="async" /></div>
+            
+          </div></div>
         </li>
       </ul>
 
@@ -612,13 +767,18 @@
           Half the jobs that come through here don&rsquo;t need what the last
           agency sold them, and that conversation is free.
         </p>
-        <dl class="facts">
-          <div><dt>Live sites built</dt><dd>15</dd></div>
-          <div><dt>Years at it</dt><dd>10+</dd></div>
-          <div><dt>Projects at once</dt><dd>2</dd></div>
-          <div><dt>Account managers</dt><dd>0</dd></div>
-        </dl>
+
       </div>
+    </div>
+  </section>
+
+  <!-- ── The count ─────────────────────────────────────── -->
+  <section class="count">
+    <div class="wrap count__grid">
+      <div><b>15</b><span>Live sites built</span></div>
+      <div><b>10<em>+</em></b><span>Years at it</span></div>
+      <div><b>2</b><span>Projects at once</span></div>
+      <div><b>0</b><span>Account managers</span></div>
     </div>
   </section>
 
@@ -1200,6 +1360,24 @@
       try { saved = localStorage.getItem('lab-theme'); } catch (e) {}
       if (saved) apply(saved);
     })();
+
+    // ── The work table ──────────────────────────────────────────────
+    // One row open at a time: the point is a glimpse, and six screenshots
+    // hanging open at once is the gallery this was built to avoid.
+    document.querySelectorAll('.rows .row__btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const row = btn.closest('.row');
+        const open = row.classList.contains('is-open');
+        row.closest('.rows').querySelectorAll('.row.is-open').forEach((r) => {
+          r.classList.remove('is-open');
+          r.querySelector('.row__btn').setAttribute('aria-expanded', 'false');
+        });
+        if (!open) {
+          row.classList.add('is-open');
+          btn.setAttribute('aria-expanded', 'true');
+        }
+      });
+    });
   </script>
 </body>
 </html>
