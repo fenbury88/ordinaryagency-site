@@ -9,7 +9,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
 
   <style>
     /* ──────────────────────────────────────────────────────────────
@@ -24,15 +24,30 @@
     html { font-size: max(10px, min(12px, 1.3020833333vw)); }
     @media (min-width: 1025px) { html { font-size: max(10px, min(12px, 0.5208333333vw)); } }
 
+    /* Perth, read from the water in. White sand, limestone groynes, the
+       Indian Ocean, and the sun that bleaches all three — which is why the
+       ground is sand rather than near-black. A dark site is the one thing
+       this coast is not. */
     :root {
-      --bg: #0C0C0C;
-      --fg: #E8E7E4;
-      --accent: #FF3B00;
+      --sand:  #F2EDE3;   /* ground: Cottesloe sand, warm, never grey */
+      --ink:   #10262E;   /* type: water at depth, never pure black */
+      --sea:   #09686A;   /* the structural accent, dark enough to read small */
+      --surf:  #39C2B6;   /* the shallows, for fills and hovers only */
+      --deep:  #0A3540;   /* past the reef: the band, the loader */
+      --sun:   #DD4F26;   /* sunset over the ocean. Emphasis, twice a page */
+      --stone: #DBD1BE;   /* limestone: rules */
+      --kraft: #C9B795;   /* card stock, dark enough to read as an object on sand */
+
+      --bg: var(--sand);
+      --fg: var(--ink);
+      --accent: var(--sea);
       --on-accent: #FFFFFF;
-      --muted: color-mix(in srgb, var(--fg) 44%, transparent);
-      --hair: color-mix(in srgb, var(--fg) 13%, transparent);
-      --soft: color-mix(in srgb, var(--fg) 62%, transparent);
-      --display: "Inter Tight", Helvetica, Arial, sans-serif;
+      /* Ink on sand needs carrying further than light-on-dark did: the same
+         percentages that read as "quiet" on black read as "faded" here. */
+      --muted: color-mix(in srgb, var(--fg) 66%, transparent);   /* 4.8:1 on sand */
+      --hair: var(--stone);
+      --soft: color-mix(in srgb, var(--fg) 80%, transparent);    /* 7.5:1 on sand */
+      --display: "Fraunces", Georgia, "Times New Roman", serif;
       --body: "Inter", Helvetica, Arial, sans-serif;
       --gutter: clamp(2rem, 4.4vw, 7rem);
       --maxw: 150rem;
@@ -52,7 +67,7 @@
     a { color: inherit; text-decoration: none; }
     img { display: block; max-width: 100%; }
     button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
-    ::selection { background: var(--accent); color: var(--on-accent); }
+    ::selection { background: var(--surf); color: var(--ink); }
 
     .wrap { width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter); }
     section { padding-block: clamp(8rem, 14vw, 18rem); }
@@ -64,26 +79,33 @@
       text-transform: uppercase; color: var(--accent); margin-bottom: 3.2rem;
     }
     .label::before { content: ""; width: 3.2rem; height: 1px; background: currentColor; }
-    h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -0.038em; line-height: 0.95; }
-    .h-xl { font-size: clamp(4.4rem, 9.4vw, 13rem); line-height: 0.9; letter-spacing: -0.045em; }
-    .h-lg { font-size: clamp(3.6rem, 7vw, 9rem); }
+    /* Tracking is a property of the typeface, not of the design. The -0.04em
+       that held Inter Tight together closes a serif's letters into each
+       other, so the display tracking is near zero and the line-height has to
+       make room for descenders a grotesque never had. */
+    h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -0.014em; line-height: 1.04; }
+    .h-xl { font-size: clamp(4.2rem, 8.8vw, 12rem); line-height: 1; letter-spacing: -0.02em; }
+    .h-lg { font-size: clamp(3.4rem, 6.6vw, 8.4rem); }
+    h1 em, h2 em { font-style: italic; color: var(--sun); }
     .lede { margin-top: 3rem; max-width: 56ch; color: var(--soft); font-size: clamp(1.6rem, 1.8vw, 2.1rem); }
 
     /* Lines arrive from under their own mask, which reads as type being set
-       rather than text fading up. */
-    .rise { display: block; overflow: hidden; }
+       rather than text fading up. The mask is given a descender's worth of
+       room and the space taken straight back, or the serif's y and g are
+       sliced off along the bottom of every line. */
+    .rise { display: block; overflow: hidden; padding-bottom: 0.1em; margin-bottom: -0.1em; }
     .rise > span { display: block; }
 
     /* ---------- Loader ---------- */
     .load {
       position: fixed; inset: 0; z-index: 200;
-      background: var(--accent); color: var(--on-accent);
+      background: var(--deep); color: var(--sand);
       display: grid; place-items: center; overflow: hidden;
     }
     .load__word {
       display: flex; flex-wrap: nowrap; white-space: nowrap;
       font-family: var(--display); font-weight: 700;
-      font-size: clamp(8rem, 22vw, 30rem); line-height: 0.8; letter-spacing: -0.06em;
+      font-size: clamp(7rem, 19vw, 26rem); line-height: 0.9; letter-spacing: -0.022em;
     }
     .load__word span { padding-right: 0.12em; }
     .load__pct {
@@ -99,7 +121,7 @@
       padding: 2.4rem var(--gutter);
       mix-blend-mode: difference; color: #fff;
     }
-    .bar__mark { font-family: var(--display); font-weight: 700; font-size: 1.8rem; letter-spacing: -0.04em; }
+    .bar__mark { font-family: var(--display); font-weight: 700; font-size: 1.8rem; letter-spacing: -0.005em; }
     .bar__nav { display: flex; gap: 2.4rem; font-size: 1.2rem; letter-spacing: 0.14em; text-transform: uppercase; }
 
     /* The one thing on screen at all times that asks for the job. */
@@ -118,7 +140,7 @@
     .pill.stood-down { opacity: 0; pointer-events: none; transform: translateY(2rem); }
     /* Over the accent band the pill is the same orange as the ground behind
        it and disappears, leaving floating white words. It inverts. */
-    .pill.on-accent { background: var(--bg); color: var(--fg); }
+    .pill.on-accent { background: var(--sand); color: var(--ink); }
     @media (max-width: 700px) { .pill { bottom: 2rem; padding: 1.1rem 1.8rem; font-size: 1.2rem; } }
 
     /* ---------- Hero ---------- */
@@ -127,7 +149,6 @@
        than scrolling past it, so it keeps its own clearance. */
     @media (max-width: 700px) { .hero { padding-bottom: 11rem; } }
     .hero__kick { font-size: 1.2rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin-bottom: 3rem; }
-    .hero em { font-style: normal; color: var(--accent); }
     .hero__foot { margin-top: 5rem; }
     .scroll {
       position: absolute; left: 50%; bottom: 3.4rem; transform: translateX(-50%);
@@ -177,20 +198,23 @@
       position: absolute; inset: 0;
       border-radius: 1rem; overflow: hidden;
       backface-visibility: hidden; -webkit-backface-visibility: hidden;
-      box-shadow: 0 2.4rem 6rem rgba(0, 0, 0, 0.6);
-      background: #111;
+      /* On sand the shadow is the depth cue, so it is tinted with the water
+         rather than being black, which would read as dirt on paper. */
+      box-shadow: 0 2rem 5rem rgba(10, 53, 64, 0.22), 0 0.2rem 0.6rem rgba(10, 53, 64, 0.1);
+      background: var(--stone);
       opacity: var(--op, 1);
       transition: opacity 0.6s var(--ease);
     }
     .dex__face--back {
       transform: rotateX(180deg);
       display: grid; place-items: center;
-      background: #141312;
-      border: 1px solid var(--hair);
+      background: var(--kraft);
+      border: 1px solid color-mix(in srgb, var(--ink) 16%, transparent);
     }
     .dex__face--back span {
-      font-family: var(--display); font-size: 1.3rem;
-      letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted);
+      font-family: var(--body); font-size: 1.3rem;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: color-mix(in srgb, var(--ink) 50%, transparent);
     }
     .dex__shot { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
     .dex__n {
@@ -204,9 +228,9 @@
       padding: clamp(2rem, 3vw, 3.4rem);
       display: flex; align-items: flex-end; justify-content: space-between;
       gap: 1.6rem 2.4rem; flex-wrap: wrap;
-      background: linear-gradient(to top, rgba(6, 6, 6, 0.95) 20%, rgba(6, 6, 6, 0.7) 55%, transparent);
+      background: linear-gradient(to top, rgba(10, 53, 64, 0.96) 20%, rgba(10, 53, 64, 0.72) 55%, transparent);
     }
-    .dex__name { font-family: var(--display); font-weight: 600; font-size: clamp(2rem, 3.2vw, 3.4rem); line-height: 1; letter-spacing: -0.04em; }
+    .dex__name { font-family: var(--display); font-weight: 600; font-size: clamp(2rem, 3.2vw, 3.4rem); line-height: 1.1; letter-spacing: -0.012em; }
     .dex__sector { margin-top: 1rem; font-size: 1.3rem; color: var(--soft); }
     .dex__tags { display: flex; flex-wrap: wrap; gap: 0.7rem; }
     .dex__tags .tag { border-color: rgba(255, 255, 255, 0.28); color: rgba(255, 255, 255, 0.78); }
@@ -224,7 +248,7 @@
       display: grid; place-items: center; font-size: 1.6rem;
       transition: background 0.4s var(--ease), border-color 0.4s var(--ease), color 0.4s var(--ease), opacity 0.3s var(--ease);
     }
-    .dex__nav button:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+    .dex__nav button:hover:not(:disabled) { background: var(--sea); border-color: var(--sea); color: var(--sand); }
     .dex__nav button:disabled { opacity: 0.25; cursor: default; }
     .dex__note { max-width: 58ch; margin-top: 2.6rem; font-size: 1.5rem; color: var(--soft); min-height: 4.5rem; }
     .dex__foot { margin-top: 3rem; font-size: 1.3rem; color: var(--muted); }
@@ -232,20 +256,33 @@
     @media (max-width: 700px) { .dex { margin-top: 18rem; } }
 
     /* ---------- Count ---------- */
-    .count { background: var(--accent); color: var(--on-accent); }
+    /* The one place the page goes into the water. The swell on its top edge
+       is a tiling SVG whose start and end share a height and a slope, so it
+       repeats without a seam and can drift sideways forever. */
+    .count {
+      position: relative;
+      background: var(--deep); color: var(--sand);
+    }
+    .count::before {
+      content: ""; position: absolute; left: 0; right: 0;
+      top: calc(-3.6rem + 1px); height: 3.6rem; pointer-events: none;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 36' preserveAspectRatio='none'%3E%3Cpath d='M0 36V18C30 4 90 4 120 18C150 32 210 32 240 18V36Z' fill='%230A3540'/%3E%3C/svg%3E") repeat-x bottom / 24rem 3.6rem;
+      animation: swell 26s linear infinite;
+    }
+    @keyframes swell { to { background-position-x: -24rem; } }
     .count__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(2rem, 4vw, 5rem); }
     .count__grid > div { display: flex; flex-direction: column; gap: 1.2rem; }
     .count__grid b {
       font-family: var(--display); font-weight: 700;
-      font-size: clamp(5.4rem, 11vw, 15rem); line-height: 0.8; letter-spacing: -0.06em;
+      font-size: clamp(5.4rem, 11vw, 15rem); line-height: 0.9; letter-spacing: -0.024em;
       font-variant-numeric: tabular-nums;
     }
-    .count__grid b em { font-style: normal; opacity: 0.5; }
-    .count__grid span { font-size: 1.2rem; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.76; }
+    .count__grid b em { font-style: normal; color: var(--surf); }
+    .count__grid span { font-size: 1.2rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--surf); }
     @media (max-width: 900px) { .count__grid { grid-template-columns: 1fr 1fr; gap: 5rem 2rem; } }
 
     /* ---------- Quote ---------- */
-    .quote blockquote { font-family: var(--display); font-weight: 500; font-size: clamp(2.4rem, 4.4vw, 5.4rem); line-height: 1.06; letter-spacing: -0.038em; max-width: 26ch; }
+    .quote blockquote { font-family: var(--display); font-weight: 500; font-size: clamp(2.4rem, 4.2vw, 5rem); line-height: 1.16; letter-spacing: -0.014em; max-width: 26ch; }
     .quote figcaption { margin-top: 3.6rem; display: flex; flex-direction: column; gap: 0.6rem; }
     .quote__who { font-size: 1.5rem; }
     .quote__src { font-size: 1.15rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
@@ -255,8 +292,8 @@
     .start__mail {
       display: inline-block; margin-top: 4.4rem;
       font-family: var(--display); font-weight: 600;
-      font-size: clamp(2.2rem, 5vw, 6rem); letter-spacing: -0.045em;
-      border-bottom: 2px solid var(--accent);
+      font-size: clamp(2.2rem, 4.6vw, 5.4rem); letter-spacing: -0.016em;
+      border-bottom: 2px solid var(--surf);
       transition: color 0.4s var(--ease);
     }
     .start__mail:hover { color: var(--accent); }
@@ -536,7 +573,7 @@
             var k = Math.min(-d, 5);
             card.style.transform =
               'rotateX(' + (112 - k * 3) + 'deg) scale(' + (1 - k * 0.02) + ')';
-            card.style.setProperty('--op', String(Math.max(0, 0.52 - k * 0.11)));
+            card.style.setProperty('--op', String(Math.max(0, 0.78 - k * 0.14)));
             card.style.zIndex = String(50 + d);
             card.style.pointerEvents = 'none';
           } else {
@@ -667,12 +704,24 @@
       window.addEventListener('load', function () {
         ScrollTrigger.refresh();
         setTimeout(function () {
+          var onScreen = function (el) {
+            var r = el.getBoundingClientRect();
+            return r.top < innerHeight && r.bottom > 0;
+          };
           gsap.utils.toArray('.rise > span').forEach(function (line) {
-            var r = line.getBoundingClientRect();
-            if (r.top < innerHeight && r.bottom > 0 && gsap.getProperty(line, 'yPercent') > 1) {
+            if (onScreen(line) && gsap.getProperty(line, 'yPercent') > 1) {
               gsap.to(line, { yPercent: 0, duration: 0.6, ease: 'power3.out' });
             }
           });
+          // On a tall screen the hero's own supporting line sits below the
+          // trigger point at rest, so it waits for a scroll that may never
+          // come and the headline stands there with nothing under it.
+          gsap.utils.toArray('.label, .lede, .say__body, .quote figcaption, .start__mail, .dex__foot')
+            .forEach(function (el) {
+              if (onScreen(el) && gsap.getProperty(el, 'opacity') < 0.99) {
+                gsap.to(el, { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out' });
+              }
+            });
         }, 600);
       });
 
