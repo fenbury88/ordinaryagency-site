@@ -690,6 +690,35 @@
         scrollTrigger: { trigger: '.dex', start: 'top 82%' },
       });
 
+      // Sections recede on the way out rather than simply sliding off: they
+      // dim, shrink and soften as their bottom edge heads for the top of the
+      // screen, so whatever is arriving always has clean ground under it.
+      //
+      // Two exclusions, both for cause. The record is last, so it never
+      // leaves — and a filter or an opacity group over it would flatten the
+      // card stack's 3D, which is the same trap that made the turned cards
+      // show their fronts mirrored. The accent band is full-bleed, so
+      // scaling it would open black seams down both sides; it only fades.
+      var soften = innerWidth > 700;
+      gsap.utils.toArray('main > section').forEach(function (sec) {
+        if (sec.id === 'work') return;
+        var bleed = sec.classList.contains('count');
+        gsap.to(sec, {
+          opacity: 0.1,
+          scale: bleed ? 1 : 0.94,
+          filter: (soften && !bleed) ? 'blur(5px)' : 'none',
+          transformOrigin: '50% 30%',
+          ease: 'none',
+          scrollTrigger: {
+            trigger: sec,
+            start: 'bottom 92%',
+            end: 'bottom 30%',
+            scrub: 0.4,
+            invalidateOnRefresh: true,
+          },
+        });
+      });
+
       // The figures run up to themselves when the band arrives.
       gsap.utils.toArray('.count__grid b').forEach(function (el) {
         var to = +el.dataset.to;
