@@ -248,84 +248,105 @@
       background: linear-gradient(var(--muted), transparent);
     }
 
-    /* ---------- The grid ----------
-       Buttermax's structure, as read out of their stylesheet: a flex wrap of
-       squares at 100% / 50% / 33.33%, made square with padding-top rather
-       than aspect-ratio, and the hairline between them drawn by box-shadow —
-       one pixel down and right on every cell, one up and left on the
-       container — so adjacent edges meet on a single line instead of
-       doubling. Theirs holds project videos. There are no projects to show
-       here, so these hold the argument instead: a sentence per square. */
-    .grid {
-      display: flex; flex-wrap: wrap;
-      box-shadow: -1px -1px 0 0 color-mix(in srgb, var(--paper) 14%, transparent);
+    /* ---------- Shared ---------- */
+    .wrap { width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter); }
+    section { padding-block: clamp(6rem, 13vw, 13rem); }
+    .label {
+      display: flex; align-items: center; gap: 1.2rem;
+      font-size: 1.1rem; letter-spacing: 0.24em; text-transform: uppercase;
+      color: var(--accent-bright); margin-bottom: 2.4rem;
     }
-    .cell { width: 100%; box-shadow: 1px 1px 0 0 color-mix(in srgb, var(--paper) 14%, transparent); }
-    @media (min-width: 768px)  { .cell { width: 50%; } }
-    @media (min-width: 1025px) { .cell { width: 33.3333%; } }
-
-    .cell__sq { position: relative; width: 100%; height: 0; padding-top: 100%; overflow: hidden; }
-    .cell__in {
-      position: absolute; inset: 0;
-      display: flex; flex-direction: column;
-      padding: 3.52rem;
+    .label::before { content: ""; width: 3.2rem; height: 1px; background: currentColor; }
+    .big {
+      font-family: var(--font-display); font-weight: 600;
+      font-size: clamp(3.2rem, 7vw, 7.6rem);
+      line-height: 0.96; letter-spacing: var(--track-display);
     }
+    .lede { margin-top: 2.8rem; max-width: 52ch; color: color-mix(in srgb, var(--paper) 62%, transparent); font-size: 1.7rem; }
 
-    /* A sentence, set large enough to be the picture. */
-    .cell__say {
+    /* ---------- The work ----------
+       S25's move, and the thing that makes their work section land: it is a
+       table, not a gallery. A screenshot of somebody else's website reads as
+       filler; the same job written as client, sector and what was built
+       reads as a record. Fifteen rows of it reads as a decade. */
+    .rows { list-style: none; padding: 0; margin-top: clamp(4rem, 8vw, 7rem); }
+    .row {
+      display: grid; align-items: baseline; gap: 1.6rem;
+      grid-template-columns: 4rem minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1.1fr);
+      padding: 2.4rem 0;
+      border-top: 1px solid var(--hair);
+      transition: background 0.4s var(--ease), padding 0.4s var(--ease);
+    }
+    .row:last-child { border-bottom: 1px solid var(--hair); }
+    .row:hover { background: color-mix(in srgb, var(--paper) 4%, transparent); }
+    .row__n { font-size: 1.2rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .row__name {
       font-family: var(--font-display); font-weight: 500;
-      font-size: clamp(1.84rem, 2.1vw, 2.64rem);
-      line-height: 1.16; letter-spacing: -0.025em;
-      color: var(--paper);
+      font-size: clamp(1.8rem, 2.4vw, 2.6rem); letter-spacing: -0.03em;
+      display: flex; flex-direction: column; gap: 0.5rem;
     }
-    .cell__say em { font-style: normal; color: var(--accent-bright); }
-    .cell__n {
-      margin-top: auto; padding-bottom: 2.24rem;
-      font-family: var(--font-display); font-size: 1.152rem;
-      letter-spacing: 0.26em; color: var(--muted);
-      font-variant-numeric: tabular-nums;
+    .row__note { font-family: var(--font-sans); font-size: 1.3rem; font-weight: 400; color: var(--muted); letter-spacing: 0; }
+    .row__sector { font-size: 1.4rem; color: color-mix(in srgb, var(--paper) 58%, transparent); }
+    .row__tags { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+    .tag {
+      font-size: 1.1rem; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.5rem 1.1rem; border-radius: 2rem;
+      border: 1px solid var(--hair); color: var(--muted); white-space: nowrap;
+    }
+    .rows__foot { margin-top: 3rem; font-size: 1.4rem; color: var(--muted); }
+    .rows__foot a { color: var(--accent-bright); border-bottom: 1px solid currentColor; }
+    @media (max-width: 860px) {
+      .row { grid-template-columns: 3rem 1fr; gap: 0.8rem 1.4rem; }
+      .row__sector, .row__tags { grid-column: 2; }
     }
 
-    /* Flat colour, the way their project tiles take the client's brand. */
-    .cell--fill .cell__in { background: var(--accent-bright); }
-    .cell--fill .cell__say, .cell--fill .cell__n { color: var(--on-accent); }
-    .cell--pale .cell__in { background: var(--t-light); }
-    .cell--pale .cell__say, .cell--pale .cell__n { color: var(--t-dark); }
-    .cell--fill .mq__track p { color: var(--on-accent); }
-    .cell--pale .mq__track p { color: var(--t-dark); }
+    /* ---------- Said about us ---------- */
+    .says { border-top: 1px solid var(--hair); }
+    .quote blockquote {
+      font-family: var(--font-display); font-weight: 500;
+      font-size: clamp(2.2rem, 4.2vw, 4.4rem); line-height: 1.08;
+      letter-spacing: -0.035em; max-width: 24ch;
+    }
+    .quote figcaption { margin-top: 3rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .quote__who { font-size: 1.5rem; }
+    .quote__src { font-size: 1.2rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
 
-    /* Their marquee tile: one word, enormous, running across the square.
-       7.68rem at line-height .8 and -.07em, which is their exact spec. */
-    .cell--run .cell__in { justify-content: center; padding: 0; }
-    .mq { width: 100%; overflow: hidden; }
-    .mq__track { display: flex; flex-wrap: nowrap; white-space: nowrap; will-change: transform; }
-    .mq__track p {
+    /* ---------- Who ---------- */
+    .who { border-top: 1px solid var(--hair); }
+    .who__grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(3rem, 7vw, 7rem); align-items: start; }
+    .who__body { color: color-mix(in srgb, var(--paper) 62%, transparent); font-size: 1.6rem; }
+    .who__body p + p { margin-top: 1.6rem; }
+    .facts { margin-top: 4rem; display: grid; gap: 0; }
+    .facts > div {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 1.6rem 0; border-top: 1px solid var(--hair);
+    }
+    .facts dt { font-size: 1.4rem; }
+    .facts dd { font-family: var(--font-display); font-size: 2.4rem; letter-spacing: -0.03em; color: var(--paper); }
+    @media (max-width: 860px) { .who__grid { grid-template-columns: 1fr; } }
+
+    /* ---------- Start ---------- */
+    .start { border-top: 1px solid var(--hair); background: var(--accent-bright); color: var(--on-accent); }
+    .start .label { color: var(--on-accent); }
+    .start .lede { color: color-mix(in srgb, var(--on-accent) 88%, transparent); }
+    .start__mail {
+      display: inline-block; margin-top: 4rem;
       font-family: var(--font-display); font-weight: 600;
-      font-size: clamp(3.84rem, 6vw, 7.68rem);
-      line-height: 0.8; letter-spacing: var(--track-display);
-      padding-right: 0.42em;
-    }
-
-    /* The contact square. The only thing on the page asking for anything. */
-    .cell--ask .cell__in { background: var(--accent-bright); justify-content: space-between; }
-    .cell--ask .cell__say { color: var(--on-accent); }
-    .cell__mail {
-      font-family: var(--font-display); font-weight: 600;
-      font-size: clamp(1.76rem, 1.9vw, 2.4rem);
-      letter-spacing: -0.03em; color: var(--on-accent);
-      border-bottom: 1px solid currentColor; align-self: flex-start;
+      font-size: clamp(2rem, 4.6vw, 4.8rem); letter-spacing: -0.04em;
+      color: var(--on-accent); border-bottom: 2px solid currentColor;
     }
 
     /* ---------- Foot ---------- */
     .foot {
       display: flex; justify-content: space-between; align-items: baseline;
-      flex-wrap: wrap; gap: 1.6rem;
-      padding: 4.16rem var(--gutter);
-      font-size: 1.248rem; letter-spacing: 0.16em; text-transform: uppercase;
+      flex-wrap: wrap; gap: 1rem;
+      padding: 2.6rem var(--gutter);
+      font-size: 1.2rem; letter-spacing: 0.16em; text-transform: uppercase;
       color: var(--muted);
     }
     .foot a { color: inherit; }
     .foot a:hover { color: var(--accent-bright); }
+
     /* Paint. Splats, drips and the landing ripple are all drawn on this one
        canvas by the script below. Painting needs a real mouse; the ripple
        works on touch too. */
@@ -444,61 +465,175 @@
     </div>
   </section>
 
-  <!-- ── The grid ───────────────────────────────────────── -->
-  <section id="work">
-    <ul class="grid">
-      <li class="cell">
-        <div class="cell__sq"><div class="cell__in">
-          <p class="cell__say">Websites for companies that don&rsquo;t advertise themselves.</p>
-          <span class="cell__n">01</span>
-        </div></div>
-      </li>
-      <li class="cell cell--run cell--fill" aria-hidden="true">
-        <div class="cell__sq"><div class="cell__in">
-          <div class="mq"><div class="mq__track"><p>Gold mines &middot; Laboratories &middot; Out&#8209;of&#8209;home &middot; Professional firms &middot; </p><p>Gold mines &middot; Laboratories &middot; Out&#8209;of&#8209;home &middot; Professional firms &middot; </p><p>Gold mines &middot; Laboratories &middot; Out&#8209;of&#8209;home &middot; Professional firms &middot; </p><p>Gold mines &middot; Laboratories &middot; Out&#8209;of&#8209;home &middot; Professional firms &middot; </p><p>Gold mines &middot; Laboratories &middot; Out&#8209;of&#8209;home &middot; Professional firms &middot; </p><p>Gold mines &middot; Laboratories &middot; Out&#8209;of&#8209;home &middot; Professional firms &middot; </p><p>Gold mines &middot; Laboratories &middot; Out&#8209;of&#8209;home &middot; Professional firms &middot; </p><p>Gold mines &middot; Laboratories &middot; Out&#8209;of&#8209;home &middot; Professional firms &middot; </p></div></div>
-        </div></div>
-      </li>
-      <li class="cell">
-        <div class="cell__sq"><div class="cell__in">
-          <p class="cell__say">Fourteen live sites in a decade.</p>
-          <span class="cell__n">02</span>
-        </div></div>
-      </li>
-      <li class="cell">
-        <div class="cell__sq"><div class="cell__in">
-          <p class="cell__say">Not published here. Most of these clients would rather they weren&rsquo;t.</p>
-          <span class="cell__n">03</span>
-        </div></div>
-      </li>
-      <li class="cell cell--run cell--pale" aria-hidden="true">
-        <div class="cell__sq"><div class="cell__in">
-          <div class="mq"><div class="mq__track"><p>Two at a time &middot; </p><p>Two at a time &middot; </p><p>Two at a time &middot; </p><p>Two at a time &middot; </p><p>Two at a time &middot; </p><p>Two at a time &middot; </p><p>Two at a time &middot; </p><p>Two at a time &middot; </p></div></div>
-        </div></div>
-      </li>
-      <li class="cell">
-        <div class="cell__sq"><div class="cell__in">
-          <p class="cell__say">There isn&rsquo;t a &ldquo;we&rdquo;. There&rsquo;s me, and a build team I&rsquo;ve worked with for years.</p>
-          <span class="cell__n">04</span>
-        </div></div>
-      </li>
-      <li class="cell">
-        <div class="cell__sq"><div class="cell__in">
-          <p class="cell__say">I&rsquo;ll tell you when something isn&rsquo;t worth building. That conversation is free.</p>
-          <span class="cell__n">05</span>
-        </div></div>
-      </li>
-      <li class="cell cell--run cell--fill" aria-hidden="true">
-        <div class="cell__sq"><div class="cell__in">
-          <div class="mq"><div class="mq__track"><p>We say <em>no</em> more than yes &middot; </p><p>We say <em>no</em> more than yes &middot; </p><p>We say <em>no</em> more than yes &middot; </p><p>We say <em>no</em> more than yes &middot; </p><p>We say <em>no</em> more than yes &middot; </p><p>We say <em>no</em> more than yes &middot; </p><p>We say <em>no</em> more than yes &middot; </p><p>We say <em>no</em> more than yes &middot; </p></div></div>
-        </div></div>
-      </li>
-      <li class="cell cell--ask">
-        <div class="cell__sq"><div class="cell__in">
-          <p class="cell__say">Tell me what you do and I&rsquo;ll send the three worth your time.</p>
-          <a class="cell__mail" href="mailto:mike@ordinaryagency.com.au">mike@ordinaryagency.com.au</a>
-        </div></div>
-      </li>
-    </ul>
+  <!-- ── The work ───────────────────────────────────────── -->
+  <section class="work" id="work">
+    <div class="wrap">
+      <p class="label">The work</p>
+      <h2 class="big">Fifteen live sites.<br />Here&rsquo;s all of them.</h2>
+      <p class="lede">
+        Not a shortlist and not a gallery. Every one is a site we designed,
+        built and still look after. Open the ones that look like your problem
+        and I&rsquo;ll walk you through what we did and why.
+      </p>
+
+      <ul class="rows">
+        <li class="row">
+          <span class="row__n">01</span>
+          <span class="row__name">BML Ventures<span class="row__note">Gold mining operator, WA Goldfields</span></span>
+          <span class="row__sector">Resources</span>
+          <span class="row__tags"><span class="tag">Website</span></span>
+        </li>
+        <li class="row">
+          <span class="row__n">02</span>
+          <span class="row__name">Australian Biosearch<span class="row__note">Biomedical distributor</span></span>
+          <span class="row__sector">Life sciences</span>
+          <span class="row__tags"><span class="tag">Website</span><span class="tag">Catalogue</span><span class="tag">Ordering</span></span>
+        </li>
+        <li class="row">
+          <span class="row__n">03</span>
+          <span class="row__name">Hay Street Billboard<span class="row__note">Campaign site</span></span>
+          <span class="row__sector">Out-of-home</span>
+          <span class="row__tags"><span class="tag">Website</span></span>
+        </li>
+        <li class="row">
+          <span class="row__n">04</span>
+          <span class="row__name">Stirling Hwy Billboard<span class="row__note">Campaign site</span></span>
+          <span class="row__sector">Out-of-home</span>
+          <span class="row__tags"><span class="tag">Website</span></span>
+        </li>
+        <li class="row">
+          <span class="row__n">05</span>
+          <span class="row__name">JLC Associates<span class="row__note">Accountants, multi-location</span></span>
+          <span class="row__sector">Professional services</span>
+          <span class="row__tags"><span class="tag">Website</span></span>
+        </li>
+        <li class="row">
+          <span class="row__n">06</span>
+          <span class="row__name">Wolfpack Basketball<span class="row__note">Association platform</span></span>
+          <span class="row__sector">Sport</span>
+          <span class="row__tags"><span class="tag">Website</span><span class="tag">Fixtures</span><span class="tag">Results</span></span>
+        </li>
+        <li class="row">
+          <span class="row__n">07</span>
+          <span class="row__name">Barefoot Disciple</span>
+          <span class="row__sector">Personal finance</span>
+          <span class="row__tags"><span class="tag">Website</span></span>
+        </li>
+        <li class="row">
+          <span class="row__n">08</span>
+          <span class="row__name">Instant Fun<span class="row__note">Hire and purchase in one shop</span></span>
+          <span class="row__sector">Retail</span>
+          <span class="row__tags"><span class="tag">E-commerce</span></span>
+        </li>
+        <li class="row">
+          <span class="row__n">09</span>
+          <span class="row__name">ICEAGE Parts & Cranes<span class="row__note">Rebuilt around the parts catalogue</span></span>
+          <span class="row__sector">Heavy equipment</span>
+          <span class="row__tags"><span class="tag">Website</span></span>
+        </li>
+        <li class="row">
+          <span class="row__n">10</span>
+          <span class="row__name">Zen Cooling</span>
+          <span class="row__sector">Climate systems</span>
+          <span class="row__tags"><span class="tag">Website</span></span>
+        </li>
+        <li class="row">
+          <span class="row__n">11</span>
+          <span class="row__name">Glazing on the Swan</span>
+          <span class="row__sector">Architectural glass</span>
+          <span class="row__tags"><span class="tag">Website</span></span>
+        </li>
+        <li class="row">
+          <span class="row__n">12</span>
+          <span class="row__name">All Style Bathrooms</span>
+          <span class="row__sector">Construction</span>
+          <span class="row__tags"><span class="tag">Website</span></span>
+        </li>
+        <li class="row">
+          <span class="row__n">13</span>
+          <span class="row__name">Dream Sliding Door Repairs</span>
+          <span class="row__sector">Trade services</span>
+          <span class="row__tags"><span class="tag">Website</span></span>
+        </li>
+        <li class="row">
+          <span class="row__n">14</span>
+          <span class="row__name">WA Pest Consultants</span>
+          <span class="row__sector">Field services</span>
+          <span class="row__tags"><span class="tag">Website</span></span>
+        </li>
+        <li class="row">
+          <span class="row__n">15</span>
+          <span class="row__name">United Pest Control</span>
+          <span class="row__sector">Field services</span>
+          <span class="row__tags"><span class="tag">Website</span></span>
+        </li>
+      </ul>
+
+      <p class="rows__foot">
+        Engagement lengths and outcomes aren&rsquo;t published here yet &mdash;
+        <a href="mailto:mike@ordinaryagency.com.au">ask about the ones relevant to you</a>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Said about us ──────────────────────────────────── -->
+  <section class="says">
+    <div class="wrap">
+      <p class="label">Said about us</p>
+      <figure class="quote">
+        <blockquote>
+          Their work is second to none and their understanding of marketing,
+          website building and Google is incredible.
+        </blockquote>
+        <figcaption>
+          <span class="quote__who">Michael Mitrovic</span>
+          <span class="quote__src">Google review &middot; 5.0 average</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ── Who you deal with ──────────────────────────────── -->
+  <section class="who">
+    <div class="wrap who__grid">
+      <div>
+        <p class="label">Who you deal with</p>
+        <h2 class="big">There isn&rsquo;t a &ldquo;we&rdquo;.</h2>
+      </div>
+      <div class="who__body">
+        <p>
+          I&rsquo;m Mike. A decade of designing and building sites, mostly for
+          companies that don&rsquo;t advertise themselves &mdash; mining
+          operators, laboratories, professional firms. You deal with me from
+          the first call to the last deploy.
+        </p>
+        <p>
+          I&rsquo;ll also tell you when something isn&rsquo;t worth building.
+          Half the jobs that come through here don&rsquo;t need what the last
+          agency sold them, and that conversation is free.
+        </p>
+        <dl class="facts">
+          <div><dt>Live sites built</dt><dd>15</dd></div>
+          <div><dt>Years at it</dt><dd>10+</dd></div>
+          <div><dt>Projects at once</dt><dd>2</dd></div>
+          <div><dt>Account managers</dt><dd>0</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Start ──────────────────────────────────────────── -->
+  <section class="start">
+    <div class="wrap">
+      <p class="label">Start here</p>
+      <h2 class="big">Tell me what you&rsquo;re building.</h2>
+      <p class="lede">
+        An email is enough. I read them myself and I&rsquo;ll tell you within a
+        day whether it&rsquo;s worth a conversation &mdash; including when it
+        isn&rsquo;t.
+      </p>
+      <a class="start__mail" href="mailto:mike@ordinaryagency.com.au">mike@ordinaryagency.com.au</a>
+    </div>
   </section>
 
   <footer class="foot">
@@ -506,7 +641,6 @@
     <span><a href="mailto:mike@ordinaryagency.com.au">mike@ordinaryagency.com.au</a></span>
   </footer>
 
-  <!-- Lab only: pick a direction. Comes out once one is chosen. -->
   <div class="themes" id="themes">
     <b>Theme</b>
     <button data-t="studio" style="--sw:#57BE89" aria-pressed="true" title="Studio">&nbsp;</button>
