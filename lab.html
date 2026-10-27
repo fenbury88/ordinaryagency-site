@@ -116,6 +116,9 @@
     /* Once the contact section is on screen the pill is asking for something
        already in front of you, and it sits over the footer. It stands down. */
     .pill.stood-down { opacity: 0; pointer-events: none; transform: translateY(2rem); }
+    /* Over the accent band the pill is the same orange as the ground behind
+       it and disappears, leaving floating white words. It inverts. */
+    .pill.on-accent { background: var(--bg); color: var(--fg); }
     @media (max-width: 700px) { .pill { bottom: 2rem; padding: 1.1rem 1.8rem; font-size: 1.2rem; } }
 
     /* ---------- Hero ---------- */
@@ -636,6 +639,15 @@
         pill.classList.toggle('stood-down', showing.size > 0);
       }, { threshold: 0.12 });
       zones.forEach(function (z) { io.observe(z); });
+
+      // The pill sits low on the screen, so what matters is whether the
+      // accent band is under it rather than merely on screen.
+      var band = document.querySelector('.count');
+      if (band) {
+        new IntersectionObserver(function (entries) {
+          pill.classList.toggle('on-accent', entries[0].isIntersecting);
+        }, { rootMargin: '-93% 0px -1% 0px' }).observe(band);
+      }
     })();
 
     // ── Motion ──────────────────────────────────────────────────────
