@@ -138,62 +138,95 @@
     .say__body p + p { margin-top: 2rem; }
     @media (max-width: 900px) { .say__grid { grid-template-columns: 1fr; } }
 
-    /* ---------- Work ----------
-       A table you can open. A screenshot sitting in a grid is filler; the
-       same screenshot shown because somebody asked for it is evidence. */
-    .rows { list-style: none; padding: 0; margin-top: clamp(5rem, 8vw, 9rem); }
-    .row { border-top: 1px solid var(--hair); }
-    .row:last-child { border-bottom: 1px solid var(--hair); }
-    .row__btn {
-      width: 100%; text-align: left;
-      display: grid; align-items: center; gap: 2rem;
-      grid-template-columns: 4.4rem minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1.2fr) 3.6rem;
-      padding: 3rem 0;
-      transition: padding 0.5s var(--ease), background 0.5s var(--ease);
-    }
-    .row:hover .row__btn, .row.open .row__btn { padding-inline: 1.8rem; background: color-mix(in srgb, var(--fg) 4%, transparent); }
-    .row__n { font-size: 1.2rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-    .row__name {
-      font-family: var(--display); font-weight: 600;
-      font-size: clamp(2.2rem, 3.2vw, 3.8rem); line-height: 1; letter-spacing: -0.04em;
-      transition: color 0.4s var(--ease), transform 0.5s var(--ease);
-    }
-    .row:hover .row__name, .row.open .row__name { color: var(--accent); transform: translateX(1.2rem); }
-    .row__sector { font-size: 1.4rem; color: var(--soft); }
-    .row__tags { display: flex; flex-wrap: wrap; gap: 0.7rem; }
+    /* ---------- The index ----------
+       A desk card index, not a grid and not a list. One card faces you; the
+       rest wait underneath as edges. Turning one sends it up and over onto a
+       pile, which is the motion the object actually has. Fifteen screenshots
+       side by side was the thing that looked cheap. */
     .tag {
       font-size: 1.05rem; letter-spacing: 0.1em; text-transform: uppercase;
       padding: 0.6rem 1.2rem; border-radius: 3rem;
       border: 1px solid var(--hair); color: var(--muted); white-space: nowrap;
     }
-    .row__eye {
-      justify-self: end; width: 3.6rem; height: 3.6rem; border-radius: 50%;
-      border: 1px solid var(--hair); position: relative;
-      transition: background 0.4s var(--ease), border-color 0.4s var(--ease), transform 0.55s var(--ease);
-    }
-    .row__eye::before, .row__eye::after {
-      content: ""; position: absolute; inset: 50% 30%; height: 1px;
-      background: currentColor; transform: translateY(-50%);
-    }
-    .row__eye::after { transform: translateY(-50%) rotate(90deg); transition: opacity 0.4s var(--ease); }
-    .row.open .row__eye { background: var(--accent); border-color: var(--accent); color: var(--on-accent); transform: rotate(180deg); }
-    .row.open .row__eye::after { opacity: 0; }
 
-    /* Height can't animate from auto; a 0fr to 1fr grid track can. */
-    .row__open { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.65s var(--ease); }
-    .row.open .row__open { grid-template-rows: 1fr; }
-    .row__in { overflow: hidden; }
-    .shot { border-radius: 0.8rem; overflow: hidden; aspect-ratio: 16 / 7; background: color-mix(in srgb, var(--fg) 6%, transparent); }
-    .shot img { width: 100%; height: 100%; object-fit: cover; object-position: center top; filter: grayscale(1) brightness(0.85); transition: filter 0.7s var(--ease); }
-    .row.open .shot img { filter: none; }
-    .note { max-width: 60ch; margin: 2.4rem 0 3.4rem; font-size: 1.5rem; color: var(--soft); }
-    .rows__foot { margin-top: 3.4rem; font-size: 1.4rem; color: var(--muted); }
-    .rows__foot a { color: var(--accent); border-bottom: 1px solid currentColor; }
-    @media (max-width: 900px) {
-      .row__btn { grid-template-columns: 3.4rem 1fr 3.6rem; gap: 1rem 1.4rem; }
-      .row__sector, .row__tags { grid-column: 2; }
-      .row__eye { grid-row: 1; grid-column: 3; }
+    /* Clearance for the turned pile, which stands above the spine. */
+    .dex { margin-top: clamp(25rem, 33vw, 35rem); }
+    .dex__stage {
+      position: relative; perspective: 2400px;
+      max-width: 104rem; margin-inline: auto;
+      cursor: grab; touch-action: pan-y;
     }
+    .dex__stage:active { cursor: grabbing; }
+    .dex__stage:focus-visible { outline: 2px solid var(--accent); outline-offset: 2.4rem; }
+    /* One element in normal flow holds the height; every card floats on top. */
+    .dex__sizer { aspect-ratio: 16 / 10; }
+    .dex__card {
+      position: absolute; inset: 0;
+      transform-origin: 50% 0%;
+      transform-style: preserve-3d;
+      transition: transform 0.9s cubic-bezier(0.52, 0.03, 0.18, 1);
+      will-change: transform;
+    }
+    /* overflow:hidden would flatten the 3D, so the radius lives on the faces. */
+    /* Opacity on the card itself would flatten its 3D and show the front
+       face mirrored instead of the back, so the fade lives down here. */
+    .dex__face {
+      position: absolute; inset: 0;
+      border-radius: 1rem; overflow: hidden;
+      backface-visibility: hidden; -webkit-backface-visibility: hidden;
+      box-shadow: 0 2.4rem 6rem rgba(0, 0, 0, 0.6);
+      background: #111;
+      opacity: var(--op, 1);
+      transition: opacity 0.6s var(--ease);
+    }
+    .dex__face--back {
+      transform: rotateX(180deg);
+      display: grid; place-items: center;
+      background: #141312;
+      border: 1px solid var(--hair);
+    }
+    .dex__face--back span {
+      font-family: var(--display); font-size: 1.3rem;
+      letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted);
+    }
+    .dex__shot { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
+    .dex__n {
+      position: absolute; z-index: 2;
+      top: clamp(1.8rem, 2.6vw, 2.8rem); left: clamp(1.8rem, 2.6vw, 2.8rem);
+      font-size: 1.2rem; letter-spacing: 0.16em; color: #fff;
+      mix-blend-mode: difference; font-variant-numeric: tabular-nums;
+    }
+    .dex__meta {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      padding: clamp(2rem, 3vw, 3.4rem);
+      display: flex; align-items: flex-end; justify-content: space-between;
+      gap: 1.6rem 2.4rem; flex-wrap: wrap;
+      background: linear-gradient(to top, rgba(6, 6, 6, 0.95) 20%, rgba(6, 6, 6, 0.7) 55%, transparent);
+    }
+    .dex__name { font-family: var(--display); font-weight: 600; font-size: clamp(2rem, 3.2vw, 3.4rem); line-height: 1; letter-spacing: -0.04em; }
+    .dex__sector { margin-top: 1rem; font-size: 1.3rem; color: var(--soft); }
+    .dex__tags { display: flex; flex-wrap: wrap; gap: 0.7rem; }
+    .dex__tags .tag { border-color: rgba(255, 255, 255, 0.28); color: rgba(255, 255, 255, 0.78); }
+
+    .dex__under { max-width: 104rem; margin-inline: auto; }
+    .dex__bar {
+      margin-top: 3.4rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 2rem;
+    }
+    .dex__count { font-size: 1.3rem; letter-spacing: 0.16em; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .dex__nav { display: flex; gap: 1rem; }
+    .dex__nav button {
+      width: 4.4rem; height: 4.4rem; border-radius: 50%;
+      border: 1px solid var(--hair); color: var(--fg);
+      display: grid; place-items: center; font-size: 1.6rem;
+      transition: background 0.4s var(--ease), border-color 0.4s var(--ease), color 0.4s var(--ease), opacity 0.3s var(--ease);
+    }
+    .dex__nav button:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+    .dex__nav button:disabled { opacity: 0.25; cursor: default; }
+    .dex__note { max-width: 58ch; margin-top: 2.6rem; font-size: 1.5rem; color: var(--soft); min-height: 4.5rem; }
+    .dex__foot { margin-top: 3rem; font-size: 1.3rem; color: var(--muted); }
+    .dex__foot a { color: var(--accent); border-bottom: 1px solid currentColor; }
+    @media (max-width: 700px) { .dex { margin-top: 18rem; } }
 
     /* ---------- Count ---------- */
     .count { background: var(--accent); color: var(--on-accent); }
@@ -263,15 +296,18 @@
       <div class="wrap">
         <p class="hero__kick">Perth, Western Australia</p>
         <h1 class="h-xl">
-          <span class="rise"><span>Websites for</span></span>
-          <span class="rise"><span>companies that</span></span>
-          <span class="rise"><span>don&rsquo;t <em>advertise</em></span></span>
-          <span class="rise"><span>themselves.</span></span>
+          <span class="rise"><span>Attention is</span></span>
+          <span class="rise"><span>rented. Only the</span></span>
+          <span class="rise"><span>thing you built</span></span>
+          <span class="rise"><span>is <em>owned</em>.</span></span>
         </h1>
         <div class="hero__foot">
           <p class="lede" style="margin-top:0">
-            Gold mines, laboratories, out&#8209;of&#8209;home and professional
-            firms. Fifteen live sites in a decade, two projects at a time.
+            Feeds turn over, auctions inflate, and a model you have never met
+            now answers questions about you before any human arrives. None of it
+            asks permission. What stays yours is the quality of the place people
+            land &mdash; so that is where the attention goes here, and very
+            nearly nowhere else.
           </p>
         </div>
         <span class="scroll">Scroll</span>
@@ -281,59 +317,55 @@
     <section class="say">
       <div class="wrap say__grid">
         <div>
-          <p class="label">The approach</p>
+          <p class="label">The philosophy</p>
           <h2 class="h-lg">
-            <span class="rise"><span>Built to be</span></span>
-            <span class="rise"><span>used, not</span></span>
-            <span class="rise"><span>admired.</span></span>
+            <span class="rise"><span>Restraint,</span></span>
+            <span class="rise"><span>held long enough,</span></span>
+            <span class="rise"><span>becomes a <em>strategy</em>.</span></span>
           </h2>
         </div>
         <div class="say__body">
           <p>
-            Most of these clients sell something difficult to people who already
-            know what they want. The job isn&rsquo;t to impress them &mdash;
-            it&rsquo;s to get out of the way of the thing they came for, whether
-            that&rsquo;s a parts catalogue, a product list or a phone number.
+            There is a kind of website that announces itself. Motion in every
+            corner, a claim in every direction, three offers before you have
+            finished arriving. It performs confidence, which is the most
+            reliable sign of its absence.
           </p>
           <p>
-            I design it, I build it, and I&rsquo;m still the person you call two
-            years later when it needs to change.
+            The other kind makes fewer moves and makes each one load&#8209;bearing.
+            Structure a search engine can parse and a language model can quote
+            without hedging. Sentences that survive a second reading. The
+            restraint reads as expense because it is one: deciding what to leave
+            out takes longer than adding.
+          </p>
+          <p>
+            Increasingly your next customer will not see your homepage at all.
+            They will ask a machine, and the machine will answer out of whatever
+            it can read, understand and trust. That is not a new discipline. It
+            is the old one, enforced &mdash; be legible, be specific, be worth
+            quoting.
+          </p>
+          <p>
+            What you are buying is a long finish. The site still makes sense in
+            three years, when the campaign that paid for it is a line in an old
+            spreadsheet.
           </p>
         </div>
-      </div>
-    </section>
-
-    <section id="work">
-      <div class="wrap">
-        <p class="label">The work</p>
-        <h2 class="h-lg">
-          <span class="rise"><span>Fifteen live sites.</span></span>
-          <span class="rise"><span>Here&rsquo;s all of them.</span></span>
-        </h2>
-        <p class="lede">
-          Not a shortlist and not a gallery. Open the ones that look like your
-          problem and I&rsquo;ll walk you through what we did and why.
-        </p>
-        <ul class="rows" id="rows"></ul>
-        <p class="rows__foot">
-          Engagement lengths and outcomes aren&rsquo;t published here yet &mdash;
-          <a href="mailto:mike@ordinaryagency.com.au">ask about the ones relevant to you</a>.
-        </p>
       </div>
     </section>
 
     <section class="count">
       <div class="wrap count__grid">
-        <div><b data-to="15">15</b><span>Live sites built</span></div>
-        <div><b data-to="10" data-suffix="+">10<em>+</em></b><span>Years at it</span></div>
-        <div><b data-to="2">2</b><span>Projects at once</span></div>
+        <div><b data-to="15">15</b><span>Sites in the world</span></div>
+        <div><b data-to="10" data-suffix="+">10<em>+</em></b><span>Years in practice</span></div>
+        <div><b data-to="2">2</b><span>At any one time</span></div>
         <div><b data-to="0">0</b><span>Account managers</span></div>
       </div>
     </section>
 
     <section class="quote">
       <div class="wrap">
-        <p class="label">Said about us</p>
+        <p class="label">On the record</p>
         <figure>
           <blockquote>
             <span class="rise"><span>Their work is second to none</span></span>
@@ -361,15 +393,15 @@
         <div class="say__body">
           <p>
             I&rsquo;m Mike. A decade of designing and building sites, mostly for
-            companies that don&rsquo;t advertise themselves. You deal with me
-            from the first call to the last deploy &mdash; no salesperson who
-            vanishes once the deposit clears, and no account manager relaying
-            your message to someone you&rsquo;ll never meet.
+            companies with no particular interest in advertising themselves. You
+            deal with me from the first conversation to the last deploy &mdash;
+            no salesperson who evaporates once the deposit clears, and no account
+            manager relaying your words to someone you will never meet.
           </p>
           <p>
-            I&rsquo;ll also tell you when something isn&rsquo;t worth building.
-            Half the jobs that come through here don&rsquo;t need what the last
-            agency sold them, and that conversation is free.
+            It is a deliberately small practice. Two projects at a time, because
+            the work that holds up is the work somebody actually thought about,
+            and thinking does not parallelise.
           </p>
         </div>
       </div>
@@ -383,11 +415,45 @@
           <span class="rise"><span>you&rsquo;re building.</span></span>
         </h2>
         <p class="lede">
-          An email is enough. I read them myself and I&rsquo;ll tell you within a
-          day whether it&rsquo;s worth a conversation &mdash; including when it
-          isn&rsquo;t.
+          An email is enough. Tell me what you&rsquo;re building, what it has to
+          do and who it has to do it for, and you&rsquo;ll have a considered
+          reply within a day &mdash; written by me, not a template, and not a
+          link to my calendar.
         </p>
         <a class="start__mail" href="mailto:mike@ordinaryagency.com.au">mike@ordinaryagency.com.au</a>
+      </div>
+    </section>
+
+    <section id="work">
+      <div class="wrap">
+        <p class="label">The record</p>
+        <h2 class="h-lg">
+          <span class="rise"><span>Fifteen,</span></span>
+          <span class="rise"><span>on file.</span></span>
+        </h2>
+        <p class="lede">
+          A card index rather than a showreel &mdash; kept at the back, where a
+          reference belongs. Turn it.
+        </p>
+
+        <div class="dex">
+          <div class="dex__stage" id="dex" tabindex="0" role="group"
+               aria-roledescription="card index" aria-label="Past projects, one card at a time"></div>
+          <div class="dex__under">
+          <div class="dex__bar">
+            <p class="dex__count" id="dexcount" aria-live="polite">01 / 15</p>
+            <div class="dex__nav">
+              <button type="button" id="dexprev" aria-label="Previous card">&#8592;</button>
+              <button type="button" id="dexnext" aria-label="Next card">&#8594;</button>
+            </div>
+          </div>
+          <p class="dex__note" id="dexnote"></p>
+          <p class="dex__foot">
+            Engagement lengths and outcomes aren&rsquo;t published here yet &mdash;
+            <a href="mailto:mike@ordinaryagency.com.au">ask about the ones relevant to you</a>.
+          </p>
+          </div>
+        </div>
       </div>
     </section>
   </main>
@@ -425,50 +491,102 @@
       ['United Pest Control', 'Field services', '', 'unitedpestcontrol', ['Website']],
     ];
 
-    const rows = document.getElementById('rows');
-    rows.innerHTML = WORK.map(function (c, i) {
-      var name = c[0], sector = c[1], note = c[2], img = c[3], tags = c[4];
-      var n = String(i + 1).padStart(2, '0');
-      var tagHtml = tags.map(function (t) { return '<span class="tag">' + t + '</span>'; }).join('');
-      var noteHtml = note ? '<p class="note">' + note + '</p>' : '<div style="height:3.4rem"></div>';
-      return '<li class="row">' +
-        '<button class="row__btn" type="button" aria-expanded="false">' +
-          '<span class="row__n">' + n + '</span>' +
-          '<span class="row__name">' + name + '</span>' +
-          '<span class="row__sector">' + sector + '</span>' +
-          '<span class="row__tags">' + tagHtml + '</span>' +
-          '<span class="row__eye" aria-hidden="true"></span>' +
-        '</button>' +
-        '<div class="row__open"><div class="row__in">' +
-          '<div class="shot"><img src="assets/work/' + img + '.webp" alt="" loading="lazy" decoding="async" /></div>' +
-          noteHtml +
-        '</div></div>' +
-      '</li>';
-    }).join('');
+    // ── The card index ──────────────────────────────────────────────
+    // A Rolodex has one motion: the facing card is flicked up and over onto
+    // a pile, and the next edge becomes the face. Everything here serves
+    // that — the stack sits in 3D, the turned cards keep their backs to you,
+    // and nothing is ever shown that nobody asked to see.
+    (function cardIndex() {
+      var stage = document.getElementById('dex');
+      var countEl = document.getElementById('dexcount');
+      var noteEl = document.getElementById('dexnote');
+      var prevBtn = document.getElementById('dexprev');
+      var nextBtn = document.getElementById('dexnext');
+      if (!stage) return;
 
-    // One open at a time. Fifteen hanging open is the gallery this avoids.
-    var settle;
-    rows.addEventListener('click', function (e) {
-      var btn = e.target.closest('.row__btn');
-      if (!btn) return;
-      var row = btn.closest('.row');
-      var was = row.classList.contains('open');
-      rows.querySelectorAll('.row.open').forEach(function (r) {
-        r.classList.remove('open');
-        r.querySelector('.row__btn').setAttribute('aria-expanded', 'false');
+      var pad = function (n) { return String(n).padStart(2, '0'); };
+
+      stage.innerHTML = '<div class="dex__sizer"></div>' + WORK.map(function (c, idx) {
+        return '<article class="dex__card">' +
+          '<div class="dex__face dex__face--front">' +
+            '<img class="dex__shot" src="assets/work/' + c[3] + '.webp" alt="' + c[0] + '" loading="lazy" decoding="async" />' +
+            '<span class="dex__n">' + pad(idx + 1) + '</span>' +
+            '<div class="dex__meta">' +
+              '<div><p class="dex__name">' + c[0] + '</p><p class="dex__sector">' + c[1] + '</p></div>' +
+              '<div class="dex__tags">' + c[4].map(function (t) { return '<span class="tag">' + t + '</span>'; }).join('') + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="dex__face dex__face--back"><span>' + c[0] + '</span></div>' +
+        '</article>';
+      }).join('');
+
+      var cards = [].slice.call(stage.querySelectorAll('.dex__card'));
+      var i = 0;
+
+      function render() {
+        cards.forEach(function (card, idx) {
+          var d = idx - i;
+          if (d < 0) {
+            // Turned: up and over, backs to the room. Past 110 degrees or so
+            // a card is nearly edge-on, which is what makes a pile read as a
+            // pile rather than as a second stack blocking the heading.
+            var k = Math.min(-d, 5);
+            card.style.transform =
+              'rotateX(' + (112 - k * 3) + 'deg) scale(' + (1 - k * 0.02) + ')';
+            card.style.setProperty('--op', String(Math.max(0, 0.52 - k * 0.11)));
+            card.style.zIndex = String(50 + d);
+            card.style.pointerEvents = 'none';
+          } else {
+            // Waiting: each one lower and smaller, so what you see of the
+            // stack is a run of edges under the card that is facing you.
+            var k2 = Math.min(d, 4);
+            card.style.transform = 'translateY(' + (k2 * 2.2) + 'rem) scale(' + (1 - k2 * 0.03) + ')';
+            card.style.setProperty('--op', d > 4 ? '0' : String(1 - k2 * 0.08));
+            card.style.zIndex = String(d === 0 ? 60 : 40 - d);
+            card.style.pointerEvents = d === 0 ? 'auto' : 'none';
+          }
+        });
+        countEl.textContent = pad(i + 1) + ' / ' + pad(cards.length);
+        noteEl.innerHTML = WORK[i][2] || '';
+        prevBtn.disabled = i === 0;
+        nextBtn.disabled = i === cards.length - 1;
+      }
+
+      function go(n) {
+        n = Math.max(0, Math.min(cards.length - 1, n));
+        if (n === i) return;
+        i = n;
+        render();
+      }
+
+      render();
+
+      prevBtn.addEventListener('click', function () { go(i - 1); });
+      nextBtn.addEventListener('click', function () { go(i + 1); });
+      stage.addEventListener('click', function () { go(i + 1); });
+
+      stage.addEventListener('keydown', function (e) {
+        var k = e.key;
+        if (k === 'ArrowRight' || k === 'ArrowDown' || k === ' ') { e.preventDefault(); go(i + 1); }
+        else if (k === 'ArrowLeft' || k === 'ArrowUp') { e.preventDefault(); go(i - 1); }
+        else if (k === 'Home') { e.preventDefault(); go(0); }
+        else if (k === 'End') { e.preventDefault(); go(cards.length - 1); }
       });
-      if (!was) {
-        row.classList.add('open');
-        btn.setAttribute('aria-expanded', 'true');
-      }
-      // The panel takes 0.65s to open. Measuring now would cache every
-      // position below the table against a height that is about to change,
-      // so wait for the row to settle before telling ScrollTrigger.
-      if (window.ScrollTrigger) {
-        clearTimeout(settle);
-        settle = setTimeout(function () { ScrollTrigger.refresh(); }, 700);
-      }
-    });
+
+      // Dragging the top card up turns it, the way you would with your thumb.
+      // A short drag is a click, so the click handler keeps working.
+      var down = null;
+      stage.addEventListener('pointerdown', function (e) { down = { y: e.clientY, t: Date.now() }; });
+      stage.addEventListener('pointerup', function (e) {
+        if (!down) return;
+        var dy = e.clientY - down.y;
+        down = null;
+        if (Math.abs(dy) < 36) return;
+        e.stopPropagation();
+        go(dy < 0 ? i + 1 : i - 1);
+      });
+      stage.addEventListener('pointercancel', function () { down = null; });
+    })();
 
     // ── Smooth scroll ───────────────────────────────────────────────
     // Lenis replaces the browser's stepped scroll with an interpolated one.
@@ -508,11 +626,16 @@
     // motion reduced or if GSAP fails to load.
     (function standDown() {
       var pill = document.querySelector('.pill');
-      var start = document.getElementById('start');
-      if (!pill || !start || !window.IntersectionObserver) return;
-      new IntersectionObserver(function (entries) {
-        pill.classList.toggle('stood-down', entries[0].isIntersecting);
-      }, { threshold: 0.12 }).observe(start);
+      var zones = [document.getElementById('start'), document.querySelector('.foot')].filter(Boolean);
+      if (!pill || !zones.length || !window.IntersectionObserver) return;
+      var showing = new Set();
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) showing.add(e.target); else showing.delete(e.target);
+        });
+        pill.classList.toggle('stood-down', showing.size > 0);
+      }, { threshold: 0.12 });
+      zones.forEach(function (z) { io.observe(z); });
     })();
 
     // ── Motion ──────────────────────────────────────────────────────
@@ -541,16 +664,18 @@
         }, 600);
       });
 
-      gsap.utils.toArray('.label, .lede, .say__body, .quote figcaption, .start__mail, .rows__foot').forEach(function (el) {
+      gsap.utils.toArray('.label, .lede, .say__body, .quote figcaption, .start__mail, .dex__foot').forEach(function (el) {
         gsap.from(el, {
           opacity: 0, y: 24, duration: 0.9, ease: 'power2.out',
           scrollTrigger: { trigger: el, start: 'top 92%' },
         });
       });
 
-      gsap.from('.row', {
-        opacity: 0, y: 30, duration: 0.7, stagger: 0.045, ease: 'power2.out',
-        scrollTrigger: { trigger: '.rows', start: 'top 80%' },
+      // The stack arrives as one object. Animating the cards themselves would
+      // fight the transforms the index sets on every one of them.
+      gsap.from('.dex', {
+        opacity: 0, y: 40, duration: 1, ease: 'power2.out',
+        scrollTrigger: { trigger: '.dex', start: 'top 82%' },
       });
 
       // The figures run up to themselves when the band arrives.
