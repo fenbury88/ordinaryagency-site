@@ -109,13 +109,20 @@
       padding: 1.3rem 2.2rem; border-radius: 4rem;
       background: var(--accent); color: var(--on-accent);
       font-size: 1.3rem; font-weight: 500;
-      transition: transform 0.45s var(--ease);
+      transition: transform 0.45s var(--ease), opacity 0.45s var(--ease);
     }
     .pill:hover { transform: translateY(-3px); }
     .pill::after { content: "\2192"; }
+    /* Once the contact section is on screen the pill is asking for something
+       already in front of you, and it sits over the footer. It stands down. */
+    .pill.stood-down { opacity: 0; pointer-events: none; transform: translateY(2rem); }
+    @media (max-width: 700px) { .pill { bottom: 2rem; padding: 1.1rem 1.8rem; font-size: 1.2rem; } }
 
     /* ---------- Hero ---------- */
     .hero { position: relative; min-height: 100svh; display: flex; align-items: flex-end; padding-bottom: clamp(6rem, 10vw, 12rem); }
+    /* The hero is the one block that sits under the pill permanently rather
+       than scrolling past it, so it keeps its own clearance. */
+    @media (max-width: 700px) { .hero { padding-bottom: 11rem; } }
     .hero__kick { font-size: 1.2rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin-bottom: 3rem; }
     .hero em { font-style: normal; color: var(--accent); }
     .hero__foot { margin-top: 5rem; }
@@ -440,6 +447,7 @@
     }).join('');
 
     // One open at a time. Fifteen hanging open is the gallery this avoids.
+    var settle;
     rows.addEventListener('click', function (e) {
       var btn = e.target.closest('.row__btn');
       if (!btn) return;
@@ -453,7 +461,13 @@
         row.classList.add('open');
         btn.setAttribute('aria-expanded', 'true');
       }
-      if (window.ScrollTrigger) ScrollTrigger.refresh();
+      // The panel takes 0.65s to open. Measuring now would cache every
+      // position below the table against a height that is about to change,
+      // so wait for the row to settle before telling ScrollTrigger.
+      if (window.ScrollTrigger) {
+        clearTimeout(settle);
+        settle = setTimeout(function () { ScrollTrigger.refresh(); }, 700);
+      }
     });
 
     // ── Smooth scroll ───────────────────────────────────────────────
@@ -487,6 +501,19 @@
         else t.scrollIntoView({ behavior: 'smooth' });
       });
     });
+
+    // The pill stands down over the contact section — it would be asking
+    // for something already on screen, and covering the footer to do it.
+    // An observer rather than a ScrollTrigger, so it still works with
+    // motion reduced or if GSAP fails to load.
+    (function standDown() {
+      var pill = document.querySelector('.pill');
+      var start = document.getElementById('start');
+      if (!pill || !start || !window.IntersectionObserver) return;
+      new IntersectionObserver(function (entries) {
+        pill.classList.toggle('stood-down', entries[0].isIntersecting);
+      }, { threshold: 0.12 }).observe(start);
+    })();
 
     // ── Motion ──────────────────────────────────────────────────────
     if (window.gsap && !reduce) {
