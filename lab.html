@@ -9,27 +9,101 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Fraunces:opsz,wght@9..144,400..600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
 
   <!-- Prototype: deliberately self-contained. Nothing here touches style.css or
        main.js, so the live site can't break while we play. -->
   <style>
+    /* Two fixed tokens per theme — the dark one and the light one — and
+       nothing else references a colour directly. --paper is always the
+       foreground and --ink always the ground, so .inv inverts the whole page
+       by swapping which token each alias points at. Everything in between is
+       a percentage of one of them via color-mix, which is why a theme only
+       has to declare five values. */
     :root {
-      --paper: #FAFAF7;
-      --ink: #0E0E0A;
-      --ink-soft: #45443D;
-      --muted: #66645B;
+      --t-dark: #0E0E0A;
+      --t-light: #FAFAF7;
       --accent: #2C7A57;
       --accent-bright: #57BE89;
       --font-display: "Space Grotesk", -apple-system, sans-serif;
       --font-sans: "Inter", -apple-system, sans-serif;
       --font-logo: "Fraunces", Georgia, serif;
+
+      --paper: var(--t-light);
+      --ink: var(--t-dark);
+      --muted: color-mix(in srgb, var(--paper) 46%, transparent);
+      --hair: color-mix(in srgb, var(--paper) 14%, transparent);
       --gutter: clamp(2rem, 5vw, 6.4rem);
       --maxw: 1240px;
       --ease: cubic-bezier(0.215, 0.61, 0.355, 1);
       /* 0 = ordinary, 1 = extraordinary. Set by JS on scroll. */
+      --on-accent: var(--t-dark);
+      --track-display: -0.07em;
+      /* Width the hero word opens to. Per typeface, not per layout. */
+      --extra-w: 7.2em;
       --p: 0;
     }
+
+    /* ---------- Themes ----------
+       Each one declares only what makes it itself: the two ground tokens,
+       an accent, what sits legibly on that accent, and the two typefaces.
+       Everything else is derived, so a theme is five lines rather than a
+       second stylesheet. --paper is the foreground and --ink the ground; a
+       theme that wants a light page simply points them the other way. */
+
+    /* Press — ink on warm paper, vermilion, a sharp editorial serif. */
+    :root[data-theme="press"] {
+      --t-dark: #16150F; --t-light: #F2F0EA;
+      --accent: #B8322A; --accent-bright: #C8372D; --on-accent: var(--t-light);
+      --paper: var(--t-dark); --ink: var(--t-light);
+      --font-display: "Instrument Serif", Georgia, serif;
+      --font-logo: "Instrument Serif", Georgia, serif;
+      --track-display: -0.018em;
+      --extra-w: 9.4em;
+    }
+    /* Plant — cold charcoal, safety orange, heavy grotesque, mono labels.
+       The one that matches what these clients actually look like. */
+    :root[data-theme="plant"] {
+      --t-dark: #15171A; --t-light: #E8EAEC;
+      --accent: #E64A13; --accent-bright: #FF5A1F; --on-accent: var(--t-light);
+      --font-display: "Archivo", Helvetica, sans-serif;
+      --font-logo: "IBM Plex Mono", monospace;
+      --track-display: -0.045em;
+    }
+    /* Bone — black on white, no accent at all. Everything carried by type. */
+    :root[data-theme="bone"] {
+      --t-dark: #000000; --t-light: #FFFFFF;
+      --accent: #000000; --accent-bright: #000000; --on-accent: var(--t-light);
+      --paper: var(--t-dark); --ink: var(--t-light);
+    }
+    /* Ore — warm black and gold. Reads as the goldfields without saying so. */
+    :root[data-theme="ore"] {
+      --t-dark: #0C0B09; --t-light: #EDE6D8;
+      --accent: #A8871F; --accent-bright: #C9A227; --on-accent: var(--t-dark);
+      --font-display: "Archivo", Helvetica, sans-serif;
+    }
+
+    /* The picker. A lab tool, not part of the design — it comes out once a
+       theme is chosen. Difference blend so it stays legible on any of them. */
+    .themes {
+      position: fixed; left: var(--gutter); bottom: 1.8rem; z-index: 90;
+      display: flex; gap: 0.6rem; align-items: center;
+      padding: 0.7rem 1.1rem; border-radius: 2.4rem;
+      background: rgba(10,10,8,0.82);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+    .themes b {
+      font: 500 0.68rem/1 var(--font-sans); letter-spacing: 0.22em;
+      text-transform: uppercase; color: #fff; margin-right: 0.4rem;
+    }
+    .themes button {
+      width: 1.5rem; height: 1.5rem; border-radius: 50%; cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.45); background: var(--sw);
+      padding: 0; transition: transform 0.3s var(--ease);
+    }
+    .themes button:hover { transform: scale(1.22); }
+    .themes button[aria-pressed="true"] { box-shadow: 0 0 0 2px #fff; }
 
     *, *::before, *::after { box-sizing: border-box; }
     * { margin: 0; }
@@ -119,14 +193,14 @@
       /* Big enough to run off the right edge. The word is the picture, and
          you don't need all of it to read it. */
       font-size: clamp(4.8rem, 19vw, 30.4rem);
-      line-height: 0.78; letter-spacing: -0.062em;
+      line-height: 0.78; letter-spacing: var(--track-display);
       display: flex; align-items: baseline; white-space: nowrap;
       transform: scale(calc(0.84 + var(--p) * 0.16));
       transform-origin: left center;
     }
-    @keyframes write { to { max-width: 7.2em; opacity: 1; } }
+    @keyframes write { to { max-width: var(--extra-w); opacity: 1; } }
     @media (prefers-reduced-motion: reduce) {
-      .word__extra { animation: none; max-width: 7.2em; opacity: 1; }
+      .word__extra { animation: none; max-width: var(--extra-w); opacity: 1; }
     }
     /* Held until the sheet comes off, so the word is not already written
        by the time anyone sees it. */
@@ -141,6 +215,10 @@
          rather than be asserted. Vertical padding with matching negative
          margin keeps the overflow clip off the italic's overhang. */
       display: inline-block; overflow: hidden; white-space: nowrap;
+      /* .word is a flex row whose content runs off the page on purpose.
+         overflow:hidden sets this item's min-width to 0, so it was absorbing
+         all of that overflow and eating its own last letter. */
+      flex: none;
       padding-bottom: 0.16em; margin-bottom: -0.16em;
       max-width: 0; opacity: 0;
       animation: write 1.5s var(--ease) 0.45s forwards;
@@ -155,7 +233,7 @@
       margin-top: clamp(2.4rem, 4vw, 4rem);
       max-width: 40ch; font-size: clamp(1.84rem, 2vw, 2.72rem);
       line-height: 1.35; letter-spacing: -0.012em;
-      color: rgba(250, 250, 247, 0.78);
+      color: color-mix(in srgb, var(--paper) 78%, transparent);
       opacity: calc(var(--p) * 2 - 1);
     }
 
@@ -180,9 +258,9 @@
        here, so these hold the argument instead: a sentence per square. */
     .grid {
       display: flex; flex-wrap: wrap;
-      box-shadow: -1px -1px 0 0 rgba(250, 250, 247, 0.14);
+      box-shadow: -1px -1px 0 0 color-mix(in srgb, var(--paper) 14%, transparent);
     }
-    .cell { width: 100%; box-shadow: 1px 1px 0 0 rgba(250, 250, 247, 0.14); }
+    .cell { width: 100%; box-shadow: 1px 1px 0 0 color-mix(in srgb, var(--paper) 14%, transparent); }
     @media (min-width: 768px)  { .cell { width: 50%; } }
     @media (min-width: 1025px) { .cell { width: 33.3333%; } }
 
@@ -210,10 +288,11 @@
 
     /* Flat colour, the way their project tiles take the client's brand. */
     .cell--fill .cell__in { background: var(--accent-bright); }
-    .cell--fill .cell__say, .cell--fill .cell__n { color: #0E0E0A; }
-    .cell--pale .cell__in { background: #FAFAF7; }
-    .cell--pale .cell__say, .cell--pale .cell__n { color: #0E0E0A; }
-    .cell--fill .mq__track p, .cell--pale .mq__track p { color: #0E0E0A; }
+    .cell--fill .cell__say, .cell--fill .cell__n { color: var(--on-accent); }
+    .cell--pale .cell__in { background: var(--t-light); }
+    .cell--pale .cell__say, .cell--pale .cell__n { color: var(--t-dark); }
+    .cell--fill .mq__track p { color: var(--on-accent); }
+    .cell--pale .mq__track p { color: var(--t-dark); }
 
     /* Their marquee tile: one word, enormous, running across the square.
        7.68rem at line-height .8 and -.07em, which is their exact spec. */
@@ -223,17 +302,17 @@
     .mq__track p {
       font-family: var(--font-display); font-weight: 600;
       font-size: clamp(3.84rem, 6vw, 7.68rem);
-      line-height: 0.8; letter-spacing: -0.07em;
+      line-height: 0.8; letter-spacing: var(--track-display);
       padding-right: 0.42em;
     }
 
     /* The contact square. The only thing on the page asking for anything. */
     .cell--ask .cell__in { background: var(--accent-bright); justify-content: space-between; }
-    .cell--ask .cell__say { color: #0E0E0A; }
+    .cell--ask .cell__say { color: var(--on-accent); }
     .cell__mail {
       font-family: var(--font-display); font-weight: 600;
       font-size: clamp(1.76rem, 1.9vw, 2.4rem);
-      letter-spacing: -0.03em; color: #0E0E0A;
+      letter-spacing: -0.03em; color: var(--on-accent);
       border-bottom: 1px solid currentColor; align-self: flex-start;
     }
 
@@ -262,7 +341,7 @@
        there is ink on screen. */
     .swap {
       position: fixed; inset: 0; z-index: 59; overflow: hidden;
-      pointer-events: none; background: #FAFAF7;
+      pointer-events: none; background: var(--t-light);
       /* visibility rather than display: the clone keeps its layout, so the
          first stroke of a trail doesn't cost a full relayout of the page. */
       visibility: hidden;
@@ -277,28 +356,22 @@
        inside the trail, where the clone toggles each section's state so the
        ink always reveals the opposite of whatever it is sitting on. */
     .inv {
-      --paper: #0E0E0A;
-      --ink: #FAFAF7;
-      --ink-soft: #45443D;
-      --muted: #6E6C63;
-      --accent: #2C7A57;
-      --accent-bright: #2C7A57;
-      background: #FAFAF7;
-      color: #0E0E0A;
+      --paper: var(--t-dark);
+      --ink: var(--t-light);
+      background: var(--t-light);
+      color: var(--t-dark);
     }
     .inv .sub
     .inv .foot
-    .inv.foot { color: rgba(14,14,10,.66) !important; }
-    .inv .word { color: #0E0E0A !important; }
-    .inv, .inv .stage, .inv .elevated { background: #FAFAF7 !important; }
-    .inv { border-color: rgba(14,14,10,.16) !important; }
+    .inv.foot { color: color-mix(in srgb, var(--paper) 66%, transparent) !important; }
+    .inv, .inv .stage, .inv .elevated { background: var(--t-light) !important; }
     .inv .plain { display: none !important; }
     .goo-def { position: absolute; width: 0; height: 0; pointer-events: none; }
     @media (prefers-reduced-motion: reduce) { .ink { display: none; } }
     @media (prefers-reduced-motion: reduce) { .trail { display: none; } }
 
     .foot {
-      border-top: 1px solid rgba(250, 250, 247, 0.12);
+      border-top: 1px solid color-mix(in srgb, var(--paper) 12%, transparent);
       padding-block: 4rem; color: var(--muted); font-size: 1.36rem;
       display: flex; flex-wrap: wrap; gap: 1.6rem 3.2rem; justify-content: space-between;
     }
@@ -432,6 +505,16 @@
     <span>Ordinary &mdash; Claremont, Perth</span>
     <span><a href="mailto:mike@ordinaryagency.com.au">mike@ordinaryagency.com.au</a></span>
   </footer>
+
+  <!-- Lab only: pick a direction. Comes out once one is chosen. -->
+  <div class="themes" id="themes">
+    <b>Theme</b>
+    <button data-t="studio" style="--sw:#57BE89" aria-pressed="true" title="Studio">&nbsp;</button>
+    <button data-t="press"  style="--sw:#C8372D" aria-pressed="false" title="Press">&nbsp;</button>
+    <button data-t="plant"  style="--sw:#FF5A1F" aria-pressed="false" title="Plant">&nbsp;</button>
+    <button data-t="bone"   style="--sw:#FFFFFF" aria-pressed="false" title="Bone">&nbsp;</button>
+    <button data-t="ore"    style="--sw:#C9A227" aria-pressed="false" title="Ore">&nbsp;</button>
+  </div>
 
   <div class="swap" id="swap" aria-hidden="true"><div class="swap__inner" id="swap-inner"></div></div>
   <canvas class="trail" id="trail" aria-hidden="true"></canvas>
@@ -955,6 +1038,34 @@
 
     })();
 
+
+    // ── Theme picker (lab only) ─────────────────────────────────────
+    // Swaps one attribute. Everything downstream is derived from the five
+    // tokens a theme declares, so nothing else has to know a theme exists.
+    (function themes() {
+      const bar = document.getElementById('themes');
+      if (!bar) return;
+      const root = document.documentElement;
+
+      const apply = (name) => {
+        if (name && name !== 'studio') root.setAttribute('data-theme', name);
+        else root.removeAttribute('data-theme');
+        bar.querySelectorAll('button').forEach((b) => {
+          b.setAttribute('aria-pressed', String(b.dataset.t === (name || 'studio')));
+        });
+        try { localStorage.setItem('lab-theme', name || 'studio'); } catch (e) {}
+      };
+
+      bar.addEventListener('click', (e) => {
+        const b = e.target.closest('button');
+        if (b) apply(b.dataset.t);
+      });
+
+      // Private windows and blocked site data both throw here.
+      let saved = null;
+      try { saved = localStorage.getItem('lab-theme'); } catch (e) {}
+      if (saved) apply(saved);
+    })();
   </script>
 </body>
 </html>
